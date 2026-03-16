@@ -4,7 +4,7 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 01-03-PLAN.md (BaseAPIClient ABC + FACEITClient)
-last_updated: "2026-03-16T18:34:55.978Z"
+last_updated: "2026-03-16T18:35:10.001Z"
 last_activity: 2026-03-16 — Completed plan 01-01 (project scaffold + data models)
 progress:
   total_phases: 6
@@ -53,6 +53,7 @@ Progress: [███░░░░░░░] 29%
 | Phase 01-data-ingestion P02 | 3 | 2 tasks | 4 files |
 | Phase 01-data-ingestion P05 | 3 | 1 tasks | 4 files |
 | Phase 01-data-ingestion P04 | 6 | 1 tasks | 8 files |
+| Phase 01-data-ingestion P03 | 6 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -76,6 +77,9 @@ Recent decisions affecting current work:
 - [Phase 01-data-ingestion]: isinstance(data, list) check for bare array responses from PandaScore list endpoints
 - [Phase 01-data-ingestion]: asyncio.sleep(2.0) inside each LiquipediaClient fetch method body — enforces rate limit on standalone calls
 - [Phase 01-data-ingestion]: Tournaments and placements count-only in LiquipediaClient — no canonical schema yet, raw S3 persistence deferred
+- [Phase 01-data-ingestion]: asyncio.sleep(1.0) called twice per match in ingest_matches() — after get_match() and after get_match_stats() — ensures ~1 req/s even without tenacity retrying
+- [Phase 01-data-ingestion]: _semaphore is class-level on BaseAPIClient subclasses — all instances share one Semaphore(1) for global rate limit enforcement
+- [Phase 01-data-ingestion]: follow_redirects=False on httpx.AsyncClient — prevents respx mock failures on redirect targets (Pitfall 6 from research)
 
 ### Pending Todos
 
