@@ -112,20 +112,59 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ING-01 through ING-08 | Phase 1 | Pending |
-| ORC-01 through ORC-05 | Phase 2 | Pending |
-| WH-01 through WH-12 | Phase 3 | Pending |
-| UP-01 through UP-05 | Phase 4 | Pending |
-| HG-01 through HG-04 | Phase 4 | Pending |
-| CC-01 through CC-04 | Phase 4 | Pending |
-| DASH-01 through DASH-06 | Phase 4 | Pending |
-| CI-01 through CI-03 | Phase 5 | Pending |
+| ING-01 | Phase 1 — Data Ingestion | Pending |
+| ING-02 | Phase 1 — Data Ingestion | Pending |
+| ING-03 | Phase 1 — Data Ingestion | Pending |
+| ING-04 | Phase 1 — Data Ingestion | Pending |
+| ING-05 | Phase 1 — Data Ingestion | Pending |
+| ING-06 | Phase 1 — Data Ingestion | Pending |
+| ING-07 | Phase 1 — Data Ingestion | Pending |
+| ING-08 | Phase 1 — Data Ingestion | Pending |
+| ORC-01 | Phase 2 — Orchestration | Pending |
+| ORC-02 | Phase 2 — Orchestration | Pending |
+| ORC-03 | Phase 2 — Orchestration | Pending |
+| ORC-04 | Phase 2 — Orchestration | Pending |
+| ORC-05 | Phase 2 — Orchestration | Pending |
+| WH-01 | Phase 3 — Warehouse & dbt | Pending |
+| WH-02 | Phase 3 — Warehouse & dbt | Pending |
+| WH-03 | Phase 3 — Warehouse & dbt | Pending |
+| WH-04 | Phase 3 — Warehouse & dbt | Pending |
+| WH-05 | Phase 3 — Warehouse & dbt | Pending |
+| WH-06 | Phase 3 — Warehouse & dbt | Pending |
+| WH-07 | Phase 3 — Warehouse & dbt | Pending |
+| WH-08 | Phase 3 — Warehouse & dbt | Pending |
+| WH-09 | Phase 3 — Warehouse & dbt | Pending |
+| WH-10 | Phase 3 — Warehouse & dbt | Pending |
+| WH-11 | Phase 3 — Warehouse & dbt | Pending |
+| WH-12 | Phase 3 — Warehouse & dbt | Pending |
+| UP-01 | Phase 4 — Analytical Products | Pending |
+| UP-02 | Phase 4 — Analytical Products | Pending |
+| UP-03 | Phase 4 — Analytical Products | Pending |
+| UP-04 | Phase 4 — Analytical Products | Pending |
+| UP-05 | Phase 4 — Analytical Products | Pending |
+| HG-01 | Phase 4 — Analytical Products | Pending |
+| HG-02 | Phase 4 — Analytical Products | Pending |
+| HG-03 | Phase 4 — Analytical Products | Pending |
+| HG-04 | Phase 4 — Analytical Products | Pending |
+| CC-01 | Phase 4 — Analytical Products | Pending |
+| CC-02 | Phase 4 — Analytical Products | Pending |
+| CC-03 | Phase 4 — Analytical Products | Pending |
+| CC-04 | Phase 4 — Analytical Products | Pending |
+| DASH-01 | Phase 5 — Dashboard & Deployment | Pending |
+| DASH-02 | Phase 5 — Dashboard & Deployment | Pending |
+| DASH-03 | Phase 5 — Dashboard & Deployment | Pending |
+| DASH-04 | Phase 5 — Dashboard & Deployment | Pending |
+| DASH-05 | Phase 5 — Dashboard & Deployment | Pending |
+| DASH-06 | Phase 5 — Dashboard & Deployment | Pending |
+| CI-01 | Phase 6 — CI & Polish | Pending |
+| CI-02 | Phase 6 — CI & Polish | Pending |
+| CI-03 | Phase 6 — CI & Polish | Pending |
 
 **Coverage:**
 - v1 requirements: 42 total
 - Mapped to phases: 42
-- Unmapped: 0 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-16*
-*Last updated: 2026-03-16 after initial definition*
+*Last updated: 2026-03-16 — traceability updated to 6-phase roadmap structure*
