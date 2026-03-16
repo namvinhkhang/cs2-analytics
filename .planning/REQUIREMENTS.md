@@ -14,7 +14,7 @@
 - [ ] **ING-05**: All raw data serialized to Parquet with pyarrow and uploaded to AWS S3 under `raw/` prefix partitioned by date
 - [ ] **ING-06**: All API clients implement retry logic, rate limiting, and exponential backoff
 - [ ] **ING-07**: pytest test suite covers all ingestion clients with mocked HTTP responses
-- [ ] **ING-08**: Pydantic data models defined for Match, Player, and Team entities
+- [x] **ING-08**: Pydantic data models defined for Match, Player, and Team entities
 
 ### Orchestration
 
@@ -119,7 +119,7 @@
 | ING-05 | Phase 1 — Data Ingestion | Pending |
 | ING-06 | Phase 1 — Data Ingestion | Pending |
 | ING-07 | Phase 1 — Data Ingestion | Pending |
-| ING-08 | Phase 1 — Data Ingestion | Pending |
+| ING-08 | Phase 1 — Data Ingestion | Complete |
 | ORC-01 | Phase 2 — Orchestration | Pending |
 | ORC-02 | Phase 2 — Orchestration | Pending |
 | ORC-03 | Phase 2 — Orchestration | Pending |

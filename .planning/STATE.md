@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-03-16)
 ## Current Position
 
 Phase: 1 of 6 (Data Ingestion)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-03-16 — Roadmap created, ready for Phase 1 planning
+Plan: 1 of TBD in current phase
+Status: In progress
+Last activity: 2026-03-16 — Completed plan 01-01 (project scaffold + data models)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] 5%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 hours
+- Total plans completed: 1
+- Average duration: 8 min
+- Total execution time: 0.13 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01-data-ingestion | 1 | 8 min | 8 min |
 
 **Recent Trend:**
-- Last 5 plans: none yet
+- Last 5 plans: 01-01 (8 min)
 - Trend: -
 
 *Updated after each plan completion*
@@ -47,6 +47,8 @@ Recent decisions affecting current work:
 - [Init]: FACEIT as primary stats source — only official API with per-match ADR/KAST at semi-pro level
 - [Init]: Kaggle CSV bootstrap for HLTV data — avoids ToS risk and Cloudflare blocking
 - [Init]: Streamlit over Tableau/PowerBI — public URL + shows Python proficiency simultaneously
+- [01-01]: Added pydantic.mypy plugin — resolves mypy strict-mode false positives on Settings() singleton
+- [01-01]: conftest.py sets dummy env vars at collection time — allows test imports without .env present
 
 ### Pending Todos
 
@@ -60,5 +62,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-16
-Stopped at: Roadmap written, REQUIREMENTS.md traceability updated, ready to plan Phase 1
+Stopped at: Completed 01-01-PLAN.md (project scaffold, Settings class, canonical + per-source models)
 Resume file: None
