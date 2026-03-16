@@ -1,0 +1,16 @@
+{
+  "result": [
+    {
+      "pagename": "placement-001",
+      "tournament": "IEM_Katowice_2024",
+      "place": "1",
+      "team": "Natus_Vincere"
+    },
+    {
+      "pagename": "placement-002",
+      "tournament": "IEM_Katowice_2024",
+      "place": "2",
+      "team": "Team_Vitality"
+    }
+  ]
+}
