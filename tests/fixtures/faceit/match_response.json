@@ -1,0 +1,12 @@
+{
+  "match_id": "1-abc123",
+  "game": "cs2",
+  "region": "EU",
+  "competition_name": "FACEIT Pro League Season 1",
+  "teams": {
+    "faction1": {"faction_id": "team-alpha"},
+    "faction2": {"faction_id": "team-beta"}
+  },
+  "results": {"winner": "team-alpha"},
+  "finished_at": 1705276800
+}

@@ -1,0 +1,58 @@
+{
+  "rounds": [
+    {
+      "teams": [
+        {
+          "players": [
+            {
+              "player_id": "player-001",
+              "nickname": "s1mple",
+              "country": "UA",
+              "skill_level": 10,
+              "faceit_elo": 3000,
+              "player_stats": {
+                "Kills": "25",
+                "Deaths": "14",
+                "ADR": "88.5",
+                "K/D Ratio": "1.79",
+                "KAST": "74.0"
+              }
+            },
+            {
+              "player_id": "player-002",
+              "nickname": "niko",
+              "country": "BA",
+              "skill_level": 10,
+              "faceit_elo": 2950,
+              "player_stats": {
+                "Kills": "20",
+                "Deaths": "16",
+                "ADR": "72.3",
+                "K/D Ratio": "1.25",
+                "KAST": "68.5"
+              }
+            }
+          ]
+        },
+        {
+          "players": [
+            {
+              "player_id": "player-003",
+              "nickname": "device",
+              "country": "DK",
+              "skill_level": 9,
+              "faceit_elo": 2800,
+              "player_stats": {
+                "Kills": "18",
+                "Deaths": "20",
+                "ADR": "65.0",
+                "K/D Ratio": "0.90",
+                "KAST": "62.0"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
