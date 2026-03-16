@@ -12,7 +12,7 @@ Six phases that deliver a production-grade ELT pipeline with three original anal
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [x] **Phase 1: Data Ingestion** - Raw data from Liquipedia, FACEIT, PandaScore, and Kaggle lands in AWS S3 as Parquet (completed 2026-03-16)
+- [ ] **Phase 1: Data Ingestion** - Raw data from Liquipedia, FACEIT, PandaScore, and Kaggle lands in AWS S3 as Parquet
 - [ ] **Phase 2: Orchestration** - Airflow DAGs automate pipeline execution in a Docker-composed local stack
 - [ ] **Phase 3: Warehouse & dbt** - Snowflake star schema with full dbt model lineage from staging to analytical marts
 - [ ] **Phase 4: Analytical Products** - Upset Tracker (ML), Hidden Gem Scout (SQL), and Choke/Clutch Profile (SQL) are computed
@@ -31,7 +31,16 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. All API clients retry on transient failures and respect rate limits without manual intervention
   4. `pytest` test suite runs green against all ingestion clients using mocked HTTP responses
   5. Pydantic models reject malformed Match, Player, and Team payloads with validation errors
-**Plans**: TBD
+**Plans**: 7 plans
+
+Plans:
+- [x] 01-01-PLAN.md — Project scaffold, Pydantic data models (ING-08)
+- [ ] 01-02-PLAN.md — S3 upload utility + Parquet serialization utility (ING-05)
+- [ ] 01-03-PLAN.md — BaseAPIClient ABC + FACEITClient with retry (ING-02, ING-06 partial)
+- [ ] 01-04-PLAN.md — LiquipediaClient with 5 CS2 entity types (ING-01)
+- [ ] 01-05-PLAN.md — PandaScoreClient with match and player ingestion (ING-03)
+- [ ] 01-06-PLAN.md — Kaggle CSV bootstrap ingester + script (ING-04)
+- [ ] 01-07-PLAN.md — Full pytest suite with respx + moto mocks (ING-06, ING-07)
 
 ### Phase 2: Orchestration
 **Goal**: Pipeline execution is automated, monitored, and reproducible via a one-command local stack
@@ -97,7 +106,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Data Ingestion | 1/1 | Complete   | 2026-03-16 |
+| 1. Data Ingestion | 1/7 | In progress | - |
 | 2. Orchestration | 0/TBD | Not started | - |
 | 3. Warehouse & dbt | 0/TBD | Not started | - |
 | 4. Analytical Products | 0/TBD | Not started | - |
