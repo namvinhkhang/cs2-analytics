@@ -7,7 +7,7 @@
 
 ### Ingestion
 
-- [ ] **ING-01**: System ingests team, player, tournament, and placement data from Liquipedia API v3
+- [x] **ING-01**: System ingests team, player, tournament, and placement data from Liquipedia API v3
 - [ ] **ING-02**: System ingests per-match statistics (kills, deaths, ADR, K/D, KAST, ELO) from FACEIT API
 - [x] **ING-03**: System ingests tier-1 pro match results and player stats from PandaScore API
 - [ ] **ING-04**: System loads historical match data from Kaggle CSV as one-time bootstrap
@@ -112,7 +112,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ING-01 | Phase 1 — Data Ingestion | Pending |
+| ING-01 | Phase 1 — Data Ingestion | Complete |
 | ING-02 | Phase 1 — Data Ingestion | Pending |
 | ING-03 | Phase 1 — Data Ingestion | Complete |
 | ING-04 | Phase 1 — Data Ingestion | Pending |

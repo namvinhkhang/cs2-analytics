@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-05-PLAN.md (PandaScoreClient with rate-limited match and player ingestion)
-last_updated: "2026-03-16T18:33:32.030Z"
+stopped_at: Completed 01-03-PLAN.md (BaseAPIClient ABC + FACEITClient)
+last_updated: "2026-03-16T18:34:55.978Z"
 last_activity: 2026-03-16 — Completed plan 01-01 (project scaffold + data models)
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 7
-  completed_plans: 3
+  completed_plans: 5
   percent: 29
 ---
 
@@ -52,6 +52,7 @@ Progress: [███░░░░░░░] 29%
 *Updated after each plan completion*
 | Phase 01-data-ingestion P02 | 3 | 2 tasks | 4 files |
 | Phase 01-data-ingestion P05 | 3 | 1 tasks | 4 files |
+| Phase 01-data-ingestion P04 | 6 | 1 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -73,6 +74,8 @@ Recent decisions affecting current work:
 - [Phase 01-data-ingestion]: asyncio.sleep(3.6) inside get_*() methods not ingest_*() callers — rate-limit contract at API boundary
 - [Phase 01-data-ingestion]: PandaScore /csgo/ legacy slug — do NOT use /cs2/ for match/player endpoints
 - [Phase 01-data-ingestion]: isinstance(data, list) check for bare array responses from PandaScore list endpoints
+- [Phase 01-data-ingestion]: asyncio.sleep(2.0) inside each LiquipediaClient fetch method body — enforces rate limit on standalone calls
+- [Phase 01-data-ingestion]: Tournaments and placements count-only in LiquipediaClient — no canonical schema yet, raw S3 persistence deferred
 
 ### Pending Todos
 
@@ -85,6 +88,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16T18:33:32.029Z
-Stopped at: Completed 01-05-PLAN.md (PandaScoreClient with rate-limited match and player ingestion)
+Last session: 2026-03-16T18:34:55.977Z
+Stopped at: Completed 01-03-PLAN.md (BaseAPIClient ABC + FACEITClient)
 Resume file: None
