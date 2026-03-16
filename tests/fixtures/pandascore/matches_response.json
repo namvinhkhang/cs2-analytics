@@ -1,0 +1,26 @@
+[
+  {
+    "id": 101,
+    "name": "Team A vs Team B",
+    "status": "finished",
+    "begin_at": "2024-01-15T12:00:00Z",
+    "end_at": "2024-01-15T13:30:00Z",
+    "winner": {"id": 1, "name": "Team A"},
+    "opponents": [
+      {"opponent": {"id": 1, "name": "Team A"}},
+      {"opponent": {"id": 2, "name": "Team B"}}
+    ]
+  },
+  {
+    "id": 102,
+    "name": "Team C vs Team D",
+    "status": "finished",
+    "begin_at": "2024-01-15T14:00:00Z",
+    "end_at": "2024-01-15T15:00:00Z",
+    "winner": null,
+    "opponents": [
+      {"opponent": {"id": 3, "name": "Team C"}},
+      {"opponent": {"id": 4, "name": "Team D"}}
+    ]
+  }
+]

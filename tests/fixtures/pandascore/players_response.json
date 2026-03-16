@@ -1,0 +1,14 @@
+[
+  {
+    "id": 201,
+    "name": "s1mple",
+    "nationality": "UA",
+    "current_team": {"id": 10, "name": "NAVI"}
+  },
+  {
+    "id": 202,
+    "name": "ZywOo",
+    "nationality": "FR",
+    "current_team": null
+  }
+]
