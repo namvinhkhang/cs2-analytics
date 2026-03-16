@@ -11,7 +11,7 @@
 - [ ] **ING-02**: System ingests per-match statistics (kills, deaths, ADR, K/D, KAST, ELO) from FACEIT API
 - [ ] **ING-03**: System ingests tier-1 pro match results and player stats from PandaScore API
 - [ ] **ING-04**: System loads historical match data from Kaggle CSV as one-time bootstrap
-- [ ] **ING-05**: All raw data serialized to Parquet with pyarrow and uploaded to AWS S3 under `raw/` prefix partitioned by date
+- [x] **ING-05**: All raw data serialized to Parquet with pyarrow and uploaded to AWS S3 under `raw/` prefix partitioned by date
 - [ ] **ING-06**: All API clients implement retry logic, rate limiting, and exponential backoff
 - [ ] **ING-07**: pytest test suite covers all ingestion clients with mocked HTTP responses
 - [x] **ING-08**: Pydantic data models defined for Match, Player, and Team entities
@@ -116,7 +116,7 @@
 | ING-02 | Phase 1 — Data Ingestion | Pending |
 | ING-03 | Phase 1 — Data Ingestion | Pending |
 | ING-04 | Phase 1 — Data Ingestion | Pending |
-| ING-05 | Phase 1 — Data Ingestion | Pending |
+| ING-05 | Phase 1 — Data Ingestion | Complete |
 | ING-06 | Phase 1 — Data Ingestion | Pending |
 | ING-07 | Phase 1 — Data Ingestion | Pending |
 | ING-08 | Phase 1 — Data Ingestion | Complete |

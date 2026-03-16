@@ -1,3 +1,19 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: executing
+stopped_at: Completed 01-02-PLAN.md (parquet schemas + S3 upload utility)
+last_updated: "2026-03-16T18:26:14.258Z"
+last_activity: 2026-03-16 — Completed plan 01-01 (project scaffold + data models)
+progress:
+  total_phases: 6
+  completed_phases: 0
+  total_plans: 7
+  completed_plans: 2
+  percent: 29
+---
+
 # Project State
 
 ## Project Reference
@@ -14,7 +30,7 @@ Plan: 1 of TBD in current phase
 Status: In progress
 Last activity: 2026-03-16 — Completed plan 01-01 (project scaffold + data models)
 
-Progress: [█░░░░░░░░░] 5%
+Progress: [███░░░░░░░] 29%
 
 ## Performance Metrics
 
@@ -34,6 +50,7 @@ Progress: [█░░░░░░░░░] 5%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 01-data-ingestion P02 | 3 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -49,6 +66,9 @@ Recent decisions affecting current work:
 - [Init]: Streamlit over Tableau/PowerBI — public URL + shows Python proficiency simultaneously
 - [01-01]: Added pydantic.mypy plugin — resolves mypy strict-mode false positives on Settings() singleton
 - [01-01]: conftest.py sets dummy env vars at collection time — allows test imports without .env present
+- [Phase 01-02]: Callers pass bucket and region to write_parquet_to_s3() explicitly — module does not import settings, keeping it testable without .env
+- [Phase 01-02]: pa.int64() used for all integer fields (not pa.int32()) — forward-safe for large ELO and ranking values
+- [Phase 01-02]: structlog.info() called after successful put_object — avoids log noise for retried failures
 
 ### Pending Todos
 
@@ -61,6 +81,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16
-Stopped at: Completed 01-01-PLAN.md (project scaffold, Settings class, canonical + per-source models)
+Last session: 2026-03-16T18:26:14.257Z
+Stopped at: Completed 01-02-PLAN.md (parquet schemas + S3 upload utility)
 Resume file: None
