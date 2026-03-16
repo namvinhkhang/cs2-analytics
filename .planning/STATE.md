@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-02-PLAN.md (parquet schemas + S3 upload utility)
-last_updated: "2026-03-16T18:26:14.258Z"
+stopped_at: Completed 01-05-PLAN.md (PandaScoreClient with rate-limited match and player ingestion)
+last_updated: "2026-03-16T18:33:32.030Z"
 last_activity: 2026-03-16 — Completed plan 01-01 (project scaffold + data models)
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 7
-  completed_plans: 2
+  completed_plans: 3
   percent: 29
 ---
 
@@ -51,6 +51,7 @@ Progress: [███░░░░░░░] 29%
 
 *Updated after each plan completion*
 | Phase 01-data-ingestion P02 | 3 | 2 tasks | 4 files |
+| Phase 01-data-ingestion P05 | 3 | 1 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,9 @@ Recent decisions affecting current work:
 - [Phase 01-02]: Callers pass bucket and region to write_parquet_to_s3() explicitly — module does not import settings, keeping it testable without .env
 - [Phase 01-02]: pa.int64() used for all integer fields (not pa.int32()) — forward-safe for large ELO and ranking values
 - [Phase 01-02]: structlog.info() called after successful put_object — avoids log noise for retried failures
+- [Phase 01-data-ingestion]: asyncio.sleep(3.6) inside get_*() methods not ingest_*() callers — rate-limit contract at API boundary
+- [Phase 01-data-ingestion]: PandaScore /csgo/ legacy slug — do NOT use /cs2/ for match/player endpoints
+- [Phase 01-data-ingestion]: isinstance(data, list) check for bare array responses from PandaScore list endpoints
 
 ### Pending Todos
 
@@ -81,6 +85,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16T18:26:14.257Z
-Stopped at: Completed 01-02-PLAN.md (parquet schemas + S3 upload utility)
+Last session: 2026-03-16T18:33:32.029Z
+Stopped at: Completed 01-05-PLAN.md (PandaScoreClient with rate-limited match and player ingestion)
 Resume file: None

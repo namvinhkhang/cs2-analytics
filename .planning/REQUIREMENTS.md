@@ -9,7 +9,7 @@
 
 - [ ] **ING-01**: System ingests team, player, tournament, and placement data from Liquipedia API v3
 - [ ] **ING-02**: System ingests per-match statistics (kills, deaths, ADR, K/D, KAST, ELO) from FACEIT API
-- [ ] **ING-03**: System ingests tier-1 pro match results and player stats from PandaScore API
+- [x] **ING-03**: System ingests tier-1 pro match results and player stats from PandaScore API
 - [ ] **ING-04**: System loads historical match data from Kaggle CSV as one-time bootstrap
 - [x] **ING-05**: All raw data serialized to Parquet with pyarrow and uploaded to AWS S3 under `raw/` prefix partitioned by date
 - [ ] **ING-06**: All API clients implement retry logic, rate limiting, and exponential backoff
@@ -114,7 +114,7 @@
 |-------------|-------|--------|
 | ING-01 | Phase 1 — Data Ingestion | Pending |
 | ING-02 | Phase 1 — Data Ingestion | Pending |
-| ING-03 | Phase 1 — Data Ingestion | Pending |
+| ING-03 | Phase 1 — Data Ingestion | Complete |
 | ING-04 | Phase 1 — Data Ingestion | Pending |
 | ING-05 | Phase 1 — Data Ingestion | Complete |
 | ING-06 | Phase 1 — Data Ingestion | Pending |
