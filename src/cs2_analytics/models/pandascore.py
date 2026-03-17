@@ -3,6 +3,7 @@
 Source models use extra="ignore" to silently tolerate undocumented API fields.
 PandaScore's CS2 game ID is "counterstrike"; free tier allows 1,000 req/hour.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -23,7 +24,7 @@ class PandaScoreMatch(BaseModel):
     winner: dict[str, Any] | None = None  # {"id": int, "name": str, ...}
     opponents: list[dict[str, Any]] = []  # [{"opponent": {"id": int, "name": str}}, ...]
 
-    def to_canonical(self) -> "Match":
+    def to_canonical(self) -> Match:
         """Map PandaScore match fields to the shared canonical Match schema."""
         from cs2_analytics.models.canonical import Match
 
@@ -40,7 +41,8 @@ class PandaScoreMatch(BaseModel):
         if self.winner is not None:
             winner_id = str(self.winner["id"])
 
-        # Extract date portion from ISO-8601 datetime string (e.g. "2024-01-15T12:00:00Z" → "2024-01-15")
+        # Extract date portion from ISO-8601 datetime string
+        # (e.g. "2024-01-15T12:00:00Z" → "2024-01-15")
         played_at: str = "unknown"
         if self.begin_at is not None:
             played_at = self.begin_at[:10]
@@ -74,7 +76,7 @@ class PandaScorePlayer(BaseModel):
         kd_ratio: float | None = None,
         match_id: str | None = None,
         recorded_at: str,
-    ) -> "Player":
+    ) -> Player:
         """Map PandaScore player fields to the shared canonical Player schema.
 
         Per-match stats (kills, deaths, adr, kd_ratio) are injected by the

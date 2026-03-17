@@ -3,9 +3,10 @@
 Source models use extra="ignore" to silently tolerate undocumented API fields
 that FACEIT may add at any time without a version bump.
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict
@@ -24,7 +25,7 @@ class FACEITMatch(BaseModel):
     results: dict[str, Any] | None = None
     finished_at: int | None = None  # UNIX epoch seconds
 
-    def to_canonical(self) -> "Match":
+    def to_canonical(self) -> Match:
         """Map FACEIT match fields to the shared canonical Match schema."""
         # Import inside method to avoid circular import if canonical ever grows
         from cs2_analytics.models.canonical import Match
@@ -43,9 +44,7 @@ class FACEITMatch(BaseModel):
         # Convert UNIX epoch to ISO date string
         played_at: str = "unknown"
         if self.finished_at is not None:
-            played_at = (
-                datetime.fromtimestamp(self.finished_at, tz=timezone.utc).date().isoformat()
-            )
+            played_at = datetime.fromtimestamp(self.finished_at, tz=UTC).date().isoformat()
 
         return Match(
             match_id=self.match_id,
@@ -78,7 +77,7 @@ class FACEITPlayer(BaseModel):
         kd_ratio: float | None = None,
         kast: float | None = None,
         recorded_at: str,
-    ) -> "Player":
+    ) -> Player:
         """Map FACEIT player profile to the shared canonical Player schema.
 
         Per-match stats (kills, deaths, adr, kd_ratio, kast) are injected by the

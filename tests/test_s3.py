@@ -3,19 +3,18 @@
 RED phase: these tests are written before the implementation exists.
 They define the exact contract the implementation must satisfy.
 """
+
 from __future__ import annotations
 
 from io import BytesIO
 from unittest.mock import MagicMock, patch
 
-import pyarrow as pa
 import pyarrow.parquet as pq
-import pytest
-
 
 # ---------------------------------------------------------------------------
 # build_s3_key() tests
 # ---------------------------------------------------------------------------
+
 
 def test_build_s3_key_basic() -> None:
     """Standard faceit/matches path with single-digit month and day."""
@@ -69,10 +68,11 @@ def test_build_s3_key_default_filename_is_data_parquet() -> None:
 # write_parquet_to_s3() tests — use mocked boto3 to avoid real AWS calls
 # ---------------------------------------------------------------------------
 
+
 def test_write_parquet_to_s3_calls_put_object() -> None:
     """write_parquet_to_s3 must call boto3 s3.put_object with correct Bucket and Key."""
-    from cs2_analytics.utils.parquet import MATCH_SCHEMA, models_to_records
     from cs2_analytics.models.canonical import Match
+    from cs2_analytics.utils.parquet import MATCH_SCHEMA, models_to_records
     from cs2_analytics.utils.s3 import write_parquet_to_s3
 
     match = Match(
@@ -128,8 +128,8 @@ def test_write_parquet_to_s3_empty_records() -> None:
 
 def test_write_parquet_to_s3_uses_snappy_compression() -> None:
     """Uploaded body must be snappy-compressed Parquet (not uncompressed or gzip)."""
-    from cs2_analytics.utils.parquet import PLAYER_SCHEMA, models_to_records
     from cs2_analytics.models.canonical import Player
+    from cs2_analytics.utils.parquet import PLAYER_SCHEMA, models_to_records
     from cs2_analytics.utils.s3 import write_parquet_to_s3
 
     player = Player(

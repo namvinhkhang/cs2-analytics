@@ -3,9 +3,8 @@
 Source models use extra="ignore" to silently tolerate undocumented API fields.
 Liquipedia's REST API v3 returns structured JSON for 10 CS2 data types.
 """
-from __future__ import annotations
 
-from typing import Any
+from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict
 
@@ -19,7 +18,7 @@ class LiquipediaTeam(BaseModel):
     name: str
     region: str | None = None
 
-    def to_canonical(self, *, ingested_at: str) -> "Team":
+    def to_canonical(self, *, ingested_at: str) -> Team:
         """Map Liquipedia team fields to the shared canonical Team schema."""
         from cs2_analytics.models.canonical import Team
 
@@ -43,7 +42,7 @@ class LiquipediaPlayer(BaseModel):
     nationality: str | None = None
     teampagename: str | None = None  # current team pagename, used as team_id
 
-    def to_canonical(self, *, recorded_at: str) -> "Player":
+    def to_canonical(self, *, recorded_at: str) -> Player:
         """Map Liquipedia player fields to the shared canonical Player schema."""
         from cs2_analytics.models.canonical import Player
 
@@ -69,7 +68,7 @@ class LiquipediaMatch(BaseModel):
     date: str | None = None  # ISO-8601 date string from Liquipedia
     tournament: str | None = None  # tournament pagename for context
 
-    def to_canonical(self) -> "Match":
+    def to_canonical(self) -> Match:
         """Map Liquipedia match fields to the shared canonical Match schema."""
         from cs2_analytics.models.canonical import Match
 

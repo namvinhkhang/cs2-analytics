@@ -7,13 +7,15 @@ Provides two functions consumed by all four ingestion clients:
 Callers pass bucket and region explicitly so this module is testable without
 a real .env file or AWS credentials.
 """
+
 from __future__ import annotations
 
 from io import BytesIO
+from typing import Any
 
 import boto3
-import pyarrow as pa
-import pyarrow.parquet as pq
+import pyarrow as pa  # type: ignore[import-untyped]
+import pyarrow.parquet as pq  # type: ignore[import-untyped]
 import structlog
 
 # Module-level structured logger — emits JSON-compatible log events
@@ -36,15 +38,11 @@ def build_s3_key(
     is required for Athena partition projection and dbt external table scanning.
     The default filename 'data.parquet' is used for single-file daily uploads.
     """
-    return (
-        f"raw/{source}/{entity_type}"
-        f"/year={year}/month={month:02d}/day={day:02d}"
-        f"/{filename}"
-    )
+    return f"raw/{source}/{entity_type}/year={year}/month={month:02d}/day={day:02d}/{filename}"
 
 
 def write_parquet_to_s3(
-    records: list[dict],
+    records: list[dict[str, Any]],
     schema: pa.Schema,
     bucket: str,
     key: str,

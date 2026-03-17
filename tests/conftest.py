@@ -4,12 +4,12 @@ The cs2_analytics.utils.config module instantiates Settings() at import time.
 This conftest ensures the required CS2_* env vars are set before any test
 module is imported, preventing ValidationError from crashing the test session.
 """
+
 from __future__ import annotations
 
 import os
 
 import pytest
-
 
 # ---------------------------------------------------------------------------
 # Set dummy env vars before any test module imports cs2_analytics.utils.config.

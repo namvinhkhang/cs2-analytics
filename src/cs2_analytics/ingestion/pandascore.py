@@ -12,6 +12,7 @@ budget in seconds (see RESEARCH.md Pitfall 1).
 CS2 game slug: /csgo/ (PandaScore uses the legacy CS:GO slug for match endpoints).
 Auth: Bearer token in Authorization header.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -50,9 +51,7 @@ class PandaScoreClient(BaseAPIClient):
         """Return PandaScore Bearer token auth header."""
         return {"Authorization": f"Bearer {self._api_key}"}
 
-    async def get_recent_matches(
-        self, page: int = 1, per_page: int = 50
-    ) -> list[PandaScoreMatch]:
+    async def get_recent_matches(self, page: int = 1, per_page: int = 50) -> list[PandaScoreMatch]:
         """Fetch recent CS2 past match results.
 
         Endpoint: GET /csgo/matches/past
@@ -76,9 +75,7 @@ class PandaScoreClient(BaseAPIClient):
             records = data.get("results", [])
         return [PandaScoreMatch.model_validate(r) for r in records]
 
-    async def get_players(
-        self, page: int = 1, per_page: int = 50
-    ) -> list[PandaScorePlayer]:
+    async def get_players(self, page: int = 1, per_page: int = 50) -> list[PandaScorePlayer]:
         """Fetch CS2 player profiles.
 
         Endpoint: GET /csgo/players
@@ -159,9 +156,9 @@ class PandaScoreClient(BaseAPIClient):
             for p in raw_players:
                 canonical_players.append(
                     p.to_canonical(
-                        kills=None,      # per-match stats not in /csgo/players endpoint
-                        deaths=None,     # require match-specific endpoints
-                        adr=None,        # may be premium-only — treat as None (Pitfall 3)
+                        kills=None,  # per-match stats not in /csgo/players endpoint
+                        deaths=None,  # require match-specific endpoints
+                        adr=None,  # may be premium-only — treat as None (Pitfall 3)
                         kd_ratio=None,
                         match_id=None,
                         recorded_at=recorded_at,

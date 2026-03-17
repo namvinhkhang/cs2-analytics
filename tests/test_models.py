@@ -6,6 +6,7 @@ Covers:
 - to_canonical() methods return correctly typed canonical instances
 - Optional stat fields can all be None
 """
+
 from __future__ import annotations
 
 import pydantic_core

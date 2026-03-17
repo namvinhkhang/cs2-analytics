@@ -8,6 +8,7 @@ Rate limit: ~1 req/s on a free FACEIT API key. asyncio.sleep(1.0) is called
 after each API request to stay within this limit. Never remove these sleeps
 without checking the current FACEIT API quota for your key tier.
 """
+
 from __future__ import annotations
 
 import asyncio

@@ -3,12 +3,13 @@
 RED phase: these tests are written before the implementation exists.
 They define the exact contract the implementation must satisfy.
 """
+
 from __future__ import annotations
 
-import pytest
+from io import BytesIO
+
 import pyarrow as pa
 import pyarrow.parquet as pq
-from io import BytesIO
 
 
 def test_match_schema_has_seven_fields() -> None:
@@ -49,7 +50,17 @@ def test_player_schema_stat_fields_nullable() -> None:
     """All stat fields on PLAYER_SCHEMA must be nullable (per-match records may omit them)."""
     from cs2_analytics.utils.parquet import PLAYER_SCHEMA
 
-    nullable_fields = ["team_id", "nationality", "kills", "deaths", "adr", "kd_ratio", "kast", "elo", "match_id"]
+    nullable_fields = [
+        "team_id",
+        "nationality",
+        "kills",
+        "deaths",
+        "adr",
+        "kd_ratio",
+        "kast",
+        "elo",
+        "match_id",
+    ]
     for field_name in nullable_fields:
         field = PLAYER_SCHEMA.field(field_name)
         assert field.nullable is True, f"Field '{field_name}' should be nullable"
@@ -105,8 +116,8 @@ def test_team_schema_world_ranking_type() -> None:
 
 def test_models_to_records_converts_pydantic_to_dicts() -> None:
     """models_to_records must return a list of plain dicts via model_dump()."""
-    from cs2_analytics.utils.parquet import models_to_records
     from cs2_analytics.models.canonical import Match
+    from cs2_analytics.utils.parquet import models_to_records
 
     match = Match(
         match_id="m1",
@@ -136,8 +147,8 @@ def test_models_to_records_none_stat_fields_roundtrip() -> None:
 
     This is the Pitfall 4 test — explicit schema prevents schema drift on null batches.
     """
-    from cs2_analytics.utils.parquet import PLAYER_SCHEMA, models_to_records
     from cs2_analytics.models.canonical import Player
+    from cs2_analytics.utils.parquet import PLAYER_SCHEMA, models_to_records
 
     player = Player(
         player_id="p1",
@@ -156,8 +167,8 @@ def test_models_to_records_none_stat_fields_roundtrip() -> None:
 
 def test_match_schema_roundtrip_with_none_fields() -> None:
     """Match with None winner_id and map_name must serialize to Parquet correctly."""
-    from cs2_analytics.utils.parquet import MATCH_SCHEMA, models_to_records
     from cs2_analytics.models.canonical import Match
+    from cs2_analytics.utils.parquet import MATCH_SCHEMA, models_to_records
 
     match = Match(
         match_id="m2",

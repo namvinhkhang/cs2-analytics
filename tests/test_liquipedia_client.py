@@ -15,6 +15,7 @@ Tests cover:
 
 All HTTP calls are mocked via respx — no live network access.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -154,7 +155,8 @@ async def test_get_matches_returns_liquipedia_match_list() -> None:
 @pytest.mark.asyncio
 @respx.mock
 async def test_get_tournaments_returns_liquipedia_tournament_list() -> None:
-    """get_tournaments() deserializes the {result: [...]} envelope into LiquipediaTournament list."""
+    """get_tournaments() deserializes the {result: [...]} envelope
+    into LiquipediaTournament list."""
     fixture = load_fixture("tournaments_response.json")
     respx.get("https://api.liquipedia.net/api/v3/tournament").mock(
         return_value=httpx.Response(200, json=fixture)
@@ -245,7 +247,7 @@ async def test_ingest_all_returns_dict_of_counts() -> None:
         patch(
             "cs2_analytics.ingestion.liquipedia.write_parquet_to_s3",
             new_callable=MagicMock,
-        ) as mock_s3,
+        ) as _,
     ):
         async with LiquipediaClient(api_key="key") as client:
             counts = await client.ingest_all(

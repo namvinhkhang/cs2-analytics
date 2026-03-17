@@ -1,8 +1,10 @@
 """Tests for Settings class — verifies CS2_ env prefix, validation, and defaults."""
+
 from __future__ import annotations
 
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 
 class TestSettings:
@@ -15,6 +17,7 @@ class TestSettings:
     def test_settings_raises_validation_error_when_env_missing(self) -> None:
         """Settings() raises ValidationError when CS2_FACEIT_API_KEY is absent."""
         import pydantic_core
+
         from cs2_analytics.utils.config import Settings
 
         # Patch out all env vars to ensure none are set

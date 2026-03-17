@@ -7,6 +7,7 @@ Covers:
 - csv_to_matches skips rows with missing team_1 or team_2
 - setup_kaggle_credentials writes correct JSON to the target path
 """
+
 from __future__ import annotations
 
 import csv
@@ -18,7 +19,6 @@ from pathlib import Path
 import pytest
 
 from cs2_analytics.ingestion.kaggle import KaggleBootstrapIngester
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -83,9 +83,7 @@ def test_csv_to_matches_skips_rows_without_teams(
     ingester: KaggleBootstrapIngester,
 ) -> None:
     """Rows with blank team_1 are skipped; rows with valid teams are kept."""
-    with tempfile.NamedTemporaryFile(
-        mode="w", suffix=".csv", delete=False, newline=""
-    ) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False, newline="") as f:
         writer = csv.DictWriter(
             f, fieldnames=["match_id", "date", "team_1", "team_2", "map_winner"]
         )

@@ -11,6 +11,7 @@ Tests cover:
 
 All HTTP calls are mocked via respx — no live network access.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -18,7 +19,7 @@ import json
 from datetime import date
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import httpx
 import pytest
@@ -45,6 +46,7 @@ def players_fixture() -> list[dict[str, Any]]:
 
 # --- Class attribute tests ---
 
+
 class TestPandaScoreClientAttributes:
     def test_base_url(self) -> None:
         """PandaScoreClient.BASE_URL must point to PandaScore API."""
@@ -67,6 +69,7 @@ class TestPandaScoreClientAttributes:
 
 
 # --- get_recent_matches tests ---
+
 
 class TestGetRecentMatches:
     @pytest.mark.asyncio
@@ -106,9 +109,7 @@ class TestGetRecentMatches:
         assert "per_page=25" in str(request.url)
 
     @pytest.mark.asyncio
-    async def test_sleeps_after_request(
-        self, matches_fixture: list[dict[str, Any]]
-    ) -> None:
+    async def test_sleeps_after_request(self, matches_fixture: list[dict[str, Any]]) -> None:
         """get_recent_matches() calls asyncio.sleep(3.6) after API call."""
         with respx.mock:
             respx.get("https://api.pandascore.co/csgo/matches/past").mock(
@@ -136,6 +137,7 @@ class TestGetRecentMatches:
 
 # --- get_players tests ---
 
+
 class TestGetPlayers:
     @pytest.mark.asyncio
     async def test_returns_list_of_pandascore_players(
@@ -157,9 +159,7 @@ class TestGetPlayers:
         assert result[0].nationality == "UA"
 
     @pytest.mark.asyncio
-    async def test_sleeps_after_request(
-        self, players_fixture: list[dict[str, Any]]
-    ) -> None:
+    async def test_sleeps_after_request(self, players_fixture: list[dict[str, Any]]) -> None:
         """get_players() calls asyncio.sleep(3.6) after API call."""
         with respx.mock:
             respx.get("https://api.pandascore.co/csgo/players").mock(
@@ -172,9 +172,7 @@ class TestGetPlayers:
         mock_sleep.assert_called_once_with(3.6)
 
     @pytest.mark.asyncio
-    async def test_handles_player_with_no_team(
-        self, players_fixture: list[dict[str, Any]]
-    ) -> None:
+    async def test_handles_player_with_no_team(self, players_fixture: list[dict[str, Any]]) -> None:
         """get_players() handles player without current_team (None)."""
         with respx.mock:
             respx.get("https://api.pandascore.co/csgo/players").mock(
@@ -190,11 +188,10 @@ class TestGetPlayers:
 
 # --- ingest_matches tests ---
 
+
 class TestIngestMatches:
     @pytest.mark.asyncio
-    async def test_returns_match_count(
-        self, matches_fixture: list[dict[str, Any]]
-    ) -> None:
+    async def test_returns_match_count(self, matches_fixture: list[dict[str, Any]]) -> None:
         """ingest_matches() returns count of matches written."""
         with respx.mock:
             respx.get("https://api.pandascore.co/csgo/matches/past").mock(
@@ -212,9 +209,7 @@ class TestIngestMatches:
         mock_write.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_writes_to_correct_s3_key(
-        self, matches_fixture: list[dict[str, Any]]
-    ) -> None:
+    async def test_writes_to_correct_s3_key(self, matches_fixture: list[dict[str, Any]]) -> None:
         """ingest_matches() writes to correct Hive-partitioned S3 key."""
         with respx.mock:
             respx.get("https://api.pandascore.co/csgo/matches/past").mock(
@@ -254,9 +249,7 @@ class TestIngestMatches:
         mock_write.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_fetches_multiple_pages(
-        self, matches_fixture: list[dict[str, Any]]
-    ) -> None:
+    async def test_fetches_multiple_pages(self, matches_fixture: list[dict[str, Any]]) -> None:
         """ingest_matches() fetches each page sequentially (no asyncio.gather)."""
         with respx.mock:
             respx.get("https://api.pandascore.co/csgo/matches/past").mock(
@@ -278,11 +271,10 @@ class TestIngestMatches:
 
 # --- ingest_players tests ---
 
+
 class TestIngestPlayers:
     @pytest.mark.asyncio
-    async def test_returns_player_count(
-        self, players_fixture: list[dict[str, Any]]
-    ) -> None:
+    async def test_returns_player_count(self, players_fixture: list[dict[str, Any]]) -> None:
         """ingest_players() returns count of players written."""
         with respx.mock:
             respx.get("https://api.pandascore.co/csgo/players").mock(
@@ -300,9 +292,7 @@ class TestIngestPlayers:
         mock_write.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_all_stats_none_on_free_tier(
-        self, players_fixture: list[dict[str, Any]]
-    ) -> None:
+    async def test_all_stats_none_on_free_tier(self, players_fixture: list[dict[str, Any]]) -> None:
         """ingest_players() passes all stat fields as None (free tier limitation)."""
         with respx.mock:
             respx.get("https://api.pandascore.co/csgo/players").mock(
@@ -326,9 +316,7 @@ class TestIngestPlayers:
             assert record["kd_ratio"] is None
 
     @pytest.mark.asyncio
-    async def test_writes_to_correct_s3_key(
-        self, players_fixture: list[dict[str, Any]]
-    ) -> None:
+    async def test_writes_to_correct_s3_key(self, players_fixture: list[dict[str, Any]]) -> None:
         """ingest_players() writes to correct Hive-partitioned S3 key."""
         with respx.mock:
             respx.get("https://api.pandascore.co/csgo/players").mock(

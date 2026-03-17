@@ -3,6 +3,7 @@
 Raises pydantic_core.ValidationError immediately if any required var is missing,
 so misconfiguration is caught at import time rather than at first API call.
 """
+
 from __future__ import annotations
 
 from pydantic_settings import BaseSettings, SettingsConfigDict

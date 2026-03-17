@@ -4,6 +4,7 @@ These models define the schema contract that every source client maps to.
 All canonical models use extra="forbid" — any unknown field causes a ValidationError
 at validation time, enforcing schema stability for downstream dbt models.
 """
+
 from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict

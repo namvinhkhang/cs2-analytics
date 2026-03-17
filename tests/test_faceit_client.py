@@ -11,6 +11,7 @@ Tests cover:
 All HTTP calls are mocked via respx — no live network access.
 boto3 calls are mocked via unittest.mock to avoid real AWS credentials.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -18,7 +19,7 @@ import json
 from datetime import date
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import httpx
 import pytest
@@ -26,7 +27,6 @@ import respx
 
 from cs2_analytics.ingestion.faceit import FACEITClient
 from cs2_analytics.models.faceit import FACEITMatch, FACEITPlayer
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -48,6 +48,7 @@ def match_stats_fixture() -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Class attribute tests
 # ---------------------------------------------------------------------------
+
 
 def test_faceit_client_base_url() -> None:
     """FACEITClient.BASE_URL should point to FACEIT Data API v4."""
@@ -71,12 +72,14 @@ def test_faceit_client_auth_headers() -> None:
 def test_faceit_client_extends_base_api_client() -> None:
     """FACEITClient must subclass BaseAPIClient."""
     from cs2_analytics.ingestion.base import BaseAPIClient
+
     assert issubclass(FACEITClient, BaseAPIClient)
 
 
 # ---------------------------------------------------------------------------
 # get_match() tests
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_match_returns_faceit_match(
@@ -116,6 +119,7 @@ async def test_get_match_uses_correct_endpoint(
 # ---------------------------------------------------------------------------
 # get_match_stats() tests
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_match_stats_returns_player_list(
@@ -172,6 +176,7 @@ async def test_get_match_stats_empty_rounds(respx_mock: respx.MockRouter) -> Non
 # ingest_matches() tests (with mocked S3 and asyncio.sleep)
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_ingest_matches_returns_counts(
     respx_mock: respx.MockRouter,
@@ -187,7 +192,7 @@ async def test_ingest_matches_returns_counts(
         return_value=httpx.Response(200, json=match_stats_fixture)
     )
 
-    with patch("cs2_analytics.ingestion.faceit.write_parquet_to_s3") as mock_write:
+    with patch("cs2_analytics.ingestion.faceit.write_parquet_to_s3") as _:
         with patch("cs2_analytics.ingestion.faceit.asyncio.sleep"):
             async with FACEITClient(api_key="key") as client:
                 match_count, player_count = await client.ingest_matches(
@@ -296,7 +301,8 @@ async def test_ingest_matches_skips_failed_match(
 
 @pytest.mark.asyncio
 async def test_ingest_matches_no_writes_when_empty(respx_mock: respx.MockRouter) -> None:
-    """ingest_matches() with empty match_ids should return (0, 0) and not call write_parquet_to_s3."""
+    """ingest_matches() with empty match_ids should return (0, 0)
+    and not call write_parquet_to_s3."""
     with patch("cs2_analytics.ingestion.faceit.write_parquet_to_s3") as mock_write:
         async with FACEITClient(api_key="key") as client:
             match_count, player_count = await client.ingest_matches(
@@ -317,7 +323,6 @@ async def test_ingest_matches_to_canonical_match_fields(
     match_stats_fixture: dict[str, Any],
 ) -> None:
     """ingest_matches() should produce canonical Match records with correct source='faceit'."""
-    from cs2_analytics.models.canonical import Match
     match_id = "1-abc123"
     respx_mock.get(f"https://open.faceit.com/data/v4/matches/{match_id}").mock(
         return_value=httpx.Response(200, json=match_fixture)

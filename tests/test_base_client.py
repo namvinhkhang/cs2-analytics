@@ -3,11 +3,11 @@
 Uses a concrete ConcreteClient subclass since BaseAPIClient is abstract.
 respx mocks intercept httpx calls without live network access.
 """
+
 from __future__ import annotations
 
 import asyncio
 from typing import Any
-from unittest.mock import patch
 
 import httpx
 import pytest
@@ -15,10 +15,10 @@ import respx
 
 from cs2_analytics.ingestion.base import BaseAPIClient
 
-
 # ---------------------------------------------------------------------------
 # Concrete subclass for testing (cannot instantiate ABC directly)
 # ---------------------------------------------------------------------------
+
 
 class ConcreteClient(BaseAPIClient):
     """Minimal concrete subclass for testing BaseAPIClient logic."""
@@ -34,9 +34,11 @@ class ConcreteClient(BaseAPIClient):
 # Instantiation and structure tests
 # ---------------------------------------------------------------------------
 
+
 def test_base_client_is_abstract() -> None:
     """BaseAPIClient should be abstract — cannot be instantiated directly."""
     import inspect
+
     assert inspect.isabstract(BaseAPIClient)
 
 
@@ -61,6 +63,7 @@ def test_get_has_retry_wrapper() -> None:
 def test_paginate_is_async_generator() -> None:
     """paginate() must be an async generator function."""
     import inspect
+
     assert inspect.isasyncgenfunction(BaseAPIClient.paginate)
 
 
@@ -74,6 +77,7 @@ def test_semaphore_is_class_level_attribute() -> None:
 # ---------------------------------------------------------------------------
 # Async context manager tests
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_async_context_manager_returns_self() -> None:
@@ -95,6 +99,7 @@ async def test_async_context_manager_closes_client(respx_mock: respx.MockRouter)
 # ---------------------------------------------------------------------------
 # get() success path
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_returns_json_dict(respx_mock: respx.MockRouter) -> None:
@@ -121,6 +126,7 @@ async def test_get_passes_query_params(respx_mock: respx.MockRouter) -> None:
 # ---------------------------------------------------------------------------
 # get() error path — 429 and 5xx trigger HTTPStatusError
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_get_raises_on_404(respx_mock: respx.MockRouter) -> None:
@@ -161,6 +167,7 @@ async def test_get_raises_http_status_error_on_429(respx_mock: respx.MockRouter)
 # ---------------------------------------------------------------------------
 # paginate() tests
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_paginate_yields_first_page_then_stops(respx_mock: respx.MockRouter) -> None:
@@ -224,6 +231,7 @@ async def test_paginate_fetches_multiple_pages(respx_mock: respx.MockRouter) -> 
 # ---------------------------------------------------------------------------
 # follow_redirects=False test
 # ---------------------------------------------------------------------------
+
 
 def test_httpx_client_follow_redirects_is_false() -> None:
     """AsyncClient must be created with follow_redirects=False (Pitfall 6 from research)."""

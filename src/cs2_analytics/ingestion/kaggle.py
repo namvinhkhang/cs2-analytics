@@ -11,15 +11,14 @@ NOTE: `import kaggle` is deferred to inside download_dataset() because the
 kaggle package reads ~/.kaggle/kaggle.json at import time.  Importing at module
 level would raise FileNotFoundError before setup_kaggle_credentials() has run.
 """
+
 from __future__ import annotations
 
 import csv
 import json
-import os
 import stat
 from datetime import date
 from pathlib import Path
-from typing import Any
 
 import structlog
 
@@ -81,7 +80,7 @@ class KaggleBootstrapIngester:
         kaggle is imported here (not at module top) because it reads
         ~/.kaggle/kaggle.json at import time — credentials must exist first.
         """
-        import kaggle  # deferred import — credentials must be set up first
+        import kaggle  # type: ignore[import-untyped]  # deferred import — credentials must be set up first
 
         download_path.mkdir(parents=True, exist_ok=True)
         kaggle.api.authenticate()

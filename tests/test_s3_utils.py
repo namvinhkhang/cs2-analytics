@@ -4,15 +4,14 @@ Covers:
 - build_s3_key: Hive-partitioned path format, zero-padding, custom filename
 - write_parquet_to_s3: uploads valid Parquet to mocked S3 bucket (no real AWS calls)
 """
+
 from __future__ import annotations
 
-import pytest
 import boto3
 from moto import mock_aws
 
-from cs2_analytics.utils.s3 import build_s3_key, write_parquet_to_s3
 from cs2_analytics.utils.parquet import MATCH_SCHEMA
-
+from cs2_analytics.utils.s3 import build_s3_key, write_parquet_to_s3
 
 # ---------------------------------------------------------------------------
 # build_s3_key tests

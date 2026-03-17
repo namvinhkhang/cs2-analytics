@@ -11,21 +11,19 @@ Tests cover:
 - ingest_csv_file calls write_parquet_to_s3 with MATCH_SCHEMA
 - download_and_ingest orchestrates credential setup + download + ingest
 """
+
 from __future__ import annotations
 
 import csv
 import json
-import os
 import stat
-import tempfile
 from datetime import date
 from pathlib import Path
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import patch
 
 import pytest
 
 from cs2_analytics.ingestion.kaggle import KaggleBootstrapIngester
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -178,9 +176,7 @@ class TestCsvToMatches:
         matches = ingester.csv_to_matches(standard_csv)
         assert len(matches) == 2
 
-    def test_source_is_kaggle(
-        self, ingester: KaggleBootstrapIngester, standard_csv: Path
-    ) -> None:
+    def test_source_is_kaggle(self, ingester: KaggleBootstrapIngester, standard_csv: Path) -> None:
         matches = ingester.csv_to_matches(standard_csv)
         assert all(m.source == "kaggle" for m in matches)
 
@@ -264,14 +260,13 @@ class TestIngestCsvFile:
         self, ingester: KaggleBootstrapIngester, standard_csv: Path
     ) -> None:
         """ingest_csv_file must call write_parquet_to_s3 with MATCH_SCHEMA."""
-        with patch(
-            "cs2_analytics.ingestion.kaggle.write_parquet_to_s3"
-        ) as mock_write:
-            count = ingester.ingest_csv_file(standard_csv, date(2024, 1, 20))
+        with patch("cs2_analytics.ingestion.kaggle.write_parquet_to_s3") as mock_write:
+            _ = ingester.ingest_csv_file(standard_csv, date(2024, 1, 20))
         mock_write.assert_called_once()
         _, kwargs = mock_write.call_args
         # schema kwarg must be MATCH_SCHEMA — check by checking type
         from cs2_analytics.utils.parquet import MATCH_SCHEMA
+
         call_args = mock_write.call_args
         assert call_args[1].get("schema") == MATCH_SCHEMA or call_args[0][1] == MATCH_SCHEMA
 
@@ -316,12 +311,10 @@ class TestDownloadAndIngest:
         self, ingester: KaggleBootstrapIngester, tmp_path: Path
     ) -> None:
         """download_and_ingest must call setup_kaggle_credentials with username/key."""
-        with patch.object(
-            ingester, "setup_kaggle_credentials"
-        ) as mock_creds, patch.object(
-            ingester, "download_dataset", return_value=tmp_path
-        ), patch.object(
-            ingester, "ingest_csv_file", return_value=0
+        with (
+            patch.object(ingester, "setup_kaggle_credentials") as mock_creds,
+            patch.object(ingester, "download_dataset", return_value=tmp_path),
+            patch.object(ingester, "ingest_csv_file", return_value=0),
         ):
             ingester.download_and_ingest("user", "apikey", date(2024, 1, 1))
         mock_creds.assert_called_once_with("user", "apikey")
@@ -329,29 +322,23 @@ class TestDownloadAndIngest:
     def test_calls_download_dataset(
         self, ingester: KaggleBootstrapIngester, tmp_path: Path
     ) -> None:
-        with patch.object(
-            ingester, "setup_kaggle_credentials"
-        ), patch.object(
-            ingester, "download_dataset", return_value=tmp_path
-        ) as mock_dl, patch.object(
-            ingester, "ingest_csv_file", return_value=0
+        with (
+            patch.object(ingester, "setup_kaggle_credentials"),
+            patch.object(ingester, "download_dataset", return_value=tmp_path) as mock_dl,
+            patch.object(ingester, "ingest_csv_file", return_value=0),
         ):
             ingester.download_and_ingest("u", "k", date(2024, 1, 1))
         mock_dl.assert_called_once()
 
-    def test_returns_total_count(
-        self, ingester: KaggleBootstrapIngester, tmp_path: Path
-    ) -> None:
+    def test_returns_total_count(self, ingester: KaggleBootstrapIngester, tmp_path: Path) -> None:
         """Total returned must be sum of per-file counts."""
         # Create two fake CSV files in tmp_path
         (tmp_path / "a.csv").write_text("date,team_1,team_2\n2024-01-01,A,B\n")
         (tmp_path / "b.csv").write_text("date,team_1,team_2\n2024-01-02,C,D\n")
-        with patch.object(
-            ingester, "setup_kaggle_credentials"
-        ), patch.object(
-            ingester, "download_dataset", return_value=tmp_path
-        ), patch.object(
-            ingester, "ingest_csv_file", return_value=5
+        with (
+            patch.object(ingester, "setup_kaggle_credentials"),
+            patch.object(ingester, "download_dataset", return_value=tmp_path),
+            patch.object(ingester, "ingest_csv_file", return_value=5),
         ):
             total = ingester.download_and_ingest("u", "k", date(2024, 1, 1))
         assert total == 10  # 5 per file × 2 files
@@ -359,8 +346,9 @@ class TestDownloadAndIngest:
     def test_returns_zero_when_no_csvs(
         self, ingester: KaggleBootstrapIngester, tmp_path: Path
     ) -> None:
-        with patch.object(ingester, "setup_kaggle_credentials"), patch.object(
-            ingester, "download_dataset", return_value=tmp_path
+        with (
+            patch.object(ingester, "setup_kaggle_credentials"),
+            patch.object(ingester, "download_dataset", return_value=tmp_path),
         ):
             total = ingester.download_and_ingest("u", "k", date(2024, 1, 1))
         assert total == 0

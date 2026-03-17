@@ -13,11 +13,11 @@ Auth: Apikey header (register at liquipedia.net/api).
 Base URL: https://api.liquipedia.net/api/v3
 Response envelope: {"result": [...]} — always use data.get("result", []).
 """
+
 from __future__ import annotations
 
 import asyncio
 from datetime import date
-from typing import Any
 
 import structlog
 
@@ -154,9 +154,7 @@ class LiquipediaClient(BaseAPIClient):
 
         # --- Players ---
         players = await self.get_players(limit=limit)
-        canonical_players: list[Player] = [
-            p.to_canonical(recorded_at=raw_date) for p in players
-        ]
+        canonical_players: list[Player] = [p.to_canonical(recorded_at=raw_date) for p in players]
         if canonical_players:
             write_parquet_to_s3(
                 records=models_to_records(canonical_players),

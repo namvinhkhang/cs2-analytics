@@ -8,12 +8,14 @@ Subclasses must define:
 - _semaphore: asyncio.Semaphore  — class-level concurrency cap
 - _auth_headers()  — authentication headers dict
 """
+
 from __future__ import annotations
 
 import asyncio
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, AsyncIterator
+from collections.abc import AsyncIterator
+from typing import Any
 
 import httpx
 import structlog
