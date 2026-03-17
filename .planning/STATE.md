@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-03-PLAN.md (BaseAPIClient ABC + FACEITClient)
-last_updated: "2026-03-16T18:35:10.001Z"
+stopped_at: Completed 01-07-PLAN.md (ingestion client test suite)
+last_updated: "2026-03-17T01:27:17.605Z"
 last_activity: 2026-03-16 — Completed plan 01-01 (project scaffold + data models)
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 7
-  completed_plans: 5
+  total_plans: 8
+  completed_plans: 7
   percent: 29
 ---
 
@@ -54,6 +54,7 @@ Progress: [███░░░░░░░] 29%
 | Phase 01-data-ingestion P05 | 3 | 1 tasks | 4 files |
 | Phase 01-data-ingestion P04 | 6 | 1 tasks | 8 files |
 | Phase 01-data-ingestion P03 | 6 | 2 tasks | 6 files |
+| Phase 01-data-ingestion P07 | 3 | 4 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,8 @@ Recent decisions affecting current work:
 - [Phase 01-data-ingestion]: asyncio.sleep(1.0) called twice per match in ingest_matches() — after get_match() and after get_match_stats() — ensures ~1 req/s even without tenacity retrying
 - [Phase 01-data-ingestion]: _semaphore is class-level on BaseAPIClient subclasses — all instances share one Semaphore(1) for global rate limit enforcement
 - [Phase 01-data-ingestion]: follow_redirects=False on httpx.AsyncClient — prevents respx mock failures on redirect targets (Pitfall 6 from research)
+- [Phase 01-data-ingestion]: moto[s3] added as dev dependency for @mock_aws S3 tests verifying PAR1 magic bytes
+- [Phase 01-data-ingestion]: test_kaggle.py uses tests/fixtures/kaggle/sample_matches.csv — validates production CSV parsing path from static reference data
 
 ### Pending Todos
 
@@ -92,6 +95,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16T18:34:55.977Z
-Stopped at: Completed 01-03-PLAN.md (BaseAPIClient ABC + FACEITClient)
+Last session: 2026-03-17T01:27:17.604Z
+Stopped at: Completed 01-07-PLAN.md (ingestion client test suite)
 Resume file: None
