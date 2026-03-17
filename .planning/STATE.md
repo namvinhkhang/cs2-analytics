@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-03-PLAN.md (Slack failure alerting)
-last_updated: "2026-03-17T05:20:38.565Z"
+stopped_at: Completed 02-04-PLAN.md (cs2_daily_matches DAG)
+last_updated: "2026-03-17T05:25:03.065Z"
 last_activity: 2026-03-16 — Completed plan 01-01 (project scaffold + data models)
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 13
-  completed_plans: 11
+  completed_plans: 12
   percent: 29
 ---
 
@@ -58,6 +58,7 @@ Progress: [███░░░░░░░] 29%
 | Phase 01-data-ingestion P08 | 5 | 2 tasks | 24 files |
 | Phase 02-orchestration P01 | 2 | 3 tasks | 7 files |
 | Phase 02-orchestration P03 | 8 | 2 tasks | 3 files |
+| Phase 02-orchestration P04 | 2 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,9 @@ Recent decisions affecting current work:
 - [Phase 02-orchestration]: module-scoped dagbag fixture — avoids repeated DagBag instantiation overhead across structural tests
 - [Phase 02-orchestration]: CS2_SLACK_WEBHOOK_URL read directly from os.environ in function body — no Airflow Connections, no module-level Settings import
 - [Phase 02-orchestration]: fail_intentionally uses schedule=None and manual trigger only — prevents accidental scheduled runs
+- [Phase 02-orchestration]: dagbag.dags.get() instead of dagbag.get_dag() in structural tests — avoids SQLite DB query on uninitialized test database
+- [Phase 02-orchestration]: _s3_key_exists() placed at module level in DAG files — enables unit testing without Airflow context
+- [Phase 02-orchestration]: FACEITClient.ingest_matches called with match_ids=[] in DAG — match ID discovery is a separate future concern; PandaScoreClient fetches internally
 
 ### Pending Todos
 
@@ -108,6 +112,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T05:20:38.564Z
-Stopped at: Completed 02-03-PLAN.md (Slack failure alerting)
+Last session: 2026-03-17T05:25:03.064Z
+Stopped at: Completed 02-04-PLAN.md (cs2_daily_matches DAG)
 Resume file: None
