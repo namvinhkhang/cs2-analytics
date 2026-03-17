@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-05-PLAN.md (Weekly rankings and tournament sync DAGs)
-last_updated: "2026-03-17T05:25:50.060Z"
+stopped_at: Completed 03-02-PLAN.md (dbt project scaffold)
+last_updated: "2026-03-17T21:08:42.359Z"
 last_activity: 2026-03-16 — Completed plan 01-01 (project scaffold + data models)
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 13
-  completed_plans: 13
+  total_plans: 19
+  completed_plans: 14
   percent: 29
 ---
 
@@ -60,6 +60,7 @@ Progress: [███░░░░░░░] 29%
 | Phase 02-orchestration P03 | 8 | 2 tasks | 3 files |
 | Phase 02-orchestration P04 | 2 | 2 tasks | 3 files |
 | Phase 02-orchestration P05 | 3 | 2 tasks | 2 files |
+| Phase 03-warehouse-dbt P02 | 2 | 2 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,8 @@ Recent decisions affecting current work:
 - [Phase 02-orchestration]: _s3_key_exists() placed at module level in DAG files — enables unit testing without Airflow context
 - [Phase 02-orchestration]: FACEITClient.ingest_matches called with match_ids=[] in DAG — match ID discovery is a separate future concern; PandaScoreClient fetches internally
 - [Phase 02-orchestration]: cs2_tournament_sync calls LiquipediaClient.ingest_matches() not ingest_tournaments() — tournaments/placements count-only in Phase 1, no canonical S3 schema yet
+- [Phase 03-warehouse-dbt]: Typed raw tables + MATCH_BY_COLUMN_NAME over VARIANT — avoids $1:field::type syntax in staging models, makes column lineage visible in dbt docs
+- [Phase 03-warehouse-dbt]: AUTO_SUSPEND=60 + INITIALLY_SUSPENDED=TRUE on CS2_WH — prevents Snowflake free trial credit burn from idle warehouse
 
 ### Pending Todos
 
@@ -114,6 +117,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T05:25:50.059Z
-Stopped at: Completed 02-05-PLAN.md (Weekly rankings and tournament sync DAGs)
+Last session: 2026-03-17T21:08:42.358Z
+Stopped at: Completed 03-02-PLAN.md (dbt project scaffold)
 Resume file: None

@@ -71,7 +71,15 @@ Plans:
   3. `dbt test` passes all not_null, unique, and referential integrity tests across every model
   4. `dbt docs generate && dbt docs serve` renders a full lineage DAG viewable in a browser
   5. mart_upset_features, mart_hidden_gems, and mart_choke_profile contain non-empty data queryable from Snowflake
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Match model patch: add score_a/score_b/is_overtime + update ingestion clients (WH-01, WH-10)
+- [ ] 03-02-PLAN.md — dbt project scaffold: config, Snowflake setup SQL, sources (WH-01, WH-12)
+- [ ] 03-03-PLAN.md — Staging + intermediate models with schema tests (WH-02, WH-03, WH-11)
+- [ ] 03-04-PLAN.md — Core star schema: fact tables + dimension tables (WH-01, WH-11)
+- [ ] 03-05-PLAN.md — All 7 analytics marts + singular non-empty test (WH-04..WH-10, WH-11)
+- [ ] 03-06-PLAN.md — cs2_dbt_run Airflow DAG + Dockerfile update (WH-11, WH-12)
 
 ### Phase 4: Analytical Products
 **Goal**: All three analytical products are computed and return correct, explainable results from warehouse data
@@ -116,7 +124,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Data Ingestion | 8/8 | Complete    | 2026-03-17 |
 | 2. Orchestration | 5/5 | Complete   | 2026-03-17 |
-| 3. Warehouse & dbt | 0/TBD | Not started | - |
+| 3. Warehouse & dbt | 1/6 | In Progress|  |
 | 4. Analytical Products | 0/TBD | Not started | - |
 | 5. Dashboard & Deployment | 0/TBD | Not started | - |
 | 6. CI & Polish | 0/TBD | Not started | - |
