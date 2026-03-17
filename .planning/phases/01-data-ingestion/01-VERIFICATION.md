@@ -1,186 +1,134 @@
 ---
 phase: 01-data-ingestion
-verified: 2026-03-16T15:00:00Z
-status: gaps_found
-score: 1/5 success criteria verified
-re_verification: false
-gaps:
-  - truth: "Running ingestion scripts for Liquipedia, FACEIT, and PandaScore produces .parquet files in S3 under raw/ partitioned by date"
-    status: failed
-    reason: "No ingestion client code exists. src/cs2_analytics/ingestion/ contains only an empty __init__.py. No HTTP clients, no Parquet serialization, no S3 upload logic."
-    artifacts:
-      - path: "src/cs2_analytics/ingestion/__init__.py"
-        issue: "Empty placeholder — no client classes"
-      - path: "src/cs2_analytics/ingestion/faceit.py"
-        issue: "File does not exist"
-      - path: "src/cs2_analytics/ingestion/liquipedia.py"
-        issue: "File does not exist"
-      - path: "src/cs2_analytics/ingestion/pandascore.py"
-        issue: "File does not exist"
-      - path: "src/cs2_analytics/utils/s3.py"
-        issue: "File does not exist — no S3 upload utility"
-      - path: "src/cs2_analytics/utils/parquet.py"
-        issue: "File does not exist — no Parquet serialization utility"
-    missing:
-      - "FACEIT API client (httpx, async, CS2 match + player stat endpoints)"
-      - "Liquipedia API v3 client (team, player, match, tournament, placement endpoints)"
-      - "PandaScore API client (CS2 matches + player endpoints)"
-      - "S3 upload utility — write Parquet to raw/{source}/date={yyyy-mm-dd}/ prefix"
-      - "Parquet serialization utility — pyarrow Table from list[BaseModel]"
-
-  - truth: "Kaggle CSV bootstrap loads historical data into S3 via a one-time script without errors"
-    status: failed
-    reason: "No Kaggle ingestion script exists anywhere in the repository."
-    artifacts:
-      - path: "src/cs2_analytics/ingestion/kaggle.py"
-        issue: "File does not exist"
-      - path: "scripts/bootstrap_kaggle.py"
-        issue: "File does not exist"
-    missing:
-      - "Kaggle dataset download script using kaggle library"
-      - "CSV-to-Parquet conversion and S3 upload for historical match data"
-
-  - truth: "All API clients retry on transient failures and respect rate limits without manual intervention"
-    status: failed
-    reason: "No ingestion client code exists at all. tenacity is in pyproject.toml dependencies but is not used anywhere in src/."
-    artifacts:
-      - path: "src/cs2_analytics/ingestion/"
-        issue: "Only __init__.py exists — no client implementations"
-    missing:
-      - "tenacity @retry decorators on HTTP call methods in each client"
-      - "Rate limiting logic (e.g. asyncio.sleep between requests for Liquipedia)"
-      - "Exponential backoff configuration per source API"
-
-  - truth: "pytest test suite runs green against all ingestion clients using mocked HTTP responses"
-    status: failed
-    reason: "Only model tests (test_models.py) and config tests (test_config.py) exist. No ingestion client tests exist. respx (mock HTTP library) is installed but unused."
-    artifacts:
-      - path: "tests/test_faceit_client.py"
-        issue: "File does not exist"
-      - path: "tests/test_liquipedia_client.py"
-        issue: "File does not exist"
-      - path: "tests/test_pandascore_client.py"
-        issue: "File does not exist"
-      - path: "tests/test_kaggle.py"
-        issue: "File does not exist"
-      - path: "tests/test_s3.py"
-        issue: "File does not exist"
-    missing:
-      - "respx-mocked tests for each API client covering success paths and retry paths"
-      - "moto or boto3-mock tests for S3 upload utility"
+verified: 2026-03-16T20:00:00Z
+status: passed
+score: 5/5 success criteria verified
+re_verification:
+  previous_status: gaps_found
+  previous_score: 1/5
+  gaps_closed:
+    - "Running ingestion scripts for Liquipedia, FACEIT, and PandaScore produces .parquet files in S3 under raw/ partitioned by date"
+    - "Kaggle CSV bootstrap loads historical data into S3 via a one-time script without errors"
+    - "All API clients retry on transient failures and respect rate limits without manual intervention"
+    - "pytest test suite runs green against all ingestion clients using mocked HTTP responses"
+  gaps_remaining: []
+  regressions: []
 human_verification: []
 ---
 
 # Phase 1: Data Ingestion Verification Report
 
 **Phase Goal:** Raw CS2 match data from all four sources lands reliably in S3 with validated schemas
-**Verified:** 2026-03-16T15:00:00Z
-**Status:** GAPS FOUND
-**Re-verification:** No — initial verification
+**Verified:** 2026-03-16T20:00:00Z
+**Status:** PASSED
+**Re-verification:** Yes — after gap closure from initial verification (previous score: 1/5)
 
 ---
 
 ## Goal Achievement
 
-The phase ROADMAP.md goal states: "Raw CS2 match data from all four sources lands reliably in S3 with validated schemas." Only the schema foundation (ING-08, Plan 01-01) was executed. The four source ingestion clients, S3/Parquet utilities, and their test coverage are entirely absent.
+All five success criteria are now verified. The phase goal is achieved: all four data sources (FACEIT, Liquipedia, PandaScore, Kaggle) have substantive ingestion clients, Parquet/S3 infrastructure is in place, retry/rate-limit logic is implemented in `BaseAPIClient`, and 158 tests pass with zero anti-patterns.
 
-### Observable Truths (from ROADMAP.md Success Criteria)
+### Observable Truths
 
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
-| 1 | Running ingestion scripts for Liquipedia, FACEIT, and PandaScore produces `.parquet` files in S3 under `raw/` partitioned by date | FAILED | `src/cs2_analytics/ingestion/` contains only `__init__.py`; no HTTP clients, S3 utils, or Parquet serialization exist |
-| 2 | Kaggle CSV bootstrap loads historical data into S3 via a one-time script without errors | FAILED | No Kaggle script exists anywhere in the repo |
-| 3 | All API clients retry on transient failures and respect rate limits without manual intervention | FAILED | No client code exists; `tenacity` is a declared dependency but is unused in `src/` |
-| 4 | `pytest` test suite runs green against all ingestion clients using mocked HTTP responses | FAILED | Only `test_config.py` (5 tests) and `test_models.py` (24 tests) exist; no ingestion client tests; `respx` is installed but unused |
-| 5 | Pydantic models reject malformed Match, Player, and Team payloads with validation errors | VERIFIED | `extra="forbid"` on all 3 canonical models confirmed; `Match(bad_field=...)` raises `ValidationError` in live run; 24 model tests pass |
+| 1 | Running ingestion scripts for Liquipedia, FACEIT, and PandaScore produces `.parquet` files in S3 under `raw/` partitioned by date | VERIFIED | `faceit.py`, `liquipedia.py`, `pandascore.py` all call `write_parquet_to_s3(key=build_s3_key(...))` which produces `raw/{source}/{entity}/year=.../month=.../day=.../data.parquet` keys; `test_s3.py` confirms correct key format and snappy compression |
+| 2 | Kaggle CSV bootstrap loads historical data into S3 via a one-time script without errors | VERIFIED | `KaggleBootstrapIngester` in `ingestion/kaggle.py` (215 lines) implements credential setup, CSV parsing, and S3 upload; `scripts/bootstrap_kaggle.py` is the runnable entry point wired to `settings`; 22 tests in `test_kaggle_ingester.py` cover all paths including alternate column names, missing teams, and empty CSVs |
+| 3 | All API clients retry on transient failures and respect rate limits without manual intervention | VERIFIED | `BaseAPIClient.get()` has `@retry(stop=stop_after_attempt(5), wait=wait_exponential_jitter, retry=retry_if_exception_type((HTTPStatusError, TimeoutException)))` from tenacity; explicit 429 raise; per-source sleeps: FACEIT `asyncio.sleep(1.0)`, Liquipedia `asyncio.sleep(2.0)`, PandaScore `asyncio.sleep(3.6)`; class-level `_semaphore` caps concurrency |
+| 4 | `pytest` test suite runs green against all ingestion clients using mocked HTTP responses | VERIFIED | `uv run pytest` gives 158 passed in 17.2s; `test_base_client.py`, `test_faceit_client.py`, `test_liquipedia_client.py`, `test_pandascore_client.py`, `test_kaggle_ingester.py`, `test_s3.py`, `test_parquet.py` all use `respx` or `unittest.mock` — no live network or AWS calls |
+| 5 | Pydantic models reject malformed Match, Player, and Team payloads with validation errors | VERIFIED | (unchanged from initial) `extra="forbid"` on all 3 canonical models; 24 model tests pass |
 
-**Score: 1/5 success criteria verified**
+**Score: 5/5 success criteria verified**
 
 ---
 
-## Required Artifacts (from Plan 01-01 must_haves)
-
-Plan 01-01 only claimed ING-08. Its own must_have artifacts are all present and substantive:
+## Required Artifacts
 
 | Artifact | Expected | Status | Details |
 |----------|----------|--------|---------|
-| `pyproject.toml` | Package config, deps, tool config | VERIFIED | Contains `name = "cs2-analytics"`, `requires-python = ">=3.12"`, `asyncio_mode = "auto"`, all 8 runtime + 6 dev deps |
-| `src/cs2_analytics/utils/config.py` | Settings class with CS2_ prefix | VERIFIED | `class Settings(BaseSettings)` with `env_prefix="CS2_"`, all 7 required fields, module-level singleton |
-| `src/cs2_analytics/models/canonical.py` | Match, Player, Team with extra=forbid | VERIFIED | 3 models × `extra="forbid"` (4 grep hits including comment line); all fields match contract |
-| `src/cs2_analytics/models/faceit.py` | FACEITMatch, FACEITPlayer with extra=ignore | VERIFIED | Both present, `extra="ignore"`, `to_canonical()` on both |
-| `src/cs2_analytics/models/liquipedia.py` | 5 Liquipedia models with extra=ignore | VERIFIED | All 5 present; LiquipediaTeam, LiquipediaPlayer, LiquipediaMatch have `to_canonical()` |
-| `src/cs2_analytics/models/pandascore.py` | PandaScoreMatch, PandaScorePlayer | VERIFIED | Both present, `extra="ignore"`, `to_canonical()` on both |
-
-**Artifacts not claimed by any plan (gaps for the remaining requirements):**
-
-| Missing Artifact | Required By | Status |
-|-----------------|------------|--------|
-| `src/cs2_analytics/ingestion/faceit.py` | ING-02 | MISSING |
-| `src/cs2_analytics/ingestion/liquipedia.py` | ING-01 | MISSING |
-| `src/cs2_analytics/ingestion/pandascore.py` | ING-03 | MISSING |
-| `src/cs2_analytics/ingestion/kaggle.py` | ING-04 | MISSING |
-| `src/cs2_analytics/utils/s3.py` | ING-05 | MISSING |
-| `src/cs2_analytics/utils/parquet.py` | ING-05 | MISSING |
-| `tests/test_faceit_client.py` | ING-07 | MISSING |
-| `tests/test_liquipedia_client.py` | ING-07 | MISSING |
-| `tests/test_pandascore_client.py` | ING-07 | MISSING |
-| `tests/test_s3.py` | ING-07 | MISSING |
+| `src/cs2_analytics/ingestion/base.py` | Abstract base with tenacity retry + semaphore | VERIFIED | 126 lines; `@retry` with 5 attempts, exponential jitter, 429/5xx retry; class-level `_semaphore`; async context manager |
+| `src/cs2_analytics/ingestion/faceit.py` | FACEIT API client with ingest_matches() | VERIFIED | 153 lines; `FACEITClient(BaseAPIClient)`; `get_match()`, `get_match_stats()`, `ingest_matches()`; calls `write_parquet_to_s3` with correct Hive-partitioned keys |
+| `src/cs2_analytics/ingestion/liquipedia.py` | Liquipedia API v3 client with ingest_all() | VERIFIED | 194 lines; `LiquipediaClient(BaseAPIClient)`; 5 fetch methods; `ingest_all()` writes teams/players/matches; 2s sleep enforced |
+| `src/cs2_analytics/ingestion/pandascore.py` | PandaScore client with ingest_matches/players | VERIFIED | 180 lines; `PandaScoreClient(BaseAPIClient)`; handles bare JSON array responses; 3.6s sleep enforced |
+| `src/cs2_analytics/ingestion/kaggle.py` | KaggleBootstrapIngester | VERIFIED | 215 lines; credential setup, deferred `import kaggle`, CSV parsing with flexible column mapping, S3 upload |
+| `src/cs2_analytics/utils/parquet.py` | Parquet serialization with explicit pyarrow schemas | VERIFIED | MATCH_SCHEMA, PLAYER_SCHEMA, TEAM_SCHEMA defined; `models_to_records()` uses `model_dump()` |
+| `src/cs2_analytics/utils/s3.py` | S3 upload with Hive-partitioned key builder | VERIFIED | `build_s3_key()` zero-pads month/day; `write_parquet_to_s3()` uses snappy compression via `BytesIO` buffer |
+| `scripts/bootstrap_kaggle.py` | Runnable one-time bootstrap script | VERIFIED | 64 lines; reads from `settings`; calls `KaggleBootstrapIngester.download_and_ingest()` |
+| `src/cs2_analytics/models/canonical.py` | Match, Player, Team with extra=forbid | VERIFIED | (unchanged from initial verification) |
+| `src/cs2_analytics/models/faceit.py` | FACEITMatch, FACEITPlayer with extra=ignore | VERIFIED | (unchanged) |
+| `src/cs2_analytics/models/liquipedia.py` | 5 Liquipedia models with extra=ignore | VERIFIED | (unchanged) |
+| `src/cs2_analytics/models/pandascore.py` | PandaScoreMatch, PandaScorePlayer | VERIFIED | (unchanged) |
 
 ---
 
-## Key Link Verification (Plan 01-01)
+## Key Link Verification
 
 | From | To | Via | Status | Details |
 |------|----|-----|--------|---------|
-| `src/cs2_analytics/models/faceit.py` | `src/cs2_analytics/models/canonical.py` | `FACEITMatch.to_canonical()` returns `Match` | VERIFIED | `def to_canonical` present; live call returns correct `Match` instance with expected field values |
-| `src/cs2_analytics/utils/config.py` | `.env` | `SettingsConfigDict(env_prefix="CS2_")` | VERIFIED | `env_prefix="CS2_"` confirmed in source; `Settings()` with missing vars raises `ValidationError` in live run |
+| `ingestion/faceit.py` | `utils/s3.py` | `write_parquet_to_s3(key=build_s3_key(...))` | WIRED | Called in `ingest_matches()` for both matches and players; key format confirmed by `test_ingest_matches_uses_correct_s3_key_format` |
+| `ingestion/liquipedia.py` | `utils/s3.py` | `write_parquet_to_s3(key=build_s3_key(...))` | WIRED | Called 3x in `ingest_all()` (teams/players/matches); confirmed by `test_ingest_all_calls_write_parquet_for_teams_players_matches` |
+| `ingestion/pandascore.py` | `utils/s3.py` | `write_parquet_to_s3(key=build_s3_key(...))` | WIRED | Called in `ingest_matches()` and `ingest_players()`; confirmed by `test_writes_to_correct_s3_key` |
+| `ingestion/kaggle.py` | `utils/s3.py` | `write_parquet_to_s3(key=build_s3_key(...))` | WIRED | Called in `ingest_csv_file()`; S3 key starts with `raw/kaggle/matches/` confirmed by `test_s3_key_uses_kaggle_source` |
+| `scripts/bootstrap_kaggle.py` | `ingestion/kaggle.py` | `KaggleBootstrapIngester(bucket=settings.aws_s3_bucket)` | WIRED | Direct import and instantiation; reads bucket/region/credentials from `settings` |
+| `ingestion/base.py` (all clients) | tenacity | `@retry` on `get()` | WIRED | `retry_if_exception_type((HTTPStatusError, TimeoutException))`; 429 explicitly raised so tenacity retries it |
+| Source models | `models/canonical.py` | `to_canonical()` | WIRED | (unchanged from initial) all source models have working `to_canonical()` methods |
 
 ---
 
 ## Requirements Coverage
 
-| Requirement | Source Plan | Description | Status | Evidence |
-|-------------|------------|-------------|--------|----------|
-| ING-08 | 01-01-PLAN.md | Pydantic data models for Match, Player, Team | SATISFIED | All 3 canonical + 7 source models exist; 24 model tests pass; no `class Config` v1 patterns |
-| ING-01 | NO PLAN | Liquipedia API v3 ingestion | BLOCKED | No plan created; no client code |
-| ING-02 | NO PLAN | FACEIT API per-match stats ingestion | BLOCKED | No plan created; no client code |
-| ING-03 | NO PLAN | PandaScore API ingestion | BLOCKED | No plan created; no client code |
-| ING-04 | NO PLAN | Kaggle CSV historical bootstrap | BLOCKED | No plan created; no script |
-| ING-05 | NO PLAN | Parquet serialization + S3 upload under `raw/` prefix | BLOCKED | No plan created; pyarrow and boto3 are installed but not used in any source file |
-| ING-06 | NO PLAN | Retry logic, rate limiting, exponential backoff on all clients | BLOCKED | No plan created; tenacity installed but unused |
-| ING-07 | NO PLAN | pytest coverage of all ingestion clients with mocked HTTP | BLOCKED | No plan created; respx installed but unused; only model/config tests exist |
+| Requirement | Description | Status | Evidence |
+|-------------|-------------|--------|----------|
+| ING-01 | Liquipedia API v3 ingestion (teams, players, tournaments, placements) | SATISFIED | `LiquipediaClient` fetches all 5 entity types; teams/players/matches written to S3; REQUIREMENTS.md checkbox: [x] |
+| ING-02 | FACEIT per-match stats (kills, deaths, ADR, K/D, KAST, ELO) | SATISFIED | `FACEITClient.get_match_stats()` flattens `player_stats` dict; `FACEITPlayer` has all stat fields; REQUIREMENTS.md checkbox: [x] |
+| ING-03 | PandaScore tier-1 pro match results and player stats | SATISFIED | `PandaScoreClient` ingests matches and players; handles bare JSON array; REQUIREMENTS.md checkbox: [x] |
+| ING-04 | Kaggle CSV historical bootstrap | SATISFIED | `KaggleBootstrapIngester` + `scripts/bootstrap_kaggle.py`; REQUIREMENTS.md checkbox: [x] |
+| ING-05 | Parquet + S3 under `raw/` partitioned by date | SATISFIED | `build_s3_key()` produces `raw/{source}/{entity}/year=.../month=.../day=.../`; snappy compression confirmed; REQUIREMENTS.md checkbox: [x] |
+| ING-06 | Retry logic, rate limiting, exponential backoff | SATISFIED | `BaseAPIClient.get()` uses tenacity; per-source mandatory sleeps; class-level semaphores; REQUIREMENTS.md checkbox: [x] |
+| ING-07 | pytest coverage of all ingestion clients with mocked HTTP | SATISFIED | 158 tests pass; all clients have dedicated test files; REQUIREMENTS.md checkbox: [x] |
+| ING-08 | Pydantic data models for Match, Player, Team | SATISFIED | (unchanged from initial verification) |
 
-**ING-01 through ING-07 are ORPHANED requirements for Phase 1** — they are mapped to Phase 1 in REQUIREMENTS.md and the ROADMAP, but no plan in this phase claimed them. They must be planned and implemented.
+All 8 requirements are SATISFIED. No orphaned requirements.
 
 ---
 
 ## Anti-Patterns Found
 
-| File | Pattern | Severity | Impact |
-|------|---------|----------|--------|
-| `src/cs2_analytics/ingestion/__init__.py` | Comment says "Utils subpackage — config, S3, and Parquet helpers" but references `__init__.py` for the ingestion package | Info | Misleading comment; no blocker |
-
-No functional stubs, no placeholder returns, no TODO/FIXME markers in existing code.
+None. Grep scan across all `src/` Python files found:
+- Zero TODO/FIXME/XXX/HACK/PLACEHOLDER comments
+- Zero stub return patterns (`return null`, `return {}`, `return []`, empty handlers)
+- No debug `print()` statements in production code (bootstrap script uses structured logging)
 
 ---
 
 ## Human Verification Required
 
-None — all gaps are programmatically verifiable (missing files and missing functionality).
+None. All gaps from the initial verification are programmatically confirmed closed. The phase goal is fully verifiable without manual testing:
+- Ingestion logic is unit-tested end-to-end with mocked HTTP and mocked S3
+- S3 key format is asserted in tests
+- Rate-limit sleep values are asserted in tests
+- Schema fields are verified against fixture data in test assertions
 
 ---
 
-## Gaps Summary
+## Re-verification Summary
 
-Plan 01-01 delivered a high-quality schema foundation: Pydantic v2 models with correct `extra="forbid"` / `extra="ignore"` split, working `to_canonical()` methods, a validated Settings class, 29 passing tests, and a clean project scaffold. ING-08 is fully satisfied.
+**Initial verification (2026-03-16T15:00:00Z):** Score 1/5. Only ING-08 (Pydantic models) was satisfied. All four ingestion clients, S3/Parquet utilities, and test coverage were absent.
 
-However, Phase 1 had 8 requirements (ING-01 through ING-08) and only 1 was addressed. The remaining 7 requirements — the four API/Kaggle ingestion clients (ING-01, ING-02, ING-03, ING-04), S3/Parquet infrastructure (ING-05), retry/rate-limit logic (ING-06), and ingestion test coverage (ING-07) — have no plans and no implementation.
+**This verification (2026-03-16T20:00:00Z):** Score 5/5. All four gaps are closed:
 
-The phase goal "Raw CS2 match data from all four sources lands reliably in S3 with validated schemas" is not achieved. The "validated schemas" part exists (ING-08); nothing else does.
+1. **FACEIT/Liquipedia/PandaScore to S3 pipeline** — Three substantive ingestion clients (153/194/180 lines each) call `write_parquet_to_s3` with Hive-partitioned keys. Tests confirm correct S3 key format and canonical model field values.
 
-**Root cause of all 4 failing success criteria is the same:** Plans 01-02 through 01-N were never created. A single planning pass covering the ingestion clients, S3 utils, and their tests would address ING-01 through ING-07 together.
+2. **Kaggle bootstrap** — `KaggleBootstrapIngester` handles credential setup, deferred Kaggle import, flexible CSV column mapping, and S3 upload. Runnable via `scripts/bootstrap_kaggle.py`. 22 tests cover all edge cases.
+
+3. **Retry and rate-limit** — `BaseAPIClient.get()` uses tenacity with `stop_after_attempt(5)`, `wait_exponential_jitter`, explicit 429 raise. Per-source mandatory sleeps (1.0s/2.0s/3.6s) are tested.
+
+4. **Test coverage** — 158 tests pass (up from 29). Every ingestion client and utility has a dedicated test file. `respx` used for HTTP mocking, `unittest.mock` for S3/sleep.
+
+No regressions on previously-passing items: ING-08 artifacts still present and all 29 original model/config tests still pass within the 158-test total.
 
 ---
 
-_Verified: 2026-03-16T15:00:00Z_
+_Verified: 2026-03-16T20:00:00Z_
 _Verifier: Claude (gsd-verifier)_
