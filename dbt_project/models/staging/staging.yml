@@ -1,0 +1,84 @@
+version: 2
+
+models:
+  - name: stg_faceit_matches
+    description: "Cleaned FACEIT match data — renames raw_faceit_matches columns, filters nulls"
+    columns:
+      - name: match_id
+        data_tests:
+          - not_null
+      - name: source
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['faceit']
+      - name: team_a_id
+        data_tests:
+          - not_null
+      - name: team_b_id
+        data_tests:
+          - not_null
+      - name: played_at
+        data_tests:
+          - not_null
+
+  - name: stg_pandascore_matches
+    description: "Cleaned PandaScore match data — renames raw_pandascore_matches columns, filters nulls"
+    columns:
+      - name: match_id
+        data_tests:
+          - not_null
+      - name: source
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['pandascore']
+
+  - name: stg_kaggle_matches
+    description: "Cleaned Kaggle historical match data — renames raw_kaggle_matches columns, filters nulls"
+    columns:
+      - name: match_id
+        data_tests:
+          - not_null
+      - name: source
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['kaggle']
+
+  - name: stg_faceit_players
+    description: "Cleaned FACEIT player stats — primary stats source with ADR, KAST, and ELO"
+    columns:
+      - name: player_id
+        data_tests:
+          - not_null
+      - name: source
+        data_tests:
+          - not_null
+      - name: recorded_at
+        data_tests:
+          - not_null
+
+  - name: stg_pandascore_players
+    description: "Cleaned PandaScore player stats — secondary stats source (no ELO/KAST)"
+    columns:
+      - name: player_id
+        data_tests:
+          - not_null
+      - name: source
+        data_tests:
+          - not_null
+
+  - name: stg_liquipedia_teams
+    description: "Cleaned Liquipedia team metadata — world_ranking used for upset detection"
+    columns:
+      - name: team_id
+        data_tests:
+          - not_null
+          - unique
+      - name: name
+        data_tests:
+          - not_null
+      - name: ingested_at
+        data_tests:
+          - not_null
