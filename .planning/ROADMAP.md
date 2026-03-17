@@ -124,7 +124,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Data Ingestion | 8/8 | Complete    | 2026-03-17 |
 | 2. Orchestration | 5/5 | Complete   | 2026-03-17 |
-| 3. Warehouse & dbt | 2/6 | In Progress|  |
+| 3. Warehouse & dbt | 4/6 | In Progress|  |
 | 4. Analytical Products | 0/TBD | Not started | - |
 | 5. Dashboard & Deployment | 0/TBD | Not started | - |
 | 6. CI & Polish | 0/TBD | Not started | - |

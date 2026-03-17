@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-01-PLAN.md (Canonical Match score fields)
-last_updated: "2026-03-17T21:09:12.784Z"
+stopped_at: Completed 03-04-PLAN.md (Core star schema)
+last_updated: "2026-03-17T21:12:34.321Z"
 last_activity: 2026-03-16 — Completed plan 01-01 (project scaffold + data models)
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 19
-  completed_plans: 15
+  completed_plans: 17
   percent: 29
 ---
 
@@ -62,6 +62,8 @@ Progress: [███░░░░░░░] 29%
 | Phase 02-orchestration P05 | 3 | 2 tasks | 2 files |
 | Phase 03-warehouse-dbt P02 | 2 | 2 tasks | 14 files |
 | Phase 03-warehouse-dbt P01 | 4 | 2 tasks | 7 files |
+| Phase 03-warehouse-dbt P03 | 3 | 2 tasks | 10 files |
+| Phase 03-warehouse-dbt P04 | 5 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -108,6 +110,11 @@ Recent decisions affecting current work:
 - [Phase 03-warehouse-dbt]: AUTO_SUSPEND=60 + INITIALLY_SUSPENDED=TRUE on CS2_WH — prevents Snowflake free trial credit burn from idle warehouse
 - [Phase 03-01]: Overtime detection: score_a > 15 AND score_b > 15 (both exceed MR15 limit), not sum > 24
 - [Phase 03-01]: score_a/score_b/is_overtime default to None on canonical Match — fully backward-compatible with existing to_canonical() callers
+- [Phase 03-03]: coalesce(match_id, '__profile__') in int_players_unioned partition handles player records with null match_id without treating all as duplicates
+- [Phase 03-03]: source column hard-coded as string literal in staging models to prevent source drift from upstream API changes
+- [Phase 03-warehouse-dbt]: dim_tournaments is a placeholder (single unknown row) — Liquipedia tournament canonical schema deferred to Phase 4
+- [Phase 03-warehouse-dbt]: fact_player_stats filters where match_id is not null — separates profile records from per-match stat records
+- [Phase 03-warehouse-dbt]: fact_player_stats includes computed_kd and kill_share derived columns for downstream analytics convenience
 
 ### Pending Todos
 
@@ -120,6 +127,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T21:09:07.928Z
-Stopped at: Completed 03-01-PLAN.md (Canonical Match score fields)
+Last session: 2026-03-17T21:12:34.320Z
+Stopped at: Completed 03-04-PLAN.md (Core star schema)
 Resume file: None

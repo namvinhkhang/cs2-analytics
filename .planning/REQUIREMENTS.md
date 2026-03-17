@@ -26,18 +26,18 @@
 
 ### Warehouse & dbt
 
-- [ ] **WH-01**: Snowflake star schema defined: fact_matches, fact_player_stats, dim_teams, dim_players, dim_maps, dim_tournaments
-- [ ] **WH-02**: dbt staging models clean raw Liquipedia, FACEIT, and PandaScore data (`stg_` prefix)
-- [ ] **WH-03**: dbt intermediate models join and enrich data (`int_` prefix)
+- [x] **WH-01**: Snowflake star schema defined: fact_matches, fact_player_stats, dim_teams, dim_players, dim_maps, dim_tournaments
+- [x] **WH-02**: dbt staging models clean raw Liquipedia, FACEIT, and PandaScore data (`stg_` prefix)
+- [x] **WH-03**: dbt intermediate models join and enrich data (`int_` prefix)
 - [ ] **WH-04**: `mart_team_performance` — win rates, form, and rankings over time
 - [ ] **WH-05**: `mart_player_leaderboard` — per-player stats with tier percentile rankings
 - [ ] **WH-06**: `mart_map_meta` — pick/ban rates and side win rates over time
 - [ ] **WH-07**: `mart_head2head` — all pairwise historical matchup records
 - [ ] **WH-08**: `mart_upset_features` — pre-computed feature set for the Upset Tracker ML model
 - [ ] **WH-09**: `mart_hidden_gems` — players flagged as outliers vs their tier cohort
-- [ ] **WH-10**: `mart_choke_profile` — lead-blown, comeback, OT, and elimination records per team
-- [ ] **WH-11**: dbt schema tests (not_null, unique, referential integrity) pass on all models
-- [ ] **WH-12**: `dbt docs generate` produces full lineage documentation
+- [x] **WH-10**: `mart_choke_profile` — lead-blown, comeback, OT, and elimination records per team
+- [x] **WH-11**: dbt schema tests (not_null, unique, referential integrity) pass on all models
+- [x] **WH-12**: `dbt docs generate` produces full lineage documentation
 
 ### Upset Tracker
 
@@ -125,18 +125,18 @@
 | ORC-03 | Phase 2 — Orchestration | Complete |
 | ORC-04 | Phase 2 — Orchestration | Complete |
 | ORC-05 | Phase 2 — Orchestration | Complete |
-| WH-01 | Phase 3 — Warehouse & dbt | Pending |
-| WH-02 | Phase 3 — Warehouse & dbt | Pending |
-| WH-03 | Phase 3 — Warehouse & dbt | Pending |
+| WH-01 | Phase 3 — Warehouse & dbt | Complete |
+| WH-02 | Phase 3 — Warehouse & dbt | Complete |
+| WH-03 | Phase 3 — Warehouse & dbt | Complete |
 | WH-04 | Phase 3 — Warehouse & dbt | Pending |
 | WH-05 | Phase 3 — Warehouse & dbt | Pending |
 | WH-06 | Phase 3 — Warehouse & dbt | Pending |
 | WH-07 | Phase 3 — Warehouse & dbt | Pending |
 | WH-08 | Phase 3 — Warehouse & dbt | Pending |
 | WH-09 | Phase 3 — Warehouse & dbt | Pending |
-| WH-10 | Phase 3 — Warehouse & dbt | Pending |
-| WH-11 | Phase 3 — Warehouse & dbt | Pending |
-| WH-12 | Phase 3 — Warehouse & dbt | Pending |
+| WH-10 | Phase 3 — Warehouse & dbt | Complete |
+| WH-11 | Phase 3 — Warehouse & dbt | Complete |
+| WH-12 | Phase 3 — Warehouse & dbt | Complete |
 | UP-01 | Phase 4 — Analytical Products | Pending |
 | UP-02 | Phase 4 — Analytical Products | Pending |
 | UP-03 | Phase 4 — Analytical Products | Pending |
