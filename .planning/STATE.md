@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-08-PLAN.md (lint gap closure)
-last_updated: "2026-03-17T01:37:59.773Z"
+stopped_at: "Checkpoint: 02-02 awaiting Docker smoke test (Task 3 human-verify)"
+last_updated: "2026-03-17T04:43:46.329Z"
 last_activity: 2026-03-16 — Completed plan 01-01 (project scaffold + data models)
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 13
+  completed_plans: 9
   percent: 29
 ---
 
@@ -86,6 +86,9 @@ Recent decisions affecting current work:
 - [Phase 01-data-ingestion]: test_kaggle.py uses tests/fixtures/kaggle/sample_matches.csv — validates production CSV parsing path from static reference data
 - [Phase 01-data-ingestion]: Sequence[BaseModel] over list[BaseModel] in models_to_records — list is invariant in mypy strict mode, Sequence is covariant
 - [Phase 01-data-ingestion]: type: ignore[import-untyped] inline per-import for pyarrow and kaggle — precise suppression over global ignore_missing_imports
+- [Phase 02-orchestration]: Build context = project root in docker-compose.yml — allows COPY pyproject.toml and COPY src to work from repo root
+- [Phase 02-orchestration]: env_file: ../.env with relative path since docker-compose.yml lives in airflow/ subdirectory
+- [Phase 02-orchestration]: restart: no on airflow-init prevents re-running users create after first successful init
 
 ### Pending Todos
 
@@ -98,6 +101,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T01:34:05.899Z
-Stopped at: Completed 01-08-PLAN.md (lint gap closure)
+Last session: 2026-03-17T04:43:41.961Z
+Stopped at: Checkpoint: 02-02 awaiting Docker smoke test (Task 3 human-verify)
 Resume file: None
