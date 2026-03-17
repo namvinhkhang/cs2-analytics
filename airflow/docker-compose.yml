@@ -1,0 +1,123 @@
+---
+# CS2 Analytics — Airflow CeleryExecutor stack
+# Start: docker compose up airflow-init && docker compose up -d
+# Requires: AIRFLOW_UID=$(id -u) in .env (Linux only, prevents volume permission issues)
+version: "3.8"
+
+x-airflow-common: &airflow-common
+  build:
+    context: ..
+    dockerfile: airflow/Dockerfile
+  image: cs2-airflow:2.9-python3.12
+  env_file:
+    - ../.env
+  environment:
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
+    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+    AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+    AIRFLOW__CORE__FERNET_KEY: "${CS2_AIRFLOW_FERNET_KEY:-}"
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__WEBSERVER__SECRET_KEY: "${CS2_AIRFLOW_SECRET_KEY:-dev_secret_change_me}"
+    # PYTHONPATH points to the live-mounted src directory for dev iteration
+    PYTHONPATH: /opt/cs2-analytics/src
+  volumes:
+    - ../airflow/dags:/opt/airflow/dags
+    - ../logs:/opt/airflow/logs
+    # Live-mount source so package changes take effect without rebuild in dev
+    - ../src:/opt/cs2-analytics/src
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  # Airflow metadata database
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    restart: always
+
+  # Celery broker — lightweight Redis 7 Alpine image
+  redis:
+    image: redis:7-alpine
+    expose:
+      - 6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    restart: always
+
+  # Airflow webserver — serves the UI at http://localhost:8080
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+
+  # Scheduler — parses DAGs and creates task instances
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    healthcheck:
+      test: ["CMD", "airflow", "jobs", "check", "--job-type", "SchedulerJob", "--hostname", "$${HOSTNAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: always
+
+  # Celery worker — executes task instances
+  airflow-worker:
+    <<: *airflow-common
+    command: celery worker
+    environment:
+      # Required to prevent Celery signal handling issues inside Docker
+      DUMB_INIT_SETSID: "0"
+    restart: always
+
+  # Triggerer — handles deferred operators (sensors, async tasks)
+  airflow-triggerer:
+    <<: *airflow-common
+    command: triggerer
+    restart: always
+
+  # One-shot init container: migrates DB and creates admin user
+  airflow-init:
+    <<: *airflow-common
+    command: >
+      bash -c "
+        airflow db migrate &&
+        airflow users create
+          --username admin
+          --password admin
+          --firstname Admin
+          --lastname User
+          --role Admin
+          --email admin@example.com
+      "
+    restart: "no"
+
+volumes:
+  postgres-db-volume:
