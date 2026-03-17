@@ -1,0 +1,78 @@
+version: 2
+
+models:
+  - name: mart_team_performance
+    description: "Team win rates, overall record, and world ranking per team (WH-04)"
+    columns:
+      - name: team_id
+        data_tests:
+          - not_null
+          - unique
+      - name: win_rate
+        data_tests:
+          - not_null
+
+  - name: mart_player_leaderboard
+    description: "Per-player aggregated stats with within-tier percent_rank columns (WH-05)"
+    columns:
+      - name: player_id
+        data_tests:
+          - not_null
+
+  - name: mart_map_meta
+    description: "Pick rates and side win rates per map across all historical matches (WH-06)"
+    columns:
+      - name: map_name
+        data_tests:
+          - unique
+          - not_null
+      - name: pick_rate
+        data_tests:
+          - not_null
+
+  - name: mart_head2head
+    description: "All pairwise historical matchup records with canonical pair ordering (WH-07)"
+    columns:
+      - name: team_1_id
+        data_tests:
+          - not_null
+      - name: team_2_id
+        data_tests:
+          - not_null
+      - name: total_matches
+        data_tests:
+          - not_null
+
+  - name: mart_upset_features
+    description: "Pre-computed feature set for Upset Tracker ML model; upset defined as ranking_delta > 5 and underdog wins (WH-08)"
+    columns:
+      - name: match_sk
+        data_tests:
+          - unique
+          - not_null
+      - name: is_upset
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+
+  - name: mart_hidden_gems
+    description: "Players in tier 2/3 with 3+ stats in the top 15th percentile of their tier (WH-09)"
+    columns:
+      - name: player_id
+        data_tests:
+          - not_null
+      - name: is_hidden_gem
+        data_tests:
+          - not_null
+
+  - name: mart_choke_profile
+    description: "Team pressure performance: lead-blown rate, comeback rate, and overtime record (WH-10)"
+    columns:
+      - name: team_id
+        data_tests:
+          - unique
+          - not_null
+      - name: lead_blown_rate
+        data_tests:
+          - not_null
