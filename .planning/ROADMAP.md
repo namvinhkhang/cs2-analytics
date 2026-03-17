@@ -52,7 +52,14 @@ Plans:
   2. `cs2_daily_matches` DAG runs on schedule, ingests new matches, and appears green in Airflow UI
   3. `cs2_weekly_rankings` and `cs2_tournament_sync` DAGs run on their respective schedules without errors
   4. A deliberately failed DAG task triggers a failure alert (email or Slack webhook)
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Wave 0: Test scaffolding, pyproject.toml Airflow deps (ORC-01..05)
+- [ ] 02-02-PLAN.md — Docker Compose stack: Dockerfile + docker-compose.yml (ORC-05)
+- [ ] 02-03-PLAN.md — Slack alerts utils + fail_intentionally DAG (ORC-04)
+- [ ] 02-04-PLAN.md — cs2_daily_matches DAG + idempotency tests (ORC-01)
+- [ ] 02-05-PLAN.md — cs2_weekly_rankings + cs2_tournament_sync DAGs (ORC-02, ORC-03)
 
 ### Phase 3: Warehouse & dbt
 **Goal**: All raw data is cleaned, joined, and surfaced as seven analytical marts in Snowflake with full lineage
@@ -108,7 +115,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Data Ingestion | 8/8 | Complete    | 2026-03-17 |
-| 2. Orchestration | 0/TBD | Not started | - |
+| 2. Orchestration | 0/5 | Not started | - |
 | 3. Warehouse & dbt | 0/TBD | Not started | - |
 | 4. Analytical Products | 0/TBD | Not started | - |
 | 5. Dashboard & Deployment | 0/TBD | Not started | - |
