@@ -18,10 +18,10 @@
 
 ### Orchestration
 
-- [ ] **ORC-01**: Airflow DAG `cs2_daily_matches` runs every 6h and ingests new match results
-- [ ] **ORC-02**: Airflow DAG `cs2_weekly_rankings` runs weekly and ingests team rankings
-- [ ] **ORC-03**: Airflow DAG `cs2_tournament_sync` syncs active tournament data
-- [ ] **ORC-04**: All DAGs have failure alerting (email or Slack webhook)
+- [x] **ORC-01**: Airflow DAG `cs2_daily_matches` runs every 6h and ingests new match results
+- [x] **ORC-02**: Airflow DAG `cs2_weekly_rankings` runs weekly and ingests team rankings
+- [x] **ORC-03**: Airflow DAG `cs2_tournament_sync` syncs active tournament data
+- [x] **ORC-04**: All DAGs have failure alerting (email or Slack webhook)
 - [x] **ORC-05**: Docker Compose runs Airflow + Postgres metadata DB + Redis broker with one command
 
 ### Warehouse & dbt
@@ -120,10 +120,10 @@
 | ING-06 | Phase 1 — Data Ingestion | Complete |
 | ING-07 | Phase 1 — Data Ingestion | Complete |
 | ING-08 | Phase 1 — Data Ingestion | Complete |
-| ORC-01 | Phase 2 — Orchestration | Pending |
-| ORC-02 | Phase 2 — Orchestration | Pending |
-| ORC-03 | Phase 2 — Orchestration | Pending |
-| ORC-04 | Phase 2 — Orchestration | Pending |
+| ORC-01 | Phase 2 — Orchestration | Complete |
+| ORC-02 | Phase 2 — Orchestration | Complete |
+| ORC-03 | Phase 2 — Orchestration | Complete |
+| ORC-04 | Phase 2 — Orchestration | Complete |
 | ORC-05 | Phase 2 — Orchestration | Complete |
 | WH-01 | Phase 3 — Warehouse & dbt | Pending |
 | WH-02 | Phase 3 — Warehouse & dbt | Pending |

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Checkpoint: 02-02 awaiting Docker smoke test (Task 3 human-verify)"
-last_updated: "2026-03-17T04:43:46.329Z"
+stopped_at: Completed 02-01-PLAN.md (Wave 0 test scaffolding)
+last_updated: "2026-03-17T04:44:21.532Z"
 last_activity: 2026-03-16 — Completed plan 01-01 (project scaffold + data models)
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 13
-  completed_plans: 9
+  completed_plans: 10
   percent: 29
 ---
 
@@ -56,6 +56,7 @@ Progress: [███░░░░░░░] 29%
 | Phase 01-data-ingestion P03 | 6 | 2 tasks | 6 files |
 | Phase 01-data-ingestion P07 | 3 | 4 tasks | 4 files |
 | Phase 01-data-ingestion P08 | 5 | 2 tasks | 24 files |
+| Phase 02-orchestration P01 | 2 | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,9 @@ Recent decisions affecting current work:
 - [Phase 02-orchestration]: Build context = project root in docker-compose.yml — allows COPY pyproject.toml and COPY src to work from repo root
 - [Phase 02-orchestration]: env_file: ../.env with relative path since docker-compose.yml lives in airflow/ subdirectory
 - [Phase 02-orchestration]: restart: no on airflow-init prevents re-running users create after first successful init
+- [Phase 02-orchestration]: AIRFLOW__CORE__UNIT_TEST_MODE=True set in conftest — disables scheduler and external connections during tests
+- [Phase 02-orchestration]: CS2_SLACK_WEBHOOK_URL injected at module level before DagBag loads — ensures Airflow config env var present at import time
+- [Phase 02-orchestration]: module-scoped dagbag fixture — avoids repeated DagBag instantiation overhead across structural tests
 
 ### Pending Todos
 
@@ -101,6 +105,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T04:43:41.961Z
-Stopped at: Checkpoint: 02-02 awaiting Docker smoke test (Task 3 human-verify)
+Last session: 2026-03-17T04:44:21.531Z
+Stopped at: Completed 02-01-PLAN.md (Wave 0 test scaffolding)
 Resume file: None
