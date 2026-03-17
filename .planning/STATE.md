@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-02-PLAN.md (dbt project scaffold)
-last_updated: "2026-03-17T21:08:42.359Z"
+stopped_at: Completed 03-01-PLAN.md (Canonical Match score fields)
+last_updated: "2026-03-17T21:09:12.784Z"
 last_activity: 2026-03-16 — Completed plan 01-01 (project scaffold + data models)
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 19
-  completed_plans: 14
+  completed_plans: 15
   percent: 29
 ---
 
@@ -61,6 +61,7 @@ Progress: [███░░░░░░░] 29%
 | Phase 02-orchestration P04 | 2 | 2 tasks | 3 files |
 | Phase 02-orchestration P05 | 3 | 2 tasks | 2 files |
 | Phase 03-warehouse-dbt P02 | 2 | 2 tasks | 14 files |
+| Phase 03-warehouse-dbt P01 | 4 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,8 @@ Recent decisions affecting current work:
 - [Phase 02-orchestration]: cs2_tournament_sync calls LiquipediaClient.ingest_matches() not ingest_tournaments() — tournaments/placements count-only in Phase 1, no canonical S3 schema yet
 - [Phase 03-warehouse-dbt]: Typed raw tables + MATCH_BY_COLUMN_NAME over VARIANT — avoids $1:field::type syntax in staging models, makes column lineage visible in dbt docs
 - [Phase 03-warehouse-dbt]: AUTO_SUSPEND=60 + INITIALLY_SUSPENDED=TRUE on CS2_WH — prevents Snowflake free trial credit burn from idle warehouse
+- [Phase 03-01]: Overtime detection: score_a > 15 AND score_b > 15 (both exceed MR15 limit), not sum > 24
+- [Phase 03-01]: score_a/score_b/is_overtime default to None on canonical Match — fully backward-compatible with existing to_canonical() callers
 
 ### Pending Todos
 
@@ -117,6 +120,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T21:08:42.358Z
-Stopped at: Completed 03-02-PLAN.md (dbt project scaffold)
+Last session: 2026-03-17T21:09:07.928Z
+Stopped at: Completed 03-01-PLAN.md (Canonical Match score fields)
 Resume file: None
