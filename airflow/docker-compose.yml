@@ -1,8 +1,8 @@
 ---
 # CS2 Analytics — Airflow CeleryExecutor stack
-# Start: docker compose up airflow-init && docker compose up -d
+# Start: docker compose --env-file .env -f airflow/docker-compose.yml up airflow-init && docker compose --env-file .env -f airflow/docker-compose.yml up -d
 # Requires: AIRFLOW_UID=$(id -u) in .env (Linux only, prevents volume permission issues)
-version: "3.8"
+# NOTE: --env-file .env is required because -f changes compose's project directory away from repo root
 
 x-airflow-common: &airflow-common
   build:
@@ -22,6 +22,11 @@ x-airflow-common: &airflow-common
     AIRFLOW__WEBSERVER__SECRET_KEY: "${CS2_AIRFLOW_SECRET_KEY:-dev_secret_change_me}"
     # PYTHONPATH points to the live-mounted src directory for dev iteration
     PYTHONPATH: /opt/cs2-analytics/src
+    # Prevents Celery signal handling issues inside Docker (required for worker;
+    # harmless on other services). Defined here because YAML <<: merge replaces
+    # entire `environment` blocks — a worker-level override would lose all common vars.
+    DUMB_INIT_SETSID: "0"
+  user: "${AIRFLOW_UID:-50000}:0"
   volumes:
     - ../airflow/dags:/opt/airflow/dags
     - ../logs:/opt/airflow/logs
@@ -81,20 +86,21 @@ services:
     <<: *airflow-common
     command: scheduler
     healthcheck:
-      test: ["CMD", "airflow", "jobs", "check", "--job-type", "SchedulerJob", "--hostname", "$${HOSTNAME}"]
+      # CMD-SHELL routes through /bin/sh so $$HOSTNAME expands to the container's hostname at runtime.
+      # $$ in docker-compose YAML escapes to a literal $, preventing compose-time substitution.
+      # Plain CMD array form does not invoke a shell, so variable expansion never occurs.
+      test: ["CMD-SHELL", "airflow jobs check --job-type SchedulerJob --hostname \"$$HOSTNAME\""]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 30s
+      # 60s gives the scheduler enough time to connect to postgres and write its first heartbeat
+      start_period: 60s
     restart: always
 
   # Celery worker — executes task instances
   airflow-worker:
     <<: *airflow-common
     command: celery worker
-    environment:
-      # Required to prevent Celery signal handling issues inside Docker
-      DUMB_INIT_SETSID: "0"
     restart: always
 
   # Triggerer — handles deferred operators (sensors, async tasks)
@@ -106,17 +112,7 @@ services:
   # One-shot init container: migrates DB and creates admin user
   airflow-init:
     <<: *airflow-common
-    command: >
-      bash -c "
-        airflow db migrate &&
-        airflow users create
-          --username admin
-          --password admin
-          --firstname Admin
-          --lastname User
-          --role Admin
-          --email admin@example.com
-      "
+    command: bash -c "airflow db migrate && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com"
     restart: "no"
 
 volumes:

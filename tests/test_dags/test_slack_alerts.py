@@ -1,16 +1,17 @@
 """Unit tests for Slack failure alert callback.
 
 Tests that on_failure_callback formats the Slack message correctly and
-calls SlackWebhookHook.send() with the right content.
+POSTs to the webhook URL with the right content.
 """
 from __future__ import annotations
 
+import os
 from unittest.mock import MagicMock, patch
 
 
 def test_on_failure_callback_sends_slack_message() -> None:
-    """on_failure_callback sends Slack message containing dag_id, task_id, run_id, log_url."""
-    from airflow.dags.utils.slack_alerts import on_failure_callback
+    """on_failure_callback POSTs a Slack message containing dag_id, task_id, run_id."""
+    from utils.slack_alerts import on_failure_callback
 
     # Build a minimal Airflow task instance context
     mock_ti = MagicMock()
@@ -24,16 +25,21 @@ def test_on_failure_callback_sends_slack_message() -> None:
         "exception": ValueError("test error"),
     }
 
-    with patch("airflow.dags.utils.slack_alerts.SlackWebhookHook") as mock_hook_cls:
-        mock_hook = MagicMock()
-        mock_hook_cls.return_value = mock_hook
+    # Patch requests.post — the callback POSTs directly to the webhook URL
+    # (SlackWebhookHook in providers-slack>=8.x requires a Connection ID, not a raw URL)
+    mock_response = MagicMock()
+    mock_response.raise_for_status.return_value = None
 
-        on_failure_callback(context)
+    with patch.dict(os.environ, {"CS2_SLACK_WEBHOOK_URL": "https://hooks.slack.com/test_webhook"}):
+        with patch("utils.slack_alerts.requests.post", return_value=mock_response) as mock_post:
+            on_failure_callback(context)
 
-    mock_hook.send.assert_called_once()
-    sent_text: str = mock_hook.send.call_args.kwargs.get(
-        "text", mock_hook.send.call_args.args[0] if mock_hook.send.call_args.args else ""
-    )
+    mock_post.assert_called_once()
+    call_kwargs = mock_post.call_args.kwargs
+    # Verify URL is the webhook URL from env
+    assert mock_post.call_args.args[0] == "https://hooks.slack.com/test_webhook"
+    # Verify message body contains the key diagnostic fields
+    sent_text: str = call_kwargs["json"]["text"]
     assert "cs2_daily_matches" in sent_text
     assert "ingest_faceit_matches" in sent_text
     assert "manual__2024-01-01T00:00:00+00:00" in sent_text

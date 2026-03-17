@@ -1,7 +1,7 @@
 """Shared Airflow DAG failure alert callback using Slack webhooks.
 
 Usage in DAG definition:
-    from airflow.dags.utils.slack_alerts import on_failure_callback
+    from utils.slack_alerts import on_failure_callback
 
     @dag(
         ...
@@ -11,14 +11,18 @@ Usage in DAG definition:
         ...
 
 Requires CS2_SLACK_WEBHOOK_URL environment variable (injected via env_file: .env in docker-compose).
+
+Note: SlackWebhookHook in apache-airflow-providers-slack>=8.x requires an Airflow Connection ID
+and no longer accepts a raw webhook_url. Since this project avoids Airflow Connections (locked
+decision), we POST directly to the webhook URL using requests instead.
 """
 from __future__ import annotations
 
 import os
 from typing import Any
 
+import requests
 import structlog
-from airflow.providers.slack.hooks.slack_webhook import SlackWebhookHook
 
 log = structlog.get_logger()
 
@@ -51,9 +55,15 @@ def on_failure_callback(context: dict[str, Any]) -> None:
         f"<{log_url}|View Logs>"
     )
 
-    # Read webhook URL directly from env var — no Airflow Connections used per locked decision
+    # Read webhook URL directly from env var — no Airflow Connections used per locked decision.
+    # POST directly via requests: SlackWebhookHook in providers-slack>=8.x only accepts a
+    # slack_webhook_conn_id (Airflow Connection), not a raw URL.
     webhook_url: str = os.environ["CS2_SLACK_WEBHOOK_URL"]
-    hook = SlackWebhookHook(webhook_url=webhook_url)
-    hook.send(text=message)
+    response = requests.post(
+        webhook_url,
+        json={"text": message},
+        timeout=10,
+    )
+    response.raise_for_status()
 
     log.info("slack_failure_alert_sent", dag_id=dag_id, task_id=task_id)
