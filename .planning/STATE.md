@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-04-PLAN.md (cs2_daily_matches DAG)
-last_updated: "2026-03-17T05:25:03.065Z"
+stopped_at: Completed 02-05-PLAN.md (Weekly rankings and tournament sync DAGs)
+last_updated: "2026-03-17T05:25:50.060Z"
 last_activity: 2026-03-16 — Completed plan 01-01 (project scaffold + data models)
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 13
-  completed_plans: 12
+  completed_plans: 13
   percent: 29
 ---
 
@@ -59,6 +59,7 @@ Progress: [███░░░░░░░] 29%
 | Phase 02-orchestration P01 | 2 | 3 tasks | 7 files |
 | Phase 02-orchestration P03 | 8 | 2 tasks | 3 files |
 | Phase 02-orchestration P04 | 2 | 2 tasks | 3 files |
+| Phase 02-orchestration P05 | 3 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -100,6 +101,7 @@ Recent decisions affecting current work:
 - [Phase 02-orchestration]: dagbag.dags.get() instead of dagbag.get_dag() in structural tests — avoids SQLite DB query on uninitialized test database
 - [Phase 02-orchestration]: _s3_key_exists() placed at module level in DAG files — enables unit testing without Airflow context
 - [Phase 02-orchestration]: FACEITClient.ingest_matches called with match_ids=[] in DAG — match ID discovery is a separate future concern; PandaScoreClient fetches internally
+- [Phase 02-orchestration]: cs2_tournament_sync calls LiquipediaClient.ingest_matches() not ingest_tournaments() — tournaments/placements count-only in Phase 1, no canonical S3 schema yet
 
 ### Pending Todos
 
@@ -112,6 +114,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T05:25:03.064Z
-Stopped at: Completed 02-04-PLAN.md (cs2_daily_matches DAG)
+Last session: 2026-03-17T05:25:50.059Z
+Stopped at: Completed 02-05-PLAN.md (Weekly rankings and tournament sync DAGs)
 Resume file: None
