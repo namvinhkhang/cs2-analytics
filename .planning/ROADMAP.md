@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. All API clients retry on transient failures and respect rate limits without manual intervention
   4. `pytest` test suite runs green against all ingestion clients using mocked HTTP responses
   5. Pydantic models reject malformed Match, Player, and Team payloads with validation errors
-**Plans**: 7 plans
+**Plans**: 8 plans
 
 Plans:
 - [x] 01-01-PLAN.md — Project scaffold, Pydantic data models (ING-08)
@@ -41,6 +41,7 @@ Plans:
 - [ ] 01-05-PLAN.md — PandaScoreClient with match and player ingestion (ING-03)
 - [ ] 01-06-PLAN.md — Kaggle CSV bootstrap ingester + script (ING-04)
 - [ ] 01-07-PLAN.md — Full pytest suite with respx + moto mocks (ING-06, ING-07)
+- [ ] 01-08-PLAN.md — Gap closure: fix 45 ruff lint errors, apply ruff format (ING-01 through ING-08)
 
 ### Phase 2: Orchestration
 **Goal**: Pipeline execution is automated, monitored, and reproducible via a one-command local stack
@@ -106,7 +107,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Data Ingestion | 5/7 | In Progress|  |
+| 1. Data Ingestion | 6/8 | In Progress|  |
 | 2. Orchestration | 0/TBD | Not started | - |
 | 3. Warehouse & dbt | 0/TBD | Not started | - |
 | 4. Analytical Products | 0/TBD | Not started | - |
