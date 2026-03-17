@@ -1,0 +1,26 @@
+version: 2
+
+models:
+  - name: int_matches_unioned
+    description: "All matches from FACEIT, PandaScore, and Kaggle unioned with source column preserved"
+    columns:
+      - name: match_id
+        data_tests:
+          - not_null
+      - name: source
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['faceit', 'pandascore', 'kaggle']
+
+  - name: int_players_unioned
+    description: "Deduplicated player stats from FACEIT and PandaScore (FACEIT priority for richer stats: ELO, KAST)"
+    columns:
+      - name: player_id
+        data_tests:
+          - not_null
+      - name: source
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['faceit', 'pandascore']
