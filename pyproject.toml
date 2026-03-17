@@ -21,6 +21,8 @@ dev = [
     "ruff>=0.4",
     "mypy>=1.10",
     "boto3-stubs[s3]>=1.35",
+    "apache-airflow>=2.9,<3.0",
+    "apache-airflow-providers-slack==8.7.1",
 ]
 
 [build-system]
