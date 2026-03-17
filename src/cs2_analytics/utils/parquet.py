@@ -27,6 +27,10 @@ MATCH_SCHEMA: pa.Schema = pa.schema(
         pa.field("winner_id", pa.string(), nullable=True),
         pa.field("played_at", pa.string(), nullable=False),
         pa.field("map_name", pa.string(), nullable=True),
+        # Phase 3 additions — score_a/score_b for lead-blown / comeback rate dbt marts
+        pa.field("score_a", pa.int64(), nullable=True),
+        pa.field("score_b", pa.int64(), nullable=True),
+        pa.field("is_overtime", pa.bool_(), nullable=True),
     ]
 )
 

@@ -27,6 +27,11 @@ class Match(BaseModel):
     played_at: str  # ISO-8601 date string, e.g. "2024-01-15"
     map_name: str | None = None
 
+    # Phase 3 additions — default None for backward compatibility with existing to_canonical() calls
+    score_a: int | None = None
+    score_b: int | None = None
+    is_overtime: bool | None = None
+
 
 class Player(BaseModel):
     """Canonical player model written to Parquet by FACEIT and PandaScore clients.

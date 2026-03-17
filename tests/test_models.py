@@ -402,3 +402,67 @@ class TestPandaScoreModels:
         assert canonical.source == "pandascore"
         assert canonical.nationality == "BA"
         assert canonical.kills == 28
+
+
+class TestMatchScoreFields:
+    """Tests for canonical Match score_a, score_b, is_overtime fields (Phase 3 additions)."""
+
+    def test_match_score_fields_default_none(self) -> None:
+        """Match without score fields has score_a=None, score_b=None, is_overtime=None."""
+        from cs2_analytics.models.canonical import Match
+
+        m = Match(
+            match_id="m1",
+            source="faceit",
+            team_a_id="t1",
+            team_b_id="t2",
+            winner_id=None,
+            played_at="2024-01-15",
+        )
+        assert m.score_a is None
+        assert m.score_b is None
+        assert m.is_overtime is None
+
+    def test_match_with_scores(self) -> None:
+        """Match with score_a=16, score_b=13, is_overtime=False stores values correctly."""
+        from cs2_analytics.models.canonical import Match
+
+        m = Match(
+            match_id="m1",
+            source="faceit",
+            team_a_id="t1",
+            team_b_id="t2",
+            winner_id="t1",
+            played_at="2024-01-15",
+            score_a=16,
+            score_b=13,
+            is_overtime=False,
+        )
+        assert m.score_a == 16
+        assert m.score_b == 13
+        assert m.is_overtime is False
+
+    def test_match_with_overtime(self) -> None:
+        """Match with score_a=19, score_b=17, is_overtime=True stores overtime correctly."""
+        from cs2_analytics.models.canonical import Match
+
+        m = Match(
+            match_id="m1",
+            source="faceit",
+            team_a_id="t1",
+            team_b_id="t2",
+            winner_id="t1",
+            played_at="2024-01-15",
+            score_a=19,
+            score_b=17,
+            is_overtime=True,
+        )
+        assert m.score_a == 19
+        assert m.score_b == 17
+        assert m.is_overtime is True
+
+    def test_match_schema_field_count(self) -> None:
+        """MATCH_SCHEMA has 10 fields (original 7 + score_a + score_b + is_overtime)."""
+        from cs2_analytics.utils.parquet import MATCH_SCHEMA
+
+        assert len(MATCH_SCHEMA) == 10
