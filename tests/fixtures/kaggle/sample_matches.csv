@@ -1,0 +1,4 @@
+match_id,date,team_1,team_2,map,map_winner,_map_wins_team_1,_map_wins_team_2
+kaggle-001,2024-01-15,Natus Vincere,Team Vitality,de_mirage,Natus Vincere,1,0
+kaggle-002,2024-01-15,FaZe Clan,G2 Esports,de_inferno,FaZe Clan,1,0
+kaggle-003,2024-01-16,Team Liquid,ENCE,de_dust2,,0,0
