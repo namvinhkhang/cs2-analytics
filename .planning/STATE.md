@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-07-PLAN.md (ingestion client test suite)
-last_updated: "2026-03-17T01:27:17.605Z"
+stopped_at: Completed 01-08-PLAN.md (lint gap closure)
+last_updated: "2026-03-17T01:34:05.900Z"
 last_activity: 2026-03-16 — Completed plan 01-01 (project scaffold + data models)
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
   percent: 29
 ---
 
@@ -55,6 +55,7 @@ Progress: [███░░░░░░░] 29%
 | Phase 01-data-ingestion P04 | 6 | 1 tasks | 8 files |
 | Phase 01-data-ingestion P03 | 6 | 2 tasks | 6 files |
 | Phase 01-data-ingestion P07 | 3 | 4 tasks | 4 files |
+| Phase 01-data-ingestion P08 | 5 | 2 tasks | 24 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,8 @@ Recent decisions affecting current work:
 - [Phase 01-data-ingestion]: follow_redirects=False on httpx.AsyncClient — prevents respx mock failures on redirect targets (Pitfall 6 from research)
 - [Phase 01-data-ingestion]: moto[s3] added as dev dependency for @mock_aws S3 tests verifying PAR1 magic bytes
 - [Phase 01-data-ingestion]: test_kaggle.py uses tests/fixtures/kaggle/sample_matches.csv — validates production CSV parsing path from static reference data
+- [Phase 01-data-ingestion]: Sequence[BaseModel] over list[BaseModel] in models_to_records — list is invariant in mypy strict mode, Sequence is covariant
+- [Phase 01-data-ingestion]: type: ignore[import-untyped] inline per-import for pyarrow and kaggle — precise suppression over global ignore_missing_imports
 
 ### Pending Todos
 
@@ -95,6 +98,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T01:27:17.604Z
-Stopped at: Completed 01-07-PLAN.md (ingestion client test suite)
+Last session: 2026-03-17T01:34:05.899Z
+Stopped at: Completed 01-08-PLAN.md (lint gap closure)
 Resume file: None

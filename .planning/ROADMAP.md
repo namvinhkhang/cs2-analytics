@@ -12,7 +12,7 @@ Six phases that deliver a production-grade ELT pipeline with three original anal
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Data Ingestion** - Raw data from Liquipedia, FACEIT, PandaScore, and Kaggle lands in AWS S3 as Parquet
+- [x] **Phase 1: Data Ingestion** - Raw data from Liquipedia, FACEIT, PandaScore, and Kaggle lands in AWS S3 as Parquet (completed 2026-03-17)
 - [ ] **Phase 2: Orchestration** - Airflow DAGs automate pipeline execution in a Docker-composed local stack
 - [ ] **Phase 3: Warehouse & dbt** - Snowflake star schema with full dbt model lineage from staging to analytical marts
 - [ ] **Phase 4: Analytical Products** - Upset Tracker (ML), Hidden Gem Scout (SQL), and Choke/Clutch Profile (SQL) are computed
@@ -107,7 +107,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Data Ingestion | 6/8 | In Progress|  |
+| 1. Data Ingestion | 8/8 | Complete   | 2026-03-17 |
 | 2. Orchestration | 0/TBD | Not started | - |
 | 3. Warehouse & dbt | 0/TBD | Not started | - |
 | 4. Analytical Products | 0/TBD | Not started | - |
