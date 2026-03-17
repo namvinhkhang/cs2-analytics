@@ -41,6 +41,22 @@ class FACEITMatch(BaseModel):
         if self.results is not None:
             winner_id = self.results.get("winner")
 
+        # Extract round scores from results.score if present
+        # CS2 regulation is MR12 (24 rounds total); overtime if combined > 24
+        score_a: int | None = None
+        score_b: int | None = None
+        is_overtime: bool | None = None
+        if self.results is not None:
+            score_dict = self.results.get("score", {})
+            if isinstance(score_dict, dict):
+                faction1_score = score_dict.get("faction1")
+                faction2_score = score_dict.get("faction2")
+                if faction1_score is not None and faction2_score is not None:
+                    score_a = int(faction1_score)
+                    score_b = int(faction2_score)
+                    # Overtime when both teams exceed regulation limit (MR15: both > 15)
+                    is_overtime = score_a > 15 and score_b > 15
+
         # Convert UNIX epoch to ISO date string
         played_at: str = "unknown"
         if self.finished_at is not None:
@@ -53,6 +69,9 @@ class FACEITMatch(BaseModel):
             team_b_id=team_b_id,
             winner_id=winner_id,
             played_at=played_at,
+            score_a=score_a,
+            score_b=score_b,
+            is_overtime=is_overtime,
         )
 
 

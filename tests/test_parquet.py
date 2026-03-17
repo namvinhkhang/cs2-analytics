@@ -12,11 +12,11 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 
-def test_match_schema_has_seven_fields() -> None:
-    """MATCH_SCHEMA must declare exactly 7 fields to mirror the Match canonical model."""
+def test_match_schema_has_ten_fields() -> None:
+    """MATCH_SCHEMA must declare exactly 10 fields (7 original + score_a, score_b, is_overtime)."""
     from cs2_analytics.utils.parquet import MATCH_SCHEMA
 
-    assert len(MATCH_SCHEMA) == 7, f"Expected 7 match fields, got {len(MATCH_SCHEMA)}"
+    assert len(MATCH_SCHEMA) == 10, f"Expected 10 match fields, got {len(MATCH_SCHEMA)}"
 
 
 def test_match_schema_required_fields_non_nullable() -> None:

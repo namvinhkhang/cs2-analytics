@@ -23,6 +23,7 @@ class PandaScoreMatch(BaseModel):
     end_at: str | None = None  # ISO-8601 datetime string
     winner: dict[str, Any] | None = None  # {"id": int, "name": str, ...}
     opponents: list[dict[str, Any]] = []  # [{"opponent": {"id": int, "name": str}}, ...]
+    results: list[dict[str, Any]] | None = None  # [{"score": int, ...}, ...] per-team result
 
     def to_canonical(self) -> Match:
         """Map PandaScore match fields to the shared canonical Match schema."""
@@ -41,6 +42,20 @@ class PandaScoreMatch(BaseModel):
         if self.winner is not None:
             winner_id = str(self.winner["id"])
 
+        # Extract scores from results list if both teams present
+        # CS2 regulation is MR12 (24 rounds total); overtime if combined > 24
+        score_a: int | None = None
+        score_b: int | None = None
+        is_overtime: bool | None = None
+        if self.results and len(self.results) >= 2:
+            s1 = self.results[0].get("score")
+            s2 = self.results[1].get("score")
+            if s1 is not None and s2 is not None:
+                score_a = int(s1)
+                score_b = int(s2)
+                # Overtime when both teams exceed regulation limit (MR15: both > 15)
+                is_overtime = score_a > 15 and score_b > 15
+
         # Extract date portion from ISO-8601 datetime string
         # (e.g. "2024-01-15T12:00:00Z" → "2024-01-15")
         played_at: str = "unknown"
@@ -54,6 +69,9 @@ class PandaScoreMatch(BaseModel):
             team_b_id=team_b_id,
             winner_id=winner_id,
             played_at=played_at,
+            score_a=score_a,
+            score_b=score_b,
+            is_overtime=is_overtime,
         )
 
 

@@ -466,3 +466,129 @@ class TestMatchScoreFields:
         from cs2_analytics.utils.parquet import MATCH_SCHEMA
 
         assert len(MATCH_SCHEMA) == 10
+
+
+class TestFACEITScoreExtraction:
+    """Tests for FACEITMatch.to_canonical() score field extraction."""
+
+    def test_faceit_match_to_canonical_with_scores(self) -> None:
+        """FACEITMatch with results.score dict populates score_a, score_b, is_overtime=False."""
+        from cs2_analytics.models.faceit import FACEITMatch
+
+        m = FACEITMatch(
+            match_id="abc",
+            game="cs2",
+            region="EU",
+            competition_name="Pro League",
+            teams={
+                "faction1": {"faction_id": "team-a"},
+                "faction2": {"faction_id": "team-b"},
+            },
+            results={"winner": "faction1", "score": {"faction1": 16, "faction2": 13}},
+            finished_at=1705276800,
+        )
+        canonical = m.to_canonical()
+        assert canonical.score_a == 16
+        assert canonical.score_b == 13
+        assert canonical.is_overtime is False
+
+    def test_faceit_match_to_canonical_no_scores(self) -> None:
+        """FACEITMatch with results but no score key has score_a=None, score_b=None."""
+        from cs2_analytics.models.faceit import FACEITMatch
+
+        m = FACEITMatch(
+            match_id="abc",
+            game="cs2",
+            region="EU",
+            competition_name="Pro League",
+            teams={"faction1": {"faction_id": "team-a"}, "faction2": {"faction_id": "team-b"}},
+            results={"winner": "faction1"},
+            finished_at=1705276800,
+        )
+        canonical = m.to_canonical()
+        assert canonical.score_a is None
+        assert canonical.score_b is None
+        assert canonical.is_overtime is None
+
+    def test_faceit_match_to_canonical_overtime(self) -> None:
+        """FACEITMatch with scores summing > 24 sets is_overtime=True."""
+        from cs2_analytics.models.faceit import FACEITMatch
+
+        m = FACEITMatch(
+            match_id="abc",
+            game="cs2",
+            region="EU",
+            competition_name="Pro League",
+            teams={"faction1": {"faction_id": "team-a"}, "faction2": {"faction_id": "team-b"}},
+            results={"winner": "faction1", "score": {"faction1": 19, "faction2": 17}},
+            finished_at=1705276800,
+        )
+        canonical = m.to_canonical()
+        assert canonical.score_a == 19
+        assert canonical.score_b == 17
+        assert canonical.is_overtime is True
+
+
+class TestPandaScoreScoreExtraction:
+    """Tests for PandaScoreMatch.to_canonical() score field extraction."""
+
+    def test_pandascore_match_to_canonical_with_scores(self) -> None:
+        """PandaScoreMatch with results list populates score_a and score_b."""
+        from cs2_analytics.models.pandascore import PandaScoreMatch
+
+        psm = PandaScoreMatch(
+            id=12345,
+            name="NaVi vs G2",
+            status="finished",
+            begin_at="2024-01-15T12:00:00Z",
+            opponents=[
+                {"opponent": {"id": 101, "name": "NaVi"}},
+                {"opponent": {"id": 202, "name": "G2"}},
+            ],
+            winner={"id": 101},
+            results=[{"score": 16}, {"score": 13}],
+        )
+        canonical = psm.to_canonical()
+        assert canonical.score_a == 16
+        assert canonical.score_b == 13
+        assert canonical.is_overtime is False
+
+    def test_pandascore_match_to_canonical_no_results(self) -> None:
+        """PandaScoreMatch without results field has score_a=None, score_b=None."""
+        from cs2_analytics.models.pandascore import PandaScoreMatch
+
+        psm = PandaScoreMatch(id=1, name="test", status="not_started")
+        canonical = psm.to_canonical()
+        assert canonical.score_a is None
+        assert canonical.score_b is None
+        assert canonical.is_overtime is None
+
+
+class TestKaggleScoreExtraction:
+    """Tests for KaggleBootstrapIngester.csv_to_matches() score field extraction."""
+
+    def test_kaggle_csv_with_map_wins_columns(self) -> None:
+        """CSV with _map_wins_team_1/_map_wins_team_2 maps to score_a/score_b."""
+        import tempfile
+        from pathlib import Path
+
+        from cs2_analytics.ingestion.kaggle import KaggleBootstrapIngester
+
+        csv_content = (
+            "match_id,date,team_1,team_2,map,map_winner,_map_wins_team_1,_map_wins_team_2\n"
+            "m1,2024-01-15,TeamA,TeamB,de_dust2,TeamA,16,10\n"
+        )
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".csv", delete=False, encoding="utf-8"
+        ) as f:
+            f.write(csv_content)
+            tmp_path = Path(f.name)
+
+        ingester = KaggleBootstrapIngester(bucket="test-bucket")
+        matches = ingester.csv_to_matches(tmp_path)
+        tmp_path.unlink()
+
+        assert len(matches) == 1
+        assert matches[0].score_a == 16
+        assert matches[0].score_b == 10
+        assert matches[0].is_overtime is False

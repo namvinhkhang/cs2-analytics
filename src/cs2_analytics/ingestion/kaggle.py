@@ -137,6 +137,16 @@ class KaggleBootstrapIngester:
                 played_at = _get(row, "date") or "unknown"
                 map_name = _get(row, "map", "map_name")
 
+                # Extract map win scores if available (Kaggle CSV columns)
+                score_a_raw = _get(row, "_map_wins_team_1", "score_team_1", "t1_score")
+                score_b_raw = _get(row, "_map_wins_team_2", "score_team_2", "t2_score")
+                score_a_val: int | None = int(score_a_raw) if score_a_raw is not None else None
+                score_b_val: int | None = int(score_b_raw) if score_b_raw is not None else None
+                is_overtime_val: bool | None = None
+                if score_a_val is not None and score_b_val is not None:
+                    # Overtime when both teams exceed regulation limit (MR15: both > 15)
+                    is_overtime_val = score_a_val > 15 and score_b_val > 15
+
                 try:
                     matches.append(
                         Match(
@@ -147,6 +157,9 @@ class KaggleBootstrapIngester:
                             winner_id=winner_id,
                             played_at=played_at,
                             map_name=map_name,
+                            score_a=score_a_val,
+                            score_b=score_b_val,
+                            is_overtime=is_overtime_val,
                         )
                     )
                 except Exception:
