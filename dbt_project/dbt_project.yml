@@ -1,0 +1,25 @@
+name: cs2_analytics
+version: '1.0.0'
+config-version: 2
+profile: cs2_analytics
+
+# Paths for dbt to find SQL files, tests, macros, and installed packages
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+packages-install-path: "dbt_packages"
+
+models:
+  cs2_analytics:
+    # Staging models — clean and rename raw columns only, no joins
+    staging:
+      +materialized: view
+      +schema: STAGING
+    # Intermediate models — join and union across sources, still views to avoid double-counting
+    intermediate:
+      +materialized: view
+      +schema: STAGING
+    # Mart models — aggregated tables for BI and ML consumption
+    marts:
+      +materialized: table
+      +schema: MARTS

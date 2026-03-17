@@ -1,6 +1,16 @@
+# Secrets
+.env
+
 # Python cache
 __pycache__/
 **/__pycache__/
 *.py[cod]
 *.pyo
 .*/*
+logs/*
+
+# dbt — build outputs and local credentials
+dbt_project/target/
+dbt_project/dbt_packages/
+dbt_project/logs/
+dbt_project/profiles.yml

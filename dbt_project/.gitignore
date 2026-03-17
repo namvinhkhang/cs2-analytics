@@ -1,0 +1,7 @@
+# dbt build outputs — generated, not source-controlled
+target/
+dbt_packages/
+logs/
+
+# Connection credentials — never commit; use .env + env_var() in profiles.yml
+profiles.yml
