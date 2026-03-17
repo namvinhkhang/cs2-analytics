@@ -1,0 +1,81 @@
+version: 2
+
+models:
+  - name: fact_matches
+    description: "Match results fact table with foreign keys to dimensions"
+    columns:
+      - name: match_sk
+        data_tests:
+          - unique
+          - not_null
+      - name: match_id
+        data_tests:
+          - not_null
+      - name: source
+        data_tests:
+          - not_null
+      - name: team_a_id
+        data_tests:
+          - not_null
+      - name: played_at
+        data_tests:
+          - not_null
+
+  - name: fact_player_stats
+    description: "Per-match player performance statistics"
+    columns:
+      - name: player_stat_sk
+        data_tests:
+          - unique
+          - not_null
+      - name: player_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_players')
+              field: player_id
+      - name: match_id
+        data_tests:
+          - not_null
+
+  - name: dim_teams
+    description: "Team dimension with world rankings"
+    columns:
+      - name: team_id
+        data_tests:
+          - unique
+          - not_null
+      - name: team_name
+        data_tests:
+          - not_null
+
+  - name: dim_players
+    description: "Player dimension with latest profile data"
+    columns:
+      - name: player_id
+        data_tests:
+          - unique
+          - not_null
+      - name: display_name
+        data_tests:
+          - not_null
+
+  - name: dim_maps
+    description: "CS2 map dimension"
+    columns:
+      - name: map_sk
+        data_tests:
+          - unique
+          - not_null
+      - name: map_name
+        data_tests:
+          - unique
+          - not_null
+
+  - name: dim_tournaments
+    description: "Tournament dimension (placeholder until Liquipedia tournament canonical schema)"
+    columns:
+      - name: tournament_sk
+        data_tests:
+          - unique
+          - not_null
