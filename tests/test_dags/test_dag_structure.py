@@ -19,39 +19,42 @@ def test_no_import_errors(dagbag: DagBag) -> None:
 
 
 def test_daily_matches_dag_exists(dagbag: DagBag) -> None:
-    dag = dagbag.get_dag("cs2_daily_matches")
+    # Use dagbag.dags dict — avoids dagbag.get_dag() which queries the SQLite DB
+    dag = dagbag.dags.get("cs2_daily_matches")
     assert dag is not None, "cs2_daily_matches DAG not found"
 
 
 def test_daily_matches_schedule(dagbag: DagBag) -> None:
-    dag = dagbag.get_dag("cs2_daily_matches")
+    dag = dagbag.dags.get("cs2_daily_matches")
     assert dag is not None
     assert str(dag.schedule_interval) == "0 */6 * * *"
 
 
 def test_daily_matches_catchup_false(dagbag: DagBag) -> None:
-    dag = dagbag.get_dag("cs2_daily_matches")
+    dag = dagbag.dags.get("cs2_daily_matches")
     assert dag is not None
     assert dag.catchup is False
 
 
 def test_weekly_rankings_dag_exists(dagbag: DagBag) -> None:
-    dag = dagbag.get_dag("cs2_weekly_rankings")
+    # This DAG is not yet implemented — expected to be None (RED stub)
+    dag = dagbag.dags.get("cs2_weekly_rankings")
     assert dag is not None, "cs2_weekly_rankings DAG not found"
 
 
 def test_weekly_rankings_schedule(dagbag: DagBag) -> None:
-    dag = dagbag.get_dag("cs2_weekly_rankings")
+    dag = dagbag.dags.get("cs2_weekly_rankings")
     assert dag is not None
     assert str(dag.schedule_interval) == "@weekly"
 
 
 def test_tournament_sync_dag_exists(dagbag: DagBag) -> None:
-    dag = dagbag.get_dag("cs2_tournament_sync")
+    # This DAG is not yet implemented — expected to be None (RED stub)
+    dag = dagbag.dags.get("cs2_tournament_sync")
     assert dag is not None, "cs2_tournament_sync DAG not found"
 
 
 def test_tournament_sync_schedule(dagbag: DagBag) -> None:
-    dag = dagbag.get_dag("cs2_tournament_sync")
+    dag = dagbag.dags.get("cs2_tournament_sync")
     assert dag is not None
     assert str(dag.schedule_interval) == "@daily"
