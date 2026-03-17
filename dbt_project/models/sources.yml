@@ -1,0 +1,30 @@
+version: 2
+
+# Declares the RAW schema tables as dbt sources.
+# These tables are populated by the cs2_dbt_run Airflow DAG via COPY INTO
+# from the S3 external stage (cs2_raw_stage).
+# Staging models reference these via {{ source('raw', 'raw_<entity>') }}.
+
+sources:
+  - name: raw
+    database: CS2_ANALYTICS
+    schema: RAW
+    description: "Raw Parquet data loaded from S3 via COPY INTO. Never modified by dbt."
+    tables:
+      - name: raw_faceit_matches
+        description: "FACEIT match results with per-round scores. Source of ADR/KAST ground truth."
+
+      - name: raw_pandascore_matches
+        description: "PandaScore tier-1 pro match results from the /csgo/ legacy endpoint."
+
+      - name: raw_kaggle_matches
+        description: "Historical HLTV match data from Kaggle CSV bootstrap (one-time load)."
+
+      - name: raw_faceit_players
+        description: "FACEIT per-match player stats: kills, deaths, ADR, KAST, ELO."
+
+      - name: raw_pandascore_players
+        description: "PandaScore per-match player stats aggregated across maps."
+
+      - name: raw_liquipedia_teams
+        description: "Liquipedia team metadata including world_ranking for upset detection."
