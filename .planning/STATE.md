@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-04-PLAN.md (Core star schema)
-last_updated: "2026-03-17T21:12:34.321Z"
+stopped_at: Completed 03-06-PLAN.md (cs2_dbt_run DAG + Dockerfile dbt deps)
+last_updated: "2026-03-17T21:16:20.050Z"
 last_activity: 2026-03-16 — Completed plan 01-01 (project scaffold + data models)
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 19
-  completed_plans: 17
+  completed_plans: 18
   percent: 29
 ---
 
@@ -64,6 +64,7 @@ Progress: [███░░░░░░░] 29%
 | Phase 03-warehouse-dbt P01 | 4 | 2 tasks | 7 files |
 | Phase 03-warehouse-dbt P03 | 3 | 2 tasks | 10 files |
 | Phase 03-warehouse-dbt P04 | 5 | 2 tasks | 7 files |
+| Phase 03-warehouse-dbt P06 | 2 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -115,6 +116,9 @@ Recent decisions affecting current work:
 - [Phase 03-warehouse-dbt]: dim_tournaments is a placeholder (single unknown row) — Liquipedia tournament canonical schema deferred to Phase 4
 - [Phase 03-warehouse-dbt]: fact_player_stats filters where match_id is not null — separates profile records from per-match stat records
 - [Phase 03-warehouse-dbt]: fact_player_stats includes computed_kd and kill_share derived columns for downstream analytics convenience
+- [Phase 03-06]: BashOperator for dbt tasks (not Cosmos) — simpler, matches existing DAG patterns
+- [Phase 03-06]: snowflake.connector imported inside @task() body — avoids DagBag load-time ImportError
+- [Phase 03-06]: PURGE = FALSE on all COPY INTO statements — raw S3 layer remains intact as immutable source of truth
 
 ### Pending Todos
 
@@ -127,6 +131,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T21:12:34.320Z
-Stopped at: Completed 03-04-PLAN.md (Core star schema)
+Last session: 2026-03-17T21:16:20.049Z
+Stopped at: Completed 03-06-PLAN.md (cs2_dbt_run DAG + Dockerfile dbt deps)
 Resume file: None
