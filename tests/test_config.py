@@ -20,10 +20,10 @@ class TestSettings:
 
         from cs2_analytics.utils.config import Settings
 
-        # Patch out all env vars to ensure none are set
+        # Patch out all env vars and disable .env file to ensure none are set
         with patch.dict("os.environ", {}, clear=True):
             with pytest.raises(pydantic_core.ValidationError):
-                Settings()
+                Settings(_env_file=None)
 
     def test_settings_aws_region_default(self) -> None:
         """settings.aws_region defaults to 'us-east-1' when CS2_AWS_REGION is not set."""
@@ -38,7 +38,7 @@ class TestSettings:
             "CS2_KAGGLE_KEY": "test_kaggle_key",
         }
         with patch.dict("os.environ", env_vars, clear=True):
-            s = Settings()
+            s = Settings(_env_file=None)
             assert s.aws_region == "us-east-1"
 
     def test_settings_reads_env_vars(self) -> None:
@@ -54,7 +54,7 @@ class TestSettings:
             "CS2_KAGGLE_KEY": "kaggle_key_abc",
         }
         with patch.dict("os.environ", env_vars, clear=True):
-            s = Settings()
+            s = Settings(_env_file=None)
             assert s.faceit_api_key == "my_faceit_key_123"
 
     def test_settings_custom_aws_region(self) -> None:
@@ -71,5 +71,5 @@ class TestSettings:
             "CS2_KAGGLE_KEY": "x",
         }
         with patch.dict("os.environ", env_vars, clear=True):
-            s = Settings()
+            s = Settings(_env_file=None)
             assert s.aws_region == "eu-west-1"

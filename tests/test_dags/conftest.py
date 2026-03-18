@@ -12,16 +12,12 @@ from pathlib import Path
 import pytest
 from airflow.models import DagBag
 
-# Add project root to sys.path so airflow's pkgutil.extend_path can discover
-# the local airflow/dags/ namespace alongside the installed airflow package.
-_PROJECT_ROOT = str(Path(__file__).parent.parent.parent)
-if _PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, _PROJECT_ROOT)
-
-# Re-extend airflow.__path__ now that project root is on sys.path
-import airflow as _airflow  # noqa: E402
-import pkgutil as _pkgutil  # noqa: E402
-_airflow.__path__ = list(_pkgutil.extend_path(_airflow.__path__, _airflow.__name__))
+# Add airflow/dags/ to sys.path so `from utils.slack_alerts import ...` works
+# in tests the same way it does inside the Airflow container (where
+# AIRFLOW__CORE__DAGS_FOLDER is automatically added to sys.path).
+_DAGS_DIR = str(Path(__file__).parent.parent.parent / "airflow" / "dags")
+if _DAGS_DIR not in sys.path:
+    sys.path.insert(0, _DAGS_DIR)
 
 # Extend root conftest dummy env with Airflow-specific vars.
 # Must run before DagBag is instantiated in any test.

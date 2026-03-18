@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Data Ingestion** - Raw data from Liquipedia, FACEIT, PandaScore, and Kaggle lands in AWS S3 as Parquet (completed 2026-03-17)
 - [x] **Phase 2: Orchestration** - Airflow DAGs automate pipeline execution in a Docker-composed local stack (completed 2026-03-17)
-- [ ] **Phase 3: Warehouse & dbt** - Snowflake star schema with full dbt model lineage from staging to analytical marts
+- [x] **Phase 3: Warehouse & dbt** - Snowflake star schema with full dbt model lineage from staging to analytical marts (completed 2026-03-18)
 - [ ] **Phase 4: Analytical Products** - Upset Tracker (ML), Hidden Gem Scout (SQL), and Choke/Clutch Profile (SQL) are computed
 - [ ] **Phase 5: Dashboard & Deployment** - Public Streamlit app on Streamlit Community Cloud serves all three products
 - [ ] **Phase 6: CI & Polish** - GitHub Actions CI, map meta notebook, and portfolio-ready README finalize the project
@@ -35,13 +35,13 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md — Project scaffold, Pydantic data models (ING-08)
-- [ ] 01-02-PLAN.md — S3 upload utility + Parquet serialization utility (ING-05)
-- [ ] 01-03-PLAN.md — BaseAPIClient ABC + FACEITClient with retry (ING-02, ING-06 partial)
-- [ ] 01-04-PLAN.md — LiquipediaClient with 5 CS2 entity types (ING-01)
-- [ ] 01-05-PLAN.md — PandaScoreClient with match and player ingestion (ING-03)
-- [ ] 01-06-PLAN.md — Kaggle CSV bootstrap ingester + script (ING-04)
-- [ ] 01-07-PLAN.md — Full pytest suite with respx + moto mocks (ING-06, ING-07)
-- [ ] 01-08-PLAN.md — Gap closure: fix 45 ruff lint errors, apply ruff format (ING-01 through ING-08)
+- [x] 01-02-PLAN.md — S3 upload utility + Parquet serialization utility (ING-05)
+- [x] 01-03-PLAN.md — BaseAPIClient ABC + FACEITClient with retry (ING-02, ING-06 partial)
+- [x] 01-04-PLAN.md — LiquipediaClient with 5 CS2 entity types (ING-01)
+- [x] 01-05-PLAN.md — PandaScoreClient with match and player ingestion (ING-03)
+- [x] 01-06-PLAN.md — Kaggle CSV bootstrap ingester + script (ING-04)
+- [x] 01-07-PLAN.md — Full pytest suite with respx + moto mocks (ING-06, ING-07)
+- [x] 01-08-PLAN.md — Gap closure: fix 45 ruff lint errors, apply ruff format (ING-01 through ING-08)
 
 ### Phase 2: Orchestration
 **Goal**: Pipeline execution is automated, monitored, and reproducible via a one-command local stack
@@ -55,11 +55,11 @@ Plans:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Wave 0: Test scaffolding, pyproject.toml Airflow deps (ORC-01..05)
-- [ ] 02-02-PLAN.md — Docker Compose stack: Dockerfile + docker-compose.yml (ORC-05)
-- [ ] 02-03-PLAN.md — Slack alerts utils + fail_intentionally DAG (ORC-04)
-- [ ] 02-04-PLAN.md — cs2_daily_matches DAG + idempotency tests (ORC-01)
-- [ ] 02-05-PLAN.md — cs2_weekly_rankings + cs2_tournament_sync DAGs (ORC-02, ORC-03)
+- [x] 02-01-PLAN.md — Wave 0: Test scaffolding, pyproject.toml Airflow deps (ORC-01..05)
+- [x] 02-02-PLAN.md — Docker Compose stack: Dockerfile + docker-compose.yml (ORC-05)
+- [x] 02-03-PLAN.md — Slack alerts utils + fail_intentionally DAG (ORC-04)
+- [x] 02-04-PLAN.md — cs2_daily_matches DAG + idempotency tests (ORC-01)
+- [x] 02-05-PLAN.md — cs2_weekly_rankings + cs2_tournament_sync DAGs (ORC-02, ORC-03)
 
 ### Phase 3: Warehouse & dbt
 **Goal**: All raw data is cleaned, joined, and surfaced as seven analytical marts in Snowflake with full lineage
@@ -74,12 +74,12 @@ Plans:
 **Plans**: 6 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Match model patch: add score_a/score_b/is_overtime + update ingestion clients (WH-01, WH-10)
-- [ ] 03-02-PLAN.md — dbt project scaffold: config, Snowflake setup SQL, sources (WH-01, WH-12)
-- [ ] 03-03-PLAN.md — Staging + intermediate models with schema tests (WH-02, WH-03, WH-11)
-- [ ] 03-04-PLAN.md — Core star schema: fact tables + dimension tables (WH-01, WH-11)
-- [ ] 03-05-PLAN.md — All 7 analytics marts + singular non-empty test (WH-04..WH-10, WH-11)
-- [ ] 03-06-PLAN.md — cs2_dbt_run Airflow DAG + Dockerfile update (WH-11, WH-12)
+- [x] 03-01-PLAN.md — Match model patch: add score_a/score_b/is_overtime + update ingestion clients (WH-01, WH-10)
+- [x] 03-02-PLAN.md — dbt project scaffold: config, Snowflake setup SQL, sources (WH-01, WH-12)
+- [x] 03-03-PLAN.md — Staging + intermediate models with schema tests (WH-02, WH-03, WH-11)
+- [x] 03-04-PLAN.md — Core star schema: fact tables + dimension tables (WH-01, WH-11)
+- [x] 03-05-PLAN.md — All 7 analytics marts + singular non-empty test (WH-04..WH-10, WH-11)
+- [x] 03-06-PLAN.md — cs2_dbt_run Airflow DAG + Dockerfile update (WH-11, WH-12)
 
 ### Phase 4: Analytical Products
 **Goal**: All three analytical products are computed and return correct, explainable results from warehouse data
@@ -124,7 +124,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Data Ingestion | 8/8 | Complete    | 2026-03-17 |
 | 2. Orchestration | 5/5 | Complete   | 2026-03-17 |
-| 3. Warehouse & dbt | 5/6 | In Progress|  |
+| 3. Warehouse & dbt | 6/6 | Complete | 2026-03-18 |
 | 4. Analytical Products | 0/TBD | Not started | - |
 | 5. Dashboard & Deployment | 0/TBD | Not started | - |
 | 6. CI & Polish | 0/TBD | Not started | - |

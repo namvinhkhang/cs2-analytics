@@ -11,7 +11,7 @@ from __future__ import annotations
 import pendulum
 from airflow.decorators import dag, task
 
-from airflow.dags.utils.slack_alerts import on_failure_callback
+from utils.slack_alerts import on_failure_callback
 
 
 @dag(

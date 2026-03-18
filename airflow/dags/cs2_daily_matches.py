@@ -18,7 +18,7 @@ import structlog
 from airflow.decorators import dag, task
 from botocore.exceptions import ClientError
 
-from airflow.dags.utils.slack_alerts import on_failure_callback
+from utils.slack_alerts import on_failure_callback
 
 log = structlog.get_logger()
 

@@ -14,20 +14,19 @@ Three analytical products that answer questions HLTV.org never answers — surfa
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] ELT pipeline ingests match data from Liquipedia API v3, FACEIT API, and PandaScore into AWS S3 (Parquet, partitioned by date)
+- [x] Apache Airflow DAGs orchestrate daily match ingestion, weekly rankings sync, and tournament sync — with retry logic and failure alerting
+- [x] Snowflake data warehouse with star schema (fact_matches, fact_player_stats, dim_teams, dim_players, dim_maps, dim_tournaments)
+- [x] dbt models: staging → intermediate → 7 analytical marts including mart_upset_features, mart_hidden_gems, mart_choke_profile
+- [x] Dockerized full stack (Airflow + Postgres + Redis) with one-command spin-up
 
 ### Active
 
-- [ ] ELT pipeline ingests match data from Liquipedia API v3, FACEIT API, and PandaScore into AWS S3 (Parquet, partitioned by date)
-- [ ] Apache Airflow DAGs orchestrate daily match ingestion, weekly rankings sync, and tournament sync — with retry logic and failure alerting
-- [ ] Snowflake data warehouse with star schema (fact_matches, fact_player_stats, dim_teams, dim_players, dim_maps, dim_tournaments)
-- [ ] dbt models: staging → intermediate → 7 analytical marts including mart_upset_features, mart_hidden_gems, mart_choke_profile
 - [ ] Upset Tracker: XGBoost classifier predicting pre-tournament upsets with SHAP explainability
 - [ ] Hidden Gem Scout: SQL-only outlier detection flagging tier-2/3 players performing at tier-1 statistical levels
 - [ ] Choke/Clutch Profile: conditional SQL aggregations surfacing team pressure-situation behavioral patterns
 - [ ] Streamlit dashboard (4 pages) deployed publicly on Streamlit Community Cloud
 - [ ] GitHub Actions CI: ruff, mypy, pytest, dbt test on every PR
-- [ ] Dockerized full stack (Airflow + Postgres + Redis) with one-command spin-up
 - [ ] Map meta Jupyter report: Seaborn heatmaps + chi-square significance tests, exported as PDF writing sample
 - [ ] Model card documenting Upset Tracker features, evaluation metrics, and known limitations
 
@@ -66,4 +65,4 @@ Three analytical products that answer questions HLTV.org never answers — surfa
 | Streamlit over Tableau/PowerBI | Deployable as public URL; shows Python + viz proficiency simultaneously | — Pending |
 
 ---
-*Last updated: 2026-03-16 after initialization*
+*Last updated: 2026-03-18 after Phase 3 completion*

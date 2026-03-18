@@ -96,7 +96,7 @@ airflow/
 | Phase | Status | Directory |
 |-------|--------|-----------|
 | 1 — Data Ingestion | Complete | `src/cs2_analytics/` |
-| 2 — Orchestration | Complete (human verification in progress) | `airflow/dags/` |
+| 2 — Orchestration | Complete (verified) | `airflow/dags/` |
 | 3 — dbt + Snowflake Warehouse | Not Started | `dbt_project/` |
 | 4 — Analytics Products | Not Started | `dashboard/`, `ml/` |
 | 5 — Dashboard & Deployment | Not Started | `dashboard/` |
