@@ -14,3 +14,5 @@
 - Hidden Gem Scout needs a recent sample-size floor; require enough recent stat rows before flagging a player so one-off games do not become prospect signals.
 - When graphifying the current codebase after the user says to ignore dot-prefixed folders, filter every detected path with any directory part beginning with `.` before extraction so planning/cache metadata does not pollute the graph.
 - Scheduled raw-data bootstraps must not overwrite same-partition S3 objects. Check each target object before API calls and either skip existing outputs or add a downstream dedupe contract before using unique run filenames.
+- Dashboard snapshot loaders must normalize Snowflake-exported uppercase columns to the code's lowercase mart contract before page logic or ML helpers touch the frame; otherwise Streamlit pages can look empty and model feature checks fail.
+- Streamlit numeric sliders need a max value greater than the min value even when filtered data is empty or a column is missing; wrap computed slider bounds so browser-only failures are covered by tests.

@@ -18,6 +18,8 @@ dependencies = [
     "matplotlib>=3.10.9",
     "snowflake-connector-python>=4.4.0",
     "duckdb>=1.5.2",
+    "streamlit>=1.51.0",
+    "plotly>=6.0",
 ]
 
 [project.optional-dependencies]
@@ -78,4 +80,5 @@ dev = [
     "dbt-snowflake>=1.11.4",
     "moto[s3]>=5.1.22",
     "pandas-stubs>=3.0.0.260204",
+    "playwright>=1.59.0",
 ]
