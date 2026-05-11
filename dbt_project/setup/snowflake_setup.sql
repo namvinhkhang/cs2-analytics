@@ -95,6 +95,21 @@ CREATE TABLE IF NOT EXISTS RAW.raw_pandascore_matches (
   team_b_ranking INTEGER
 );
 
+CREATE TABLE IF NOT EXISTS RAW.raw_csapi_matches (
+  match_id    VARCHAR,
+  source      VARCHAR,
+  team_a_id   VARCHAR,
+  team_b_id   VARCHAR,
+  winner_id   VARCHAR,
+  played_at   VARCHAR,
+  map_name    VARCHAR,
+  score_a     INTEGER,
+  score_b     INTEGER,
+  is_overtime BOOLEAN,
+  team_a_ranking INTEGER,
+  team_b_ranking INTEGER
+);
+
 CREATE TABLE IF NOT EXISTS RAW.raw_csapi_team_rankings (
   team_id       VARCHAR,
   source        VARCHAR,
@@ -230,6 +245,13 @@ COPY INTO CS2_ANALYTICS.RAW.raw_faceit_matches
 
 COPY INTO CS2_ANALYTICS.RAW.raw_pandascore_matches
   FROM @cs2_raw_stage/pandascore/matches/
+  FILE_FORMAT = (TYPE = PARQUET)
+  MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
+  ON_ERROR = CONTINUE
+  PURGE = FALSE;
+
+COPY INTO CS2_ANALYTICS.RAW.raw_csapi_matches
+  FROM @cs2_raw_stage/csapi/matches/
   FILE_FORMAT = (TYPE = PARQUET)
   MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
   ON_ERROR = CONTINUE

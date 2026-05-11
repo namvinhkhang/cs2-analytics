@@ -5,7 +5,8 @@ models:
     description: "Cleaned FACEIT match data — renames raw_faceit_matches columns, filters nulls"
     columns:
       - name: match_id
-        description: "Real CS API match ID for match-stat rows; null for current profile snapshots."
+        data_tests:
+          - not_null
       - name: source
         data_tests:
           - not_null
@@ -32,6 +33,27 @@ models:
           - not_null
           - accepted_values:
               values: ['pandascore']
+
+  - name: stg_csapi_matches
+    description: "Cleaned CS API series-level match data with CS API team IDs and rankings"
+    columns:
+      - name: match_id
+        data_tests:
+          - not_null
+      - name: source
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['csapi']
+      - name: team_a_id
+        data_tests:
+          - not_null
+      - name: team_b_id
+        data_tests:
+          - not_null
+      - name: played_at
+        data_tests:
+          - not_null
 
   - name: stg_csapi_team_rankings
     description: "Modern CS2 VRS-style team rankings from CS API"
@@ -63,8 +85,7 @@ models:
           - accepted_values:
               values: ['csapi']
       - name: match_id
-        data_tests:
-          - not_null
+        description: "Real CS API match ID for match-stat rows; null for current profile snapshots."
 
   - name: stg_faceit_players
     description: "Cleaned FACEIT player stats — primary stats source with ADR, KAST, and ELO"

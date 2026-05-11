@@ -9,10 +9,11 @@ from typing import Any
 import structlog
 
 from cs2_analytics.ingestion.base import BaseAPIClient
-from cs2_analytics.models.csapi import CSAPIPlayerStat, CSAPITeamRanking
+from cs2_analytics.models.csapi import CSAPIMatch, CSAPIPlayerStat, CSAPITeamRanking
 from cs2_analytics.utils.parquet import (
     CSAPI_PLAYER_STATS_SCHEMA,
     CSAPI_TEAM_RANKING_SCHEMA,
+    MATCH_SCHEMA,
 )
 from cs2_analytics.utils.s3 import build_s3_key, write_parquet_to_s3
 
@@ -170,6 +171,76 @@ class CSAPIClient(BaseAPIClient):
             )
 
         logger.info("csapi_team_rankings_ingested", count=len(records))
+        return len(records)
+
+    async def ingest_matches(
+        self,
+        bucket: str,
+        ingest_date: date,
+        *,
+        limit: int = 100,
+        offset: int = 0,
+        pages: int = 25,
+        max_matches: int | None = None,
+        request_delay_seconds: float = 0.1,
+        progress_interval: int = 25,
+        output_filename: str = "data.parquet",
+        region: str = "us-east-1",
+    ) -> int:
+        """Fetch CS API series-level match rows and write them to S3."""
+        records: list[dict[str, Any]] = []
+        total_seen = 0
+        for page_index in range(pages):
+            if max_matches is not None and total_seen >= max_matches:
+                break
+
+            page_offset = offset + page_index * limit
+            page_limit = limit
+            if max_matches is not None:
+                page_limit = min(limit, max_matches - total_seen)
+
+            page_matches = await self.get_matches(limit=page_limit, offset=page_offset)
+            total_seen += len(page_matches)
+            records.extend(
+                CSAPIMatch.model_validate(match).to_match_record()
+                for match in page_matches
+            )
+            logger.info(
+                "csapi_matches_page_ingested",
+                page=page_index + 1,
+                offset=page_offset,
+                limit=page_limit,
+                count=len(page_matches),
+                total_matches=total_seen,
+                records=len(records),
+            )
+            if len(page_matches) < page_limit:
+                break
+            if request_delay_seconds > 0:
+                await asyncio.sleep(request_delay_seconds)
+
+            if progress_interval > 0 and (page_index + 1) % progress_interval == 0:
+                logger.info(
+                    "csapi_matches_ingest_progress",
+                    pages=page_index + 1,
+                    records=len(records),
+                )
+
+        if records:
+            y, m, d = ingest_date.year, ingest_date.month, ingest_date.day
+            write_parquet_to_s3(
+                records=records,
+                schema=MATCH_SCHEMA,
+                bucket=bucket,
+                key=build_s3_key("csapi", "matches", y, m, d, filename=output_filename),
+                region=region,
+            )
+
+        logger.info(
+            "csapi_matches_ingested",
+            count=len(records),
+            output_filename=output_filename,
+        )
         return len(records)
 
     async def ingest_player_stats(

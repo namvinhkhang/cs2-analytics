@@ -17,6 +17,9 @@ sources:
       - name: raw_pandascore_matches
         description: "PandaScore tier-1 pro match results from the /csgo/ legacy endpoint."
 
+      - name: raw_csapi_matches
+        description: "Modern CS2 series-level match results from the public CS API."
+
       - name: raw_csapi_team_rankings
         description: "Modern CS2 VRS-style team rankings from the public CS API."
 

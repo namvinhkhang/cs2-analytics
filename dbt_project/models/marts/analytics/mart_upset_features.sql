@@ -3,9 +3,11 @@
 -- and the ranking delta between the two teams is greater than 5.
 -- Grain: one row per completed match with team ranking features and upset label.
 with matches as (
-    -- Only completed matches with a determined winner
+    -- Only completed CS API matches with a determined winner. CS API match
+    -- team IDs align with CS API rankings, avoiding cross-provider ID joins.
     select * from {{ ref('fact_matches') }}
     where winner_id is not null
+      and source = 'csapi'
 ),
 
 teams as (

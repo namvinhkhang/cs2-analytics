@@ -30,6 +30,11 @@ COPY_INTO_STATEMENTS = [
        FILE_FORMAT = (TYPE = PARQUET)
        MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
        ON_ERROR = CONTINUE PURGE = FALSE""",
+    """COPY INTO CS2_ANALYTICS.RAW.raw_csapi_matches
+       FROM @CS2_ANALYTICS.RAW.cs2_raw_stage/csapi/matches/
+       FILE_FORMAT = (TYPE = PARQUET)
+       MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
+       ON_ERROR = CONTINUE PURGE = FALSE""",
     """COPY INTO CS2_ANALYTICS.RAW.raw_csapi_team_rankings
        FROM @CS2_ANALYTICS.RAW.cs2_raw_stage/csapi/team_rankings/
        FILE_FORMAT = (TYPE = PARQUET)

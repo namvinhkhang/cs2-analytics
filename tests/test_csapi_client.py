@@ -10,7 +10,7 @@ import respx
 from httpx import Response
 
 from cs2_analytics.ingestion.csapi import CSAPIClient
-from cs2_analytics.models.csapi import CSAPIPlayerStat, CSAPITeamRanking
+from cs2_analytics.models.csapi import CSAPIMatch, CSAPIPlayerStat, CSAPITeamRanking
 
 
 @pytest.mark.asyncio
@@ -72,6 +72,95 @@ def test_team_ranking_maps_to_canonical_team() -> None:
     assert team.region == "global"
     assert team.world_ranking == 1
     assert team.ingested_at == "2026-05-10"
+
+
+def test_csapi_match_maps_to_series_match_record() -> None:
+    """CS API matches should preserve team IDs and rankings for Upset Tracker."""
+    match = CSAPIMatch(
+        id=2394126,
+        team1={"id": 7020, "name": "Spirit", "score": 2, "rank": 3},
+        team2={"id": 6248, "name": "The MongolZ", "score": 0, "rank": 6},
+        maps=[
+            {"id": 4, "name": "Dust2", "team1_score": 13, "team2_score": 11},
+            {"id": 3, "name": "Ancient", "team1_score": 19, "team2_score": 16},
+        ],
+        best_of=3,
+        date="2026-05-10",
+        event="PGL Astana 2026",
+        winner={"id": 7020, "name": "Spirit"},
+    )
+
+    record = match.to_match_record()
+
+    assert record["match_id"] == "2394126"
+    assert record["source"] == "csapi"
+    assert record["team_a_id"] == "7020"
+    assert record["team_b_id"] == "6248"
+    assert record["winner_id"] == "7020"
+    assert record["played_at"] == "2026-05-10"
+    assert record["map_name"] is None
+    assert record["score_a"] == 2
+    assert record["score_b"] == 0
+    assert record["is_overtime"] is None
+    assert record["team_a_ranking"] == 3
+    assert record["team_b_ranking"] == 6
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_ingest_matches_writes_csapi_match_prefix() -> None:
+    """CS API match rows should be loaded as the canonical upset-predictor match source."""
+    respx.get(
+        "https://api.csapi.de/matches/",
+        params={"limit": 1, "offset": 0},
+    ).mock(
+        return_value=Response(
+            200,
+            json=[
+                {
+                    "id": 2394130,
+                    "team1": {"id": 11283, "name": "Falcons", "score": 1, "rank": 4},
+                    "team2": {"id": 9996, "name": "9z", "score": 2, "rank": 13},
+                    "maps": [],
+                    "best_of": 3,
+                    "date": "2026-05-10",
+                    "event": "PGL Astana 2026",
+                    "winner": {"id": 9996, "name": "9z"},
+                }
+            ],
+        )
+    )
+
+    with patch("cs2_analytics.ingestion.csapi.write_parquet_to_s3") as mock_write:
+        async with CSAPIClient() as client:
+            count = await client.ingest_matches(
+                bucket="bucket",
+                ingest_date=date(2026, 5, 11),
+                limit=1,
+                pages=1,
+                request_delay_seconds=0.0,
+            )
+
+    assert count == 1
+    call = mock_write.call_args.kwargs
+    assert call["bucket"] == "bucket"
+    assert call["key"] == "raw/csapi/matches/year=2026/month=05/day=11/data.parquet"
+    assert call["records"] == [
+        {
+            "match_id": "2394130",
+            "source": "csapi",
+            "team_a_id": "11283",
+            "team_b_id": "9996",
+            "winner_id": "9996",
+            "played_at": "2026-05-10",
+            "map_name": None,
+            "score_a": 1,
+            "score_b": 2,
+            "is_overtime": None,
+            "team_a_ranking": 4,
+            "team_b_ranking": 13,
+        }
+    ]
 
 
 def test_player_stat_maps_to_modern_player_record() -> None:

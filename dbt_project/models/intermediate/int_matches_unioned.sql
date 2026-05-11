@@ -9,10 +9,16 @@ pandascore as (
     select * from {{ ref('stg_pandascore_matches') }}
 ),
 
+csapi as (
+    select * from {{ ref('stg_csapi_matches') }}
+),
+
 unioned as (
     select * from faceit
     union all
     select * from pandascore
+    union all
+    select * from csapi
 )
 
 select * from unioned

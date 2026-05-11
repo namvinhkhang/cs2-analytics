@@ -91,7 +91,7 @@ def _output_filename(offset: int, max_matches: int | None) -> str:
     return "data.parquet"
 
 
-async def _run() -> tuple[int, int]:
+async def _run() -> tuple[int, int, int]:
     """Fetch modern ranking/player stat snapshots and upload them to S3."""
     ingest_date = date.today()
     match_limit = _read_int_env("CS2_CSAPI_MATCH_LIMIT", 100, minimum=1)
@@ -125,6 +125,18 @@ async def _run() -> tuple[int, int]:
             ingest_date=ingest_date,
             region=settings.aws_region,
         )
+        match_count = await client.ingest_matches(
+            bucket=settings.aws_s3_bucket,
+            ingest_date=ingest_date,
+            limit=match_limit,
+            offset=match_offset,
+            pages=match_pages,
+            max_matches=max_matches,
+            request_delay_seconds=request_delay_seconds,
+            progress_interval=progress_interval,
+            output_filename=output_filename,
+            region=settings.aws_region,
+        )
         player_count = await client.ingest_player_stats(
             bucket=settings.aws_s3_bucket,
             ingest_date=ingest_date,
@@ -138,21 +150,23 @@ async def _run() -> tuple[int, int]:
             refresh_current_profiles=refresh_current_profiles,
             region=settings.aws_region,
         )
-    return ranking_count, player_count
+    return ranking_count, match_count, player_count
 
 
 def main() -> None:
     """Run CS API bootstrap."""
     logger.info("csapi_bootstrap_starting", bucket=settings.aws_s3_bucket)
-    ranking_count, player_count = asyncio.run(_run())
+    ranking_count, match_count, player_count = asyncio.run(_run())
     logger.info(
         "csapi_bootstrap_finished",
         team_rankings=ranking_count,
+        matches=match_count,
         player_stats=player_count,
     )
     print(
         "CS API bootstrap complete: "
-        f"{ranking_count} rankings and {player_count} player stats written "
+        f"{ranking_count} rankings, {match_count} matches, "
+        f"and {player_count} player stats written "
         f"to s3://{settings.aws_s3_bucket}/raw/csapi/"
     )
 

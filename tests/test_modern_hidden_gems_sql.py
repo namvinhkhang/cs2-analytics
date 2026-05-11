@@ -70,3 +70,23 @@ def test_modern_intermediate_models_exclude_kaggle_sources() -> None:
     assert "stg_kaggle_matches" not in matches_sql
     assert "stg_kaggle_players" not in players_sql
     assert "'kaggle'" not in schema_yml
+
+
+def test_modern_match_union_includes_csapi_matches() -> None:
+    """CS API matches should feed modern match facts for ranking-compatible analytics."""
+    matches_sql = Path("dbt_project/models/intermediate/int_matches_unioned.sql").read_text()
+    sources_yml = Path("dbt_project/models/sources.yml").read_text()
+    staging_yml = Path("dbt_project/models/staging/staging.yml").read_text()
+    intermediate_yml = Path("dbt_project/models/intermediate/intermediate.yml").read_text()
+
+    assert "stg_csapi_matches" in matches_sql
+    assert "raw_csapi_matches" in sources_yml
+    assert "stg_csapi_matches" in staging_yml
+    assert "values: ['faceit', 'pandascore', 'csapi']" in intermediate_yml
+
+
+def test_upset_features_use_csapi_match_source() -> None:
+    """Upset Predictor should avoid provider-ID joins by training on CS API matches."""
+    sql = Path("dbt_project/models/marts/analytics/mart_upset_features.sql").read_text()
+
+    assert "source = 'csapi'" in sql

@@ -53,6 +53,51 @@ class CSAPITeamRanking(BaseModel):
         }
 
 
+class CSAPIMatch(BaseModel):
+    """One series-level row from the CS API `/matches/` endpoint."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    id: int
+    team1: dict[str, Any]
+    team2: dict[str, Any]
+    maps: list[dict[str, Any]] = []
+    best_of: int | None = None
+    date: str
+    event: str | None = None
+    winner: dict[str, Any] | None = None
+
+    @staticmethod
+    def _string_value(data: dict[str, Any], key: str) -> str | None:
+        """Read a stringified value from a nested CS API object."""
+        value = data.get(key)
+        return str(value) if value is not None else None
+
+    @staticmethod
+    def _int_value(data: dict[str, Any], key: str) -> int | None:
+        """Read an integer value from a nested CS API object."""
+        value = data.get(key)
+        return int(value) if value is not None else None
+
+    def to_match_record(self) -> dict[str, Any]:
+        """Return a canonical series-level match row for ranking-compatible marts."""
+        winner_id = self._string_value(self.winner, "id") if self.winner is not None else None
+        return {
+            "match_id": str(self.id),
+            "source": "csapi",
+            "team_a_id": self._string_value(self.team1, "id") or "unknown",
+            "team_b_id": self._string_value(self.team2, "id") or "unknown",
+            "winner_id": winner_id,
+            "played_at": self.date,
+            "map_name": None,
+            "score_a": self._int_value(self.team1, "score"),
+            "score_b": self._int_value(self.team2, "score"),
+            "is_overtime": None,
+            "team_a_ranking": self._int_value(self.team1, "rank"),
+            "team_b_ranking": self._int_value(self.team2, "rank"),
+        }
+
+
 class CSAPIPlayerStat(BaseModel):
     """Player stat row from CS API match stats or player aggregate endpoints."""
 
