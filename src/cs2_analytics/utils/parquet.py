@@ -103,6 +103,21 @@ CSAPI_PLAYER_STATS_SCHEMA: pa.Schema = pa.schema(
     ]
 )
 
+VALVE_TEAM_REGION_SCHEMA: pa.Schema = pa.schema(
+    [
+        pa.field("snapshot_date", pa.string(), nullable=False),
+        pa.field("team_name", pa.string(), nullable=False),
+        pa.field("normalized_team_name", pa.string(), nullable=False),
+        pa.field("region", pa.string(), nullable=False),
+        pa.field("regional_rank", pa.int64(), nullable=False),
+        pa.field("global_rank", pa.int64(), nullable=True),
+        pa.field("points", pa.int64(), nullable=True),
+        pa.field("roster", pa.string(), nullable=True),
+        pa.field("detail_path", pa.string(), nullable=True),
+        pa.field("source", pa.string(), nullable=False),
+    ]
+)
+
 def models_to_records(models: Sequence[BaseModel]) -> list[dict[str, Any]]:
     """Convert a list of Pydantic models to plain dicts for pyarrow.
 

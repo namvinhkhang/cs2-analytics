@@ -45,6 +45,11 @@ COPY_INTO_STATEMENTS = [
        FILE_FORMAT = (TYPE = PARQUET)
        MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
        ON_ERROR = CONTINUE PURGE = FALSE""",
+    """COPY INTO CS2_ANALYTICS.RAW.raw_valve_team_regions
+       FROM @CS2_ANALYTICS.RAW.cs2_raw_stage/valve/team_regions/
+       FILE_FORMAT = (TYPE = PARQUET)
+       MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
+       ON_ERROR = CONTINUE PURGE = FALSE""",
     """COPY INTO CS2_ANALYTICS.RAW.raw_faceit_players
        FROM @CS2_ANALYTICS.RAW.cs2_raw_stage/faceit/players/
        FILE_FORMAT = (TYPE = PARQUET)
