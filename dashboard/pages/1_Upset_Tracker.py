@@ -48,6 +48,19 @@ def _normalize_region(value: Any) -> str:
     return "Unknown" if text.casefold() == "global" else text
 
 
+def _display_bool(value: Any) -> bool | None:
+    """Convert warehouse 0/1 flags to booleans for table rendering only."""
+    if pd.isna(value):
+        return None
+    if isinstance(value, str):
+        normalized = value.strip().casefold()
+        if normalized in {"1", "true", "yes"}:
+            return True
+        if normalized in {"0", "false", "no"}:
+            return False
+    return bool(value)
+
+
 def _available_columns(frame: pd.DataFrame, columns: Iterable[str]) -> list[str]:
     return [column for column in columns if column in frame.columns]
 
@@ -88,7 +101,11 @@ def _prepare_frame(frame: pd.DataFrame) -> pd.DataFrame:
 def _display_frame(frame: pd.DataFrame) -> pd.DataFrame:
     """Return the public match table without raw provider IDs when labels exist."""
     prepared = _prepare_frame(frame)
-    return prepared[_available_columns(prepared, DISPLAY_COLUMNS)]
+    display = prepared[_available_columns(prepared, DISPLAY_COLUMNS)].copy()
+    for column in ("is_cross_region", "is_upset"):
+        if column in display.columns:
+            display[column] = display[column].map(_display_bool).astype(object)
+    return display
 
 
 def _match_labels(frame: pd.DataFrame) -> list[str]:

@@ -159,6 +159,29 @@ def test_upset_tracker_filters_do_not_render_map_selector() -> None:
     assert len(filtered) == 1
 
 
+def test_upset_tracker_display_frame_renders_binary_flags_as_booleans() -> None:
+    """The table should render binary labels readably without changing source data."""
+    module = _load_module(REPO_ROOT / "dashboard" / "pages" / "1_Upset_Tracker.py")
+    frame = pd.DataFrame(
+        [
+            {
+                "match_id": "2394126",
+                "team_a_name": "Spirit",
+                "team_b_name": "The MongolZ",
+                "is_cross_region": 1,
+                "is_upset": 0,
+            }
+        ]
+    )
+
+    display = module._display_frame(frame)
+
+    assert display.loc[0, "is_cross_region"] is True
+    assert display.loc[0, "is_upset"] is False
+    assert frame.loc[0, "is_cross_region"] == 1
+    assert frame.loc[0, "is_upset"] == 0
+
+
 def test_hidden_gem_display_frame_hides_player_and_team_ids_when_names_exist() -> None:
     """Player/team IDs are technical keys and should not crowd the public table."""
     module = _load_module(REPO_ROOT / "dashboard" / "pages" / "2_Hidden_Gem_Scout.py")
