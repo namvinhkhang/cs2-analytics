@@ -150,8 +150,10 @@ jobs:
         run: |
           uv run python - <<'PY'
           import os
+          import sys
 
           import snowflake.connector
+          from snowflake.connector.errors import ProgrammingError
 
           database = os.environ["SNOWFLAKE_DATABASE"]
           conn = snowflake.connector.connect(
@@ -164,25 +166,21 @@ jobs:
           )
           try:
               cursor = conn.cursor()
-              cursor.execute(
-                  f"""
-                  CREATE TABLE IF NOT EXISTS {database}.RAW.raw_valve_team_regions (
-                    snapshot_date        VARCHAR,
-                    team_name            VARCHAR,
-                    normalized_team_name VARCHAR,
-                    region               VARCHAR,
-                    regional_rank        INTEGER,
-                    global_rank          INTEGER,
-                    points               INTEGER,
-                    roster               VARCHAR,
-                    detail_path          VARCHAR,
-                    source               VARCHAR
+              table_name = f"{database}.RAW.raw_valve_team_regions"
+              try:
+                  cursor.execute(f"SELECT 1 FROM {table_name} LIMIT 0")
+              except ProgrammingError as exc:
+                  print(
+                      "RAW.raw_valve_team_regions is missing or inaccessible. "
+                      "Run the one-time Snowflake setup SQL from "
+                      "dbt_project/setup/snowflake_setup.sql with an admin role, "
+                      "then grant TRANSFORMER SELECT and INSERT on the table.",
+                      file=sys.stderr,
                   )
-                  """
-              )
+                  raise SystemExit(1) from exc
               cursor.execute(
                   f"""
-                  COPY INTO {database}.RAW.raw_valve_team_regions
+                  COPY INTO {table_name}
                     FROM @{database}.RAW.cs2_raw_stage/valve/team_regions/
                     FILE_FORMAT = (TYPE = PARQUET)
                     MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE

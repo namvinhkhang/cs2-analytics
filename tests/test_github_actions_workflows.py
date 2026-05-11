@@ -39,6 +39,16 @@ def test_dashboard_refresh_workflow_loads_valve_regions_before_dbt() -> None:
     assert "cs2_raw_stage/valve/team_regions/" in workflow
 
 
+def test_dashboard_refresh_workflow_does_not_create_raw_tables() -> None:
+    """Raw DDL is a setup/admin concern; CI should not need schema CREATE privileges."""
+    workflow = (REPO_ROOT / ".github" / "workflows" / "dashboard-refresh.yml").read_text(
+        encoding="utf-8",
+    )
+
+    assert "CREATE TABLE IF NOT EXISTS" not in workflow
+    assert "RAW.raw_valve_team_regions is missing or inaccessible" in workflow
+
+
 def test_dashboard_refresh_workflow_rebuilds_upstream_region_models() -> None:
     """Running only final marts can leave dim_teams stale after raw Valve ingestion."""
     workflow = (REPO_ROOT / ".github" / "workflows" / "dashboard-refresh.yml").read_text(
