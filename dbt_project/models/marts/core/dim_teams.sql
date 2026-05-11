@@ -15,19 +15,46 @@ with liquipedia as (
     from {{ ref('stg_liquipedia_teams') }}
 ),
 
+liquipedia_region_names as (
+    select
+        lower(
+            regexp_replace(
+                regexp_replace(name, '^team[ _-]+', '', 1, 1, 'i'),
+                '[^a-z0-9]+',
+                ''
+            )
+        ) as normalized_team_name,
+        region
+    from {{ ref('stg_liquipedia_teams') }}
+    where name is not null
+      and region is not null
+    qualify count(*) over (partition by normalized_team_name) = 1
+),
+
 csapi_rankings as (
     select
-        team_id,
-        name as team_name,
-        region,
-        world_ranking,
-        ranking_date as last_updated,
+        c.team_id,
+        c.name as team_name,
+        coalesce(
+            case when lower(c.region) = 'global' then null else c.region end,
+            lr.region
+        ) as region,
+        c.world_ranking,
+        c.ranking_date as last_updated,
         'csapi' as ranking_source,
         case 'csapi'
             when 'liquipedia' then 1
             when 'csapi' then 2
         end as ranking_source_priority
-    from {{ ref('stg_csapi_team_rankings') }}
+    from {{ ref('stg_csapi_team_rankings') }} c
+    left join liquipedia_region_names lr
+        on lower(
+            regexp_replace(
+                regexp_replace(c.name, '^team[ _-]+', '', 1, 1, 'i'),
+                '[^a-z0-9]+',
+                ''
+            )
+        ) = lr.normalized_team_name
 ),
 
 unioned as (

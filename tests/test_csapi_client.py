@@ -53,7 +53,7 @@ async def test_get_rankings_injects_snapshot_date() -> None:
 
 
 def test_team_ranking_maps_to_canonical_team() -> None:
-    """VRS team ranking rows should be usable by dim_teams."""
+    """VRS team ranking rows should not invent a team region the API does not provide."""
     ranking = CSAPITeamRanking(
         id=9565,
         name="Vitality",
@@ -69,9 +69,26 @@ def test_team_ranking_maps_to_canonical_team() -> None:
     assert team.team_id == "9565"
     assert team.source == "csapi"
     assert team.name == "Vitality"
-    assert team.region == "global"
+    assert team.region is None
     assert team.world_ranking == 1
     assert team.ingested_at == "2026-05-10"
+
+
+def test_team_ranking_record_keeps_missing_region_null() -> None:
+    """Dashboard region filters should not collapse unknown CS API regions into Global."""
+    ranking = CSAPITeamRanking(
+        id=9565,
+        name="Vitality",
+        rank=1,
+        rank_diff=0,
+        points=2086,
+        points_diff=5,
+        ranking_date="2026-05-10",
+    )
+
+    record = ranking.to_ranking_record()
+
+    assert record["region"] is None
 
 
 def test_csapi_match_maps_to_series_match_record() -> None:

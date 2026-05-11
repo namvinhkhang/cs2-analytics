@@ -90,3 +90,18 @@ def test_upset_features_use_csapi_match_source() -> None:
     sql = Path("dbt_project/models/marts/analytics/mart_upset_features.sql").read_text()
 
     assert "source = 'csapi'" in sql
+
+
+def test_upset_features_expose_readable_team_names() -> None:
+    """Dashboard watchlists should not force users to decode raw team IDs."""
+    sql = Path("dbt_project/models/marts/analytics/mart_upset_features.sql").read_text()
+
+    assert "team_a_name" in sql
+    assert "team_b_name" in sql
+
+
+def test_hidden_gems_expose_readable_team_names() -> None:
+    """Hidden Gem Scout should filter and display prospects by team name."""
+    sql = Path("dbt_project/models/marts/analytics/mart_hidden_gems.sql").read_text()
+
+    assert "team_name" in sql

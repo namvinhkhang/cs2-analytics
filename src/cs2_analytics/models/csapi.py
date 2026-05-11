@@ -32,7 +32,7 @@ class CSAPITeamRanking(BaseModel):
             team_id=str(self.id),
             source="csapi",
             name=self.name,
-            region="global",
+            region=None,
             world_ranking=self.rank,
             ingested_at=self.ranking_date,
         )
@@ -43,7 +43,9 @@ class CSAPITeamRanking(BaseModel):
             "team_id": str(self.id),
             "source": "csapi",
             "name": self.name,
-            "region": "global",
+            # CS API rankings do not expose geography, so keep this null instead of
+            # turning every team into a misleading Global region.
+            "region": None,
             "world_ranking": self.rank,
             "vrs_points": self.points,
             "rank_diff": self.rank_diff,
