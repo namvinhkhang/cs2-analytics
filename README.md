@@ -168,6 +168,45 @@ GitHub Student Developer Pack credits can help with alternatives like
 DigitalOcean or Azure, but Streamlit Community Cloud is the lowest-maintenance
 fit for this app.
 
+## GitHub Actions Refresh
+
+The repository includes `.github/workflows/dashboard-refresh.yml` to keep hosted
+dashboard snapshots fresh without running a 24/7 server.
+
+GitHub only runs scheduled workflows from the default branch, so merge this
+workflow to `main` before relying on the daily and weekly timers.
+
+Schedules are in UTC:
+
+- Daily refresh: `17 10 * * *`
+- Weekly refresh: `43 11 * * 1`
+
+You can also run it manually from GitHub Actions with the `daily` or `weekly`
+profile. The daily run ingests recent CS API data, rebuilds/test the dashboard
+marts, exports snapshots, and commits changed snapshots. The weekly run also
+rebuilds `mart_choke_profile` and retrains the Upset Tracker model before
+exporting snapshots.
+
+Add these repository secrets in GitHub before enabling the workflow:
+
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_SESSION_TOKEN` if using temporary AWS credentials
+- `CS2_AWS_REGION`
+- `CS2_AWS_S3_BUCKET`
+- `CS2_FACEIT_API_KEY`
+- `CS2_PANDASCORE_API_KEY`
+- `CS2_LIQUIPEDIA_API_KEY` if using Liquipedia enrichment
+- `SNOWFLAKE_ACCOUNT`
+- `SNOWFLAKE_USER`
+- `SNOWFLAKE_WAREHOUSE`
+- `SNOWFLAKE_DATABASE`
+- `SNOWFLAKE_PRIVATE_KEY`
+
+`SNOWFLAKE_PRIVATE_KEY` should contain the full private key text. Escaped
+newlines (`\n`) and normal multi-line secret values are both handled by the
+workflow.
+
 ## Airflow
 
 Start local Airflow:

@@ -262,3 +262,13 @@ tier-2/3/4 prospect, with tier-above thresholds, trend direction, and a numeric
 - Added `playwright` as a dev dependency and installed Chromium for local browser checks.
 - Verification: `CS2_DASHBOARD_BASE_URL=http://localhost:8505 uv run pytest tests/test_dashboard_browser.py -q` passed with 3 browser checks.
 - Verification: `uv run pytest` passed with 232 tests, 3 skipped opt-in browser tests, and 1 existing Airflow deprecation warning.
+
+## GitHub Actions Dashboard Refresh - 2026-05-11
+
+- [x] Add a scheduled GitHub Actions workflow for daily and weekly dashboard refreshes.
+- [x] Add manual `workflow_dispatch` profile selection for `daily` and `weekly`.
+- [x] Materialize the Snowflake private key from GitHub Secrets without committing credentials.
+- [x] Run CS API ingestion, dbt deps/run/test, weekly ML retraining, and snapshot export.
+- [x] Commit changed dashboard snapshots and weekly ML artifacts back to the branch.
+- [x] Document required GitHub repository secrets and manual run behavior in README.
+- [x] Add tests that lock the workflow's required schedule and command contract.

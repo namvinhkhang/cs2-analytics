@@ -1,0 +1,137 @@
+name: Dashboard Refresh
+
+on:
+  schedule:
+    # GitHub schedule times are UTC. Daily refresh runs at 06:17 Eastern during EDT.
+    - cron: "17 10 * * *"
+    # Weekly refresh runs Monday at 07:43 Eastern during EDT.
+    - cron: "43 11 * * 1"
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: "Refresh profile to run"
+        required: true
+        default: daily
+        type: choice
+        options:
+          - daily
+          - weekly
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dashboard-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+      AWS_DEFAULT_REGION: ${{ secrets.CS2_AWS_REGION }}
+      CS2_AWS_REGION: ${{ secrets.CS2_AWS_REGION }}
+      CS2_AWS_S3_BUCKET: ${{ secrets.CS2_AWS_S3_BUCKET }}
+      CS2_FACEIT_API_KEY: ${{ secrets.CS2_FACEIT_API_KEY }}
+      CS2_PANDASCORE_API_KEY: ${{ secrets.CS2_PANDASCORE_API_KEY }}
+      CS2_LIQUIPEDIA_API_KEY: ${{ secrets.CS2_LIQUIPEDIA_API_KEY }}
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+      SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+      SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install Python
+        run: uv python install 3.13
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Resolve refresh profile
+        id: refresh
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            profile="${{ inputs.profile }}"
+          elif [[ "${{ github.event.schedule }}" == "43 11 * * 1" ]]; then
+            profile="weekly"
+          else
+            profile="daily"
+          fi
+          echo "profile=${profile}" >> "$GITHUB_OUTPUT"
+          echo "Running ${profile} dashboard refresh"
+
+      - name: Write Snowflake private key
+        shell: bash
+        run: |
+          key_path="$RUNNER_TEMP/snowflake_key.p8"
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          key = os.environ["SNOWFLAKE_PRIVATE_KEY"]
+          if "\\n" in key and "\n" not in key.strip():
+              key = key.replace("\\n", "\n")
+          Path(os.environ["RUNNER_TEMP"], "snowflake_key.p8").write_text(key, encoding="utf-8")
+          PY
+          chmod 600 "$key_path"
+          echo "SNOWFLAKE_PRIVATE_KEY_PATH=$key_path" >> "$GITHUB_ENV"
+
+      - name: Ingest CS API profile
+        shell: bash
+        run: uv run python scripts/bootstrap_csapi.py --profile "${{ steps.refresh.outputs.profile }}"
+
+      - name: Install dbt packages
+        run: uv run dbt deps --project-dir dbt_project
+
+      - name: Run targeted dbt models
+        shell: bash
+        run: |
+          if [[ "${{ steps.refresh.outputs.profile }}" == "weekly" ]]; then
+            selector="mart_upset_features mart_hidden_gems mart_choke_profile"
+          else
+            selector="mart_upset_features mart_hidden_gems"
+          fi
+          uv run dbt run --select $selector --project-dir dbt_project --profiles-dir dbt_project
+
+      - name: Test targeted dbt models
+        shell: bash
+        run: |
+          if [[ "${{ steps.refresh.outputs.profile }}" == "weekly" ]]; then
+            selector="mart_upset_features mart_hidden_gems mart_choke_profile"
+          else
+            selector="mart_upset_features mart_hidden_gems"
+          fi
+          uv run dbt test --select $selector --project-dir dbt_project --profiles-dir dbt_project
+
+      - name: Retrain Upset Tracker model
+        if: steps.refresh.outputs.profile == 'weekly'
+        run: uv run python -m ml.train
+
+      - name: Export dashboard snapshots
+        run: uv run python -m dashboard.export_snapshots
+
+      - name: Commit refreshed artifacts
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dashboard/snapshots ml/models ml/evaluation ml/MODEL_CARD.md
+          if git diff --cached --quiet; then
+            echo "No dashboard artifacts changed."
+            exit 0
+          fi
+          git commit -m "chore(dashboard): refresh snapshots"
+          git push
