@@ -99,14 +99,12 @@ uv run pytest
 
 To enable automated dashboard refreshes on GitHub:
 
-1. Open a pull request from this branch into `main`.
-2. Merge it after the tests pass.
-3. Add the GitHub repository secrets listed in the GitHub Actions Refresh
+1. Add the GitHub repository secrets listed in the GitHub Actions Refresh
    section.
-4. Run the `Dashboard Refresh` workflow manually with the `daily` profile.
-5. Confirm the run succeeds and commits any changed files in
+2. Run the `Dashboard Refresh` workflow manually with the `daily` profile.
+3. Confirm the run succeeds and commits any changed files in
    `dashboard/snapshots/` and weekly ML artifact paths.
-6. Deploy or refresh the Streamlit app from `main`.
+4. Deploy or refresh the Streamlit app from `main`.
 
 ## Daily Operations
 
