@@ -6,18 +6,26 @@ so misconfiguration is caught at import time rather than at first API call.
 
 from __future__ import annotations
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_LIQUIPEDIA_PLACEHOLDER_KEYS = {
+    "liquipedia_api_key_here",
+    "our_liquipedia_api_key_here",
+    "your_liquipedia_api_key_here",
+}
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables with CS2_ prefix.
 
     Required variables (no default):
-      CS2_FACEIT_API_KEY, CS2_PANDASCORE_API_KEY, CS2_LIQUIPEDIA_API_KEY,
-      CS2_AWS_S3_BUCKET, CS2_KAGGLE_USERNAME, CS2_KAGGLE_KEY
+      CS2_FACEIT_API_KEY, CS2_PANDASCORE_API_KEY, CS2_AWS_S3_BUCKET,
+      CS2_KAGGLE_USERNAME, CS2_KAGGLE_KEY
 
     Optional variables (have defaults):
       CS2_AWS_REGION — defaults to "us-east-1"
+      CS2_LIQUIPEDIA_API_KEY — optional enrichment source; blank/placeholder is disabled
     """
 
     # Pydantic v2 config — reads from .env file with CS2_ prefix
@@ -31,13 +39,27 @@ class Settings(BaseSettings):
     # --- Required fields (missing value raises ValidationError) ---
     faceit_api_key: str
     pandascore_api_key: str
-    liquipedia_api_key: str
     aws_s3_bucket: str
     kaggle_username: str
     kaggle_key: str
 
     # --- Optional fields with defaults ---
+    liquipedia_api_key: str | None = None
     aws_region: str = "us-east-1"
+
+    @field_validator("liquipedia_api_key", mode="before")
+    @classmethod
+    def _normalize_optional_liquipedia_key(cls, value: object) -> object:
+        """Treat blank or template Liquipedia keys as an unconfigured optional source."""
+        if value is None:
+            return None
+        if not isinstance(value, str):
+            return value
+
+        stripped_value = value.strip()
+        if not stripped_value or stripped_value.lower() in _LIQUIPEDIA_PLACEHOLDER_KEYS:
+            return None
+        return stripped_value
 
 
 # Module-level singleton — eagerly instantiated so any missing env var

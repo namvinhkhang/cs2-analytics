@@ -94,6 +94,18 @@ def test_has_ingest_all() -> None:
     assert hasattr(LiquipediaClient, "ingest_all")
 
 
+def test_has_ingest_teams() -> None:
+    assert hasattr(LiquipediaClient, "ingest_teams")
+
+
+def test_has_ingest_players() -> None:
+    assert hasattr(LiquipediaClient, "ingest_players")
+
+
+def test_has_ingest_matches() -> None:
+    assert hasattr(LiquipediaClient, "ingest_matches")
+
+
 # --- Network-mocked functional tests ---
 
 
@@ -265,6 +277,87 @@ async def test_ingest_all_returns_dict_of_counts() -> None:
     assert counts["matches"] == 1
     assert counts["tournaments"] == 1
     assert counts["placements"] == 2
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_ingest_teams_writes_only_team_records() -> None:
+    """ingest_teams() writes canonical teams and returns their count."""
+    respx.get("https://api.liquipedia.net/api/v3/team").mock(
+        return_value=httpx.Response(200, json=load_fixture("teams_response.json"))
+    )
+
+    with (
+        patch("asyncio.sleep", new_callable=AsyncMock),
+        patch(
+            "cs2_analytics.ingestion.liquipedia.write_parquet_to_s3",
+            new_callable=MagicMock,
+        ) as mock_s3,
+    ):
+        async with LiquipediaClient(api_key="key") as client:
+            count = await client.ingest_teams(
+                bucket="test-bucket",
+                ingest_date=date(2024, 1, 15),
+            )
+
+    assert count == 2
+    assert mock_s3.call_count == 1
+    assert "liquipedia" in mock_s3.call_args.kwargs["key"]
+    assert "teams" in mock_s3.call_args.kwargs["key"]
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_ingest_players_writes_only_player_records() -> None:
+    """ingest_players() writes canonical players and returns their count."""
+    respx.get("https://api.liquipedia.net/api/v3/player").mock(
+        return_value=httpx.Response(200, json=load_fixture("players_response.json"))
+    )
+
+    with (
+        patch("asyncio.sleep", new_callable=AsyncMock),
+        patch(
+            "cs2_analytics.ingestion.liquipedia.write_parquet_to_s3",
+            new_callable=MagicMock,
+        ) as mock_s3,
+    ):
+        async with LiquipediaClient(api_key="key") as client:
+            count = await client.ingest_players(
+                bucket="test-bucket",
+                ingest_date=date(2024, 1, 15),
+            )
+
+    assert count == 2
+    assert mock_s3.call_count == 1
+    assert "liquipedia" in mock_s3.call_args.kwargs["key"]
+    assert "players" in mock_s3.call_args.kwargs["key"]
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_ingest_matches_writes_only_match_records() -> None:
+    """ingest_matches() writes canonical matches and returns their count."""
+    respx.get("https://api.liquipedia.net/api/v3/match2").mock(
+        return_value=httpx.Response(200, json=load_fixture("matches_response.json"))
+    )
+
+    with (
+        patch("asyncio.sleep", new_callable=AsyncMock),
+        patch(
+            "cs2_analytics.ingestion.liquipedia.write_parquet_to_s3",
+            new_callable=MagicMock,
+        ) as mock_s3,
+    ):
+        async with LiquipediaClient(api_key="key") as client:
+            count = await client.ingest_matches(
+                bucket="test-bucket",
+                ingest_date=date(2024, 1, 15),
+            )
+
+    assert count == 1
+    assert mock_s3.call_count == 1
+    assert "liquipedia" in mock_s3.call_args.kwargs["key"]
+    assert "matches" in mock_s3.call_args.kwargs["key"]
 
 
 @pytest.mark.asyncio

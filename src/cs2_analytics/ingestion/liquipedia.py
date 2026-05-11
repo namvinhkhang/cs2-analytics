@@ -135,48 +135,27 @@ class LiquipediaClient(BaseAPIClient):
 
         Returns dict of entity_type -> record count written.
         """
-        y, m, d = ingest_date.year, ingest_date.month, ingest_date.day
         raw_date = ingest_date.isoformat()
         counts: dict[str, int] = {}
 
-        # --- Teams ---
-        teams = await self.get_teams(limit=limit)
-        canonical_teams: list[Team] = [t.to_canonical(ingested_at=raw_date) for t in teams]
-        if canonical_teams:
-            write_parquet_to_s3(
-                records=models_to_records(canonical_teams),
-                schema=TEAM_SCHEMA,
-                bucket=bucket,
-                key=build_s3_key("liquipedia", "teams", y, m, d),
-                region=region,
-            )
-        counts["teams"] = len(canonical_teams)
-
-        # --- Players ---
-        players = await self.get_players(limit=limit)
-        canonical_players: list[Player] = [p.to_canonical(recorded_at=raw_date) for p in players]
-        if canonical_players:
-            write_parquet_to_s3(
-                records=models_to_records(canonical_players),
-                schema=PLAYER_SCHEMA,
-                bucket=bucket,
-                key=build_s3_key("liquipedia", "players", y, m, d),
-                region=region,
-            )
-        counts["players"] = len(canonical_players)
-
-        # --- Matches ---
-        matches = await self.get_matches(limit=limit)
-        canonical_matches: list[Match] = [m.to_canonical() for m in matches]
-        if canonical_matches:
-            write_parquet_to_s3(
-                records=models_to_records(canonical_matches),
-                schema=MATCH_SCHEMA,
-                bucket=bucket,
-                key=build_s3_key("liquipedia", "matches", y, m, d),
-                region=region,
-            )
-        counts["matches"] = len(canonical_matches)
+        counts["teams"] = await self.ingest_teams(
+            bucket=bucket,
+            ingest_date=ingest_date,
+            region=region,
+            limit=limit,
+        )
+        counts["players"] = await self.ingest_players(
+            bucket=bucket,
+            ingest_date=ingest_date,
+            region=region,
+            limit=limit,
+        )
+        counts["matches"] = await self.ingest_matches(
+            bucket=bucket,
+            ingest_date=ingest_date,
+            region=region,
+            limit=limit,
+        )
 
         # --- Tournaments (no canonical schema yet — count only) ---
         # LiquipediaTournament has no to_canonical(); raw persistence is deferred
@@ -191,3 +170,91 @@ class LiquipediaClient(BaseAPIClient):
 
         logger.info("liquipedia_ingest_complete", date=raw_date, counts=counts)
         return counts
+
+    async def ingest_teams(
+        self,
+        bucket: str,
+        *,
+        ingest_date: date | None = None,
+        region: str = "us-east-1",
+        limit: int = 50,
+    ) -> int:
+        """Fetch Liquipedia teams and write canonical Team records to S3.
+
+        `ingest_date` defaults to today so Airflow tasks can call this method
+        without duplicating date handling, while tests and backfills can pin it.
+        """
+        effective_date = ingest_date or date.today()
+        y, m, d = effective_date.year, effective_date.month, effective_date.day
+        raw_date = effective_date.isoformat()
+
+        teams = await self.get_teams(limit=limit)
+        canonical_teams: list[Team] = [t.to_canonical(ingested_at=raw_date) for t in teams]
+        if canonical_teams:
+            write_parquet_to_s3(
+                records=models_to_records(canonical_teams),
+                schema=TEAM_SCHEMA,
+                bucket=bucket,
+                key=build_s3_key("liquipedia", "teams", y, m, d),
+                region=region,
+            )
+
+        logger.info("liquipedia_teams_ingested", date=raw_date, count=len(canonical_teams))
+        return len(canonical_teams)
+
+    async def ingest_players(
+        self,
+        bucket: str,
+        *,
+        ingest_date: date | None = None,
+        region: str = "us-east-1",
+        limit: int = 50,
+    ) -> int:
+        """Fetch Liquipedia players and write canonical Player records to S3."""
+        effective_date = ingest_date or date.today()
+        y, m, d = effective_date.year, effective_date.month, effective_date.day
+        raw_date = effective_date.isoformat()
+
+        players = await self.get_players(limit=limit)
+        canonical_players: list[Player] = [p.to_canonical(recorded_at=raw_date) for p in players]
+        if canonical_players:
+            write_parquet_to_s3(
+                records=models_to_records(canonical_players),
+                schema=PLAYER_SCHEMA,
+                bucket=bucket,
+                key=build_s3_key("liquipedia", "players", y, m, d),
+                region=region,
+            )
+
+        logger.info("liquipedia_players_ingested", date=raw_date, count=len(canonical_players))
+        return len(canonical_players)
+
+    async def ingest_matches(
+        self,
+        bucket: str,
+        *,
+        ingest_date: date | None = None,
+        region: str = "us-east-1",
+        limit: int = 50,
+    ) -> int:
+        """Fetch Liquipedia matches and write canonical Match records to S3."""
+        effective_date = ingest_date or date.today()
+        y, m, d = effective_date.year, effective_date.month, effective_date.day
+
+        matches = await self.get_matches(limit=limit)
+        canonical_matches: list[Match] = [m.to_canonical() for m in matches]
+        if canonical_matches:
+            write_parquet_to_s3(
+                records=models_to_records(canonical_matches),
+                schema=MATCH_SCHEMA,
+                bucket=bucket,
+                key=build_s3_key("liquipedia", "matches", y, m, d),
+                region=region,
+            )
+
+        logger.info(
+            "liquipedia_matches_ingested",
+            date=effective_date.isoformat(),
+            count=len(canonical_matches),
+        )
+        return len(canonical_matches)

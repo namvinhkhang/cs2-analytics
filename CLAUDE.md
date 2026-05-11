@@ -62,7 +62,7 @@ src/cs2_analytics/
 
 ### Config Pattern
 
-All settings come from environment variables with `CS2_` prefix (e.g., `CS2_FACEIT_API_KEY`). Copy `.env.example` to `.env` to run locally. Required vars: `CS2_FACEIT_API_KEY`, `CS2_PANDASCORE_API_KEY`, `CS2_LIQUIPEDIA_API_KEY`, `CS2_AWS_S3_BUCKET`, `CS2_KAGGLE_USERNAME`, `CS2_KAGGLE_KEY`. Airflow vars: `CS2_AIRFLOW_FERNET_KEY`, `CS2_AIRFLOW_SECRET_KEY`, `CS2_SLACK_WEBHOOK_URL`. Optional: `CS2_AWS_REGION` (defaults to `us-east-1`).
+All settings come from environment variables with `CS2_` prefix (e.g., `CS2_FACEIT_API_KEY`). Copy `.env.example` to `.env` to run locally. Required vars: `CS2_FACEIT_API_KEY`, `CS2_PANDASCORE_API_KEY`, `CS2_AWS_S3_BUCKET`, `CS2_KAGGLE_USERNAME`, `CS2_KAGGLE_KEY`. Airflow vars: `CS2_AIRFLOW_FERNET_KEY`, `CS2_AIRFLOW_SECRET_KEY`, `CS2_SLACK_WEBHOOK_URL`. Optional: `CS2_AWS_REGION` (defaults to `us-east-1`), `CS2_LIQUIPEDIA_API_KEY` (blank or placeholder skips Liquipedia-only tasks).
 
 ### BaseAPIClient
 

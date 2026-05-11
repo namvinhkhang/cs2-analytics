@@ -17,7 +17,6 @@ import pendulum
 import structlog
 from airflow.decorators import dag, task
 from botocore.exceptions import ClientError
-
 from utils.slack_alerts import on_failure_callback
 
 log = structlog.get_logger()
@@ -46,7 +45,12 @@ async def _ingest_rankings(settings: object) -> int:
 
     # asyncio.sleep(2.0) is inside LiquipediaClient fetch methods — do NOT add extra sleep here
     s: Settings = settings  # type: ignore[assignment]
-    async with LiquipediaClient(api_key=s.liquipedia_api_key) as client:
+    api_key = s.liquipedia_api_key
+    if api_key is None:
+        log.info("liquipedia_ingestion_skipped_missing_api_key", task="team_rankings")
+        return 0
+
+    async with LiquipediaClient(api_key=api_key) as client:
         return await client.ingest_teams(bucket=s.aws_s3_bucket, region=s.aws_region)
 
 
@@ -57,7 +61,12 @@ async def _ingest_player_rankings(settings: object) -> int:
 
     # asyncio.sleep(2.0) is inside LiquipediaClient fetch methods — do NOT add extra sleep here
     s: Settings = settings  # type: ignore[assignment]
-    async with LiquipediaClient(api_key=s.liquipedia_api_key) as client:
+    api_key = s.liquipedia_api_key
+    if api_key is None:
+        log.info("liquipedia_ingestion_skipped_missing_api_key", task="player_rankings")
+        return 0
+
+    async with LiquipediaClient(api_key=api_key) as client:
         return await client.ingest_players(bucket=s.aws_s3_bucket, region=s.aws_region)
 
 
@@ -84,6 +93,10 @@ def cs2_weekly_rankings_dag() -> None:
         from cs2_analytics.utils.config import Settings
 
         settings = Settings()
+        if settings.liquipedia_api_key is None:
+            log.info("liquipedia_ingestion_skipped_missing_api_key", task="team_rankings")
+            return 0
+
         this_monday = datetime.utcnow().strftime("%Y-%m-%d")
         s3_key = f"raw/teams/liquipedia/{this_monday}/teams.parquet"
 
@@ -101,6 +114,10 @@ def cs2_weekly_rankings_dag() -> None:
         from cs2_analytics.utils.config import Settings
 
         settings = Settings()
+        if settings.liquipedia_api_key is None:
+            log.info("liquipedia_ingestion_skipped_missing_api_key", task="player_rankings")
+            return 0
+
         this_monday = datetime.utcnow().strftime("%Y-%m-%d")
         s3_key = f"raw/players/liquipedia/{this_monday}/players.parquet"
 

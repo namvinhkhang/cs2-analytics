@@ -20,7 +20,6 @@ import pendulum
 import structlog
 from airflow.decorators import dag, task
 from botocore.exceptions import ClientError
-
 from utils.slack_alerts import on_failure_callback
 
 log = structlog.get_logger()
@@ -45,15 +44,20 @@ def _s3_key_exists(bucket: str, key: str) -> bool:
 async def _ingest_tournament_matches(settings: object) -> int:
     """Run Liquipedia tournament match ingestion asynchronously.
 
-    Calls LiquipediaClient.ingest_matches() — note that ingest_tournaments()
-    and ingest_placements() are count-only in Phase 1 (no canonical schema yet).
+    Calls LiquipediaClient.ingest_matches() when Liquipedia is configured.
+    Tournament and placement entities are count-only in Phase 1.
     """
     from cs2_analytics.ingestion.liquipedia import LiquipediaClient
     from cs2_analytics.utils.config import Settings
 
     # asyncio.sleep(2.0) is inside LiquipediaClient fetch methods — do NOT add extra sleep here
     s: Settings = settings  # type: ignore[assignment]
-    async with LiquipediaClient(api_key=s.liquipedia_api_key) as client:
+    api_key = s.liquipedia_api_key
+    if api_key is None:
+        log.info("liquipedia_ingestion_skipped_missing_api_key", task="tournament_matches")
+        return 0
+
+    async with LiquipediaClient(api_key=api_key) as client:
         return await client.ingest_matches(bucket=s.aws_s3_bucket, region=s.aws_region)
 
 
@@ -80,6 +84,10 @@ def cs2_tournament_sync_dag() -> None:
         from cs2_analytics.utils.config import Settings
 
         settings = Settings()
+        if settings.liquipedia_api_key is None:
+            log.info("liquipedia_ingestion_skipped_missing_api_key", task="tournament_matches")
+            return 0
+
         today = datetime.utcnow().strftime("%Y-%m-%d")
         s3_key = f"raw/matches/liquipedia/{today}/matches.parquet"
 

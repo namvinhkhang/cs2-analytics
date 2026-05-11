@@ -32,7 +32,6 @@ class TestSettings:
         env_vars = {
             "CS2_FACEIT_API_KEY": "test_faceit",
             "CS2_PANDASCORE_API_KEY": "test_ps",
-            "CS2_LIQUIPEDIA_API_KEY": "test_lp",
             "CS2_AWS_S3_BUCKET": "test-bucket",
             "CS2_KAGGLE_USERNAME": "test_user",
             "CS2_KAGGLE_KEY": "test_kaggle_key",
@@ -40,6 +39,39 @@ class TestSettings:
         with patch.dict("os.environ", env_vars, clear=True):
             s = Settings(_env_file=None)
             assert s.aws_region == "us-east-1"
+            assert s.liquipedia_api_key is None
+
+    def test_settings_keeps_real_liquipedia_key_when_present(self) -> None:
+        """settings.liquipedia_api_key keeps a real key when CS2_LIQUIPEDIA_API_KEY is set."""
+        from cs2_analytics.utils.config import Settings
+
+        env_vars = {
+            "CS2_FACEIT_API_KEY": "test_faceit",
+            "CS2_PANDASCORE_API_KEY": "test_ps",
+            "CS2_LIQUIPEDIA_API_KEY": "lp_key",
+            "CS2_AWS_S3_BUCKET": "test-bucket",
+            "CS2_KAGGLE_USERNAME": "test_user",
+            "CS2_KAGGLE_KEY": "test_kaggle_key",
+        }
+        with patch.dict("os.environ", env_vars, clear=True):
+            s = Settings(_env_file=None)
+            assert s.liquipedia_api_key == "lp_key"
+
+    def test_settings_treats_liquipedia_placeholder_as_missing(self) -> None:
+        """Local placeholder Liquipedia keys should behave like an unconfigured optional source."""
+        from cs2_analytics.utils.config import Settings
+
+        env_vars = {
+            "CS2_FACEIT_API_KEY": "test_faceit",
+            "CS2_PANDASCORE_API_KEY": "test_ps",
+            "CS2_LIQUIPEDIA_API_KEY": "your_liquipedia_api_key_here",
+            "CS2_AWS_S3_BUCKET": "test-bucket",
+            "CS2_KAGGLE_USERNAME": "test_user",
+            "CS2_KAGGLE_KEY": "test_kaggle_key",
+        }
+        with patch.dict("os.environ", env_vars, clear=True):
+            s = Settings(_env_file=None)
+            assert s.liquipedia_api_key is None
 
     def test_settings_reads_env_vars(self) -> None:
         """settings.faceit_api_key returns the value of CS2_FACEIT_API_KEY env var."""
