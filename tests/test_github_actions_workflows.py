@@ -27,6 +27,27 @@ def test_dashboard_refresh_workflow_has_required_schedule_and_steps() -> None:
     assert "AWS_ACCESS_KEY_ID" in text
 
 
+def test_dashboard_refresh_workflow_loads_valve_regions_before_dbt() -> None:
+    """The hosted snapshots need Valve region rows loaded before mart exports."""
+    workflow = (REPO_ROOT / ".github" / "workflows" / "dashboard-refresh.yml").read_text(
+        encoding="utf-8",
+    )
+
+    assert "Ingest Valve team regions" in workflow
+    assert "ingest_latest_team_regions_sync" in workflow
+    assert "raw_valve_team_regions" in workflow
+    assert "cs2_raw_stage/valve/team_regions/" in workflow
+
+
+def test_dashboard_refresh_workflow_rebuilds_upstream_region_models() -> None:
+    """Running only final marts can leave dim_teams stale after raw Valve ingestion."""
+    workflow = (REPO_ROOT / ".github" / "workflows" / "dashboard-refresh.yml").read_text(
+        encoding="utf-8",
+    )
+
+    assert '+mart_upset_features +mart_hidden_gems' in workflow
+
+
 def test_dashboard_refresh_workflow_rebases_artifact_commit_before_push() -> None:
     """Snapshot commits must handle remote main moving while the workflow runs."""
     workflow = (REPO_ROOT / ".github" / "workflows" / "dashboard-refresh.yml").read_text(

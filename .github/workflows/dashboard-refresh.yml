@@ -112,6 +112,88 @@ jobs:
         shell: bash
         run: uv run python scripts/bootstrap_csapi.py --profile "${{ steps.refresh.outputs.profile }}"
 
+      - name: Ingest Valve team regions
+        shell: bash
+        run: |
+          uv run python - <<'PY'
+          from datetime import date
+
+          import boto3
+          from botocore.exceptions import ClientError
+
+          from cs2_analytics.ingestion.valve import (
+              build_valve_team_regions_s3_key,
+              ingest_latest_team_regions_sync,
+          )
+          from cs2_analytics.utils.config import settings
+
+          ingest_date = date.today()
+          key = build_valve_team_regions_s3_key(ingest_date)
+          s3 = boto3.client("s3", region_name=settings.aws_region)
+          try:
+              s3.head_object(Bucket=settings.aws_s3_bucket, Key=key)
+              print(f"Valve region snapshot already exists at s3://{settings.aws_s3_bucket}/{key}")
+          except ClientError as exc:
+              error_code = str(exc.response.get("Error", {}).get("Code", ""))
+              if error_code not in {"404", "NoSuchKey", "NotFound"}:
+                  raise
+              count = ingest_latest_team_regions_sync(
+                  bucket=settings.aws_s3_bucket,
+                  ingest_date=ingest_date,
+                  region=settings.aws_region,
+              )
+              print(f"Ingested {count} Valve team-region rows to s3://{settings.aws_s3_bucket}/{key}")
+          PY
+
+      - name: Load Valve regions into Snowflake
+        shell: bash
+        run: |
+          uv run python - <<'PY'
+          import os
+
+          import snowflake.connector
+
+          database = os.environ["SNOWFLAKE_DATABASE"]
+          conn = snowflake.connector.connect(
+              account=os.environ["SNOWFLAKE_ACCOUNT"],
+              user=os.environ["SNOWFLAKE_USER"],
+              authenticator="SNOWFLAKE_JWT",
+              private_key_file=os.environ["SNOWFLAKE_PRIVATE_KEY_PATH"],
+              warehouse=os.environ["SNOWFLAKE_WAREHOUSE"],
+              database=database,
+          )
+          try:
+              cursor = conn.cursor()
+              cursor.execute(
+                  f"""
+                  CREATE TABLE IF NOT EXISTS {database}.RAW.raw_valve_team_regions (
+                    snapshot_date        VARCHAR,
+                    team_name            VARCHAR,
+                    normalized_team_name VARCHAR,
+                    region               VARCHAR,
+                    regional_rank        INTEGER,
+                    global_rank          INTEGER,
+                    points               INTEGER,
+                    roster               VARCHAR,
+                    detail_path          VARCHAR,
+                    source               VARCHAR
+                  )
+                  """
+              )
+              cursor.execute(
+                  f"""
+                  COPY INTO {database}.RAW.raw_valve_team_regions
+                    FROM @{database}.RAW.cs2_raw_stage/valve/team_regions/
+                    FILE_FORMAT = (TYPE = PARQUET)
+                    MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
+                    ON_ERROR = CONTINUE
+                    PURGE = FALSE
+                  """
+              )
+          finally:
+              conn.close()
+          PY
+
       - name: Install dbt packages
         run: uv run dbt deps --project-dir dbt_project
 
@@ -119,9 +201,9 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ steps.refresh.outputs.profile }}" == "weekly" ]]; then
-            selector="mart_upset_features mart_hidden_gems mart_choke_profile"
+            selector="+mart_upset_features +mart_hidden_gems +mart_choke_profile"
           else
-            selector="mart_upset_features mart_hidden_gems"
+            selector="+mart_upset_features +mart_hidden_gems"
           fi
           uv run dbt run --select $selector --project-dir dbt_project --profiles-dir dbt_project
 
@@ -129,9 +211,9 @@ jobs:
         shell: bash
         run: |
           if [[ "${{ steps.refresh.outputs.profile }}" == "weekly" ]]; then
-            selector="mart_upset_features mart_hidden_gems mart_choke_profile"
+            selector="+mart_upset_features +mart_hidden_gems +mart_choke_profile"
           else
-            selector="mart_upset_features mart_hidden_gems"
+            selector="+mart_upset_features +mart_hidden_gems"
           fi
           uv run dbt test --select $selector --project-dir dbt_project --profiles-dir dbt_project
 

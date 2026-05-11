@@ -16,3 +16,4 @@
 - Scheduled raw-data bootstraps must not overwrite same-partition S3 objects. Check each target object before API calls and either skip existing outputs or add a downstream dedupe contract before using unique run filenames.
 - Dashboard snapshot loaders must normalize Snowflake-exported uppercase columns to the code's lowercase mart contract before page logic or ML helpers touch the frame; otherwise Streamlit pages can look empty and model feature checks fail.
 - Streamlit numeric sliders need a max value greater than the min value even when filtered data is empty or a column is missing; wrap computed slider bounds so browser-only failures are covered by tests.
+- Dashboard refresh workflows must ingest and load any new raw source before exporting snapshots, and dbt selectors must include upstream parents when changed dimensions like `dim_teams` need rebuilding; final mart-only runs can leave Streamlit showing stale metadata.
