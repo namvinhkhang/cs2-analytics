@@ -218,6 +218,23 @@ tier-2/3/4 prospect, with tier-above thresholds, trend direction, and a numeric
 - Added `README.md` run commands for CS API profiles, dbt refreshes, ML training, and Airflow startup.
 - Pressure-source research result: next Choke/Clutch implementation should add CS API map-grain ingestion for exact map overtime W/L; lead-blown, halftime comeback, bracket, and elimination metrics remain proxy/unavailable until round or bracket data exists with an identity map.
 - Dashboard research result: first Streamlit slice should read cached mart snapshot Parquet files plus versioned ML artifacts, not query Snowflake on every page refresh.
+
+## Dashboard Logic and Visual Polish - 2026-05-11
+
+- [x] Add tests that dashboard tables prefer team/player names over raw IDs.
+- [x] Add tests that CS API ranking rows do not hard-code every team region as Global.
+- [x] Add tests that Hidden Gem Scout sample-floor filtering follows the slider instead of the mart eligibility floor.
+- [x] Enrich Upset Tracker and Hidden Gem marts/pages with readable team names and region handling.
+- [x] Improve the Streamlit home page with data-rich metrics, charts, and cleaner navigation.
+- [x] Verify targeted dashboard/dbt tests, lint, and local Streamlit runtime status.
+
+## Review - Dashboard Logic and Visual Polish
+
+- Root cause: CS API ranking records hard-coded `region = 'global'`, and the dashboard simply displayed that mart value. CS API `/rankings/` does not return a region field, so CS API records now keep region null and `dim_teams` enriches region from unique Liquipedia team-name matches when available.
+- Added `team_a_name` and `team_b_name` to `mart_upset_features`; added `team_name` and `team_region` to `mart_hidden_gems`; dashboard tables now prefer names and hide raw provider IDs when names/display names are present.
+- Removed the mart-level `recent_90_day_maps_played >= minimum_recent_90_day_maps` hard filter so Hidden Gem Scout can use the Streamlit sample-floor slider interactively.
+- Reworked Home into a data-rich dashboard with KPI cards, match/prospect charts, region coverage, top prospect preview, page links, and snapshot freshness.
+- Verification: targeted dashboard/source/SQL tests passed; `uv run ruff check .` passed; `dbt parse --no-partial-parse` passed with existing accepted-values deprecation warnings; full `uv run pytest -q` passed with 239 tests, 3 skipped, and 1 existing Airflow warning; browser smoke tests passed against `http://localhost:8501`.
 - Verification: `uv run pytest tests/test_bootstrap_csapi.py tests/test_dags/test_airflow_runtime_packaging.py tests/test_dags/test_daily_matches.py tests/test_dags/test_dag_structure.py tests/test_dags/test_dbt_run_dag.py` passed with 31 tests and 1 existing Airflow deprecation warning.
 - Verification: `uv run ruff check .` passed.
 - Verification: `uv run pytest` passed with 214 tests and 1 existing Airflow deprecation warning.
@@ -262,3 +279,20 @@ tier-2/3/4 prospect, with tier-above thresholds, trend direction, and a numeric
 - Added `playwright` as a dev dependency and installed Chromium for local browser checks.
 - Verification: `CS2_DASHBOARD_BASE_URL=http://localhost:8505 uv run pytest tests/test_dashboard_browser.py -q` passed with 3 browser checks.
 - Verification: `uv run pytest` passed with 232 tests, 3 skipped opt-in browser tests, and 1 existing Airflow deprecation warning.
+
+## GitHub Actions Dashboard Refresh - 2026-05-11
+
+- [x] Add a scheduled GitHub Actions workflow for daily and weekly dashboard refreshes.
+- [x] Add manual `workflow_dispatch` profile selection for `daily` and `weekly`.
+- [x] Materialize the Snowflake private key from GitHub Secrets without committing credentials.
+- [x] Run CS API ingestion, dbt deps/run/test, weekly ML retraining, and snapshot export.
+- [x] Commit changed dashboard snapshots and weekly ML artifacts back to the branch.
+- [x] Document required GitHub repository secrets and manual run behavior in README.
+- [x] Add tests that lock the workflow's required schedule and command contract.
+
+## GitHub Actions Setup Docs - 2026-05-11
+
+- [x] Add a setup section before daily operations in README.
+- [x] Explain the post-PR merge GitHub Actions setup flow.
+- [x] Clarify where to add repository secrets and how to run the first manual refresh.
+- [x] Verify the docs-only change and commit it.

@@ -55,20 +55,56 @@ training, prediction explainability, and dashboard snapshot export.
 - Docker, if running local Airflow
 - GitHub CLI, if publishing branches/PRs from the command line
 
+## Setup
+
 Install dependencies:
 
 ```bash
 uv sync
 ```
 
-Create a local `.env` file with the needed credentials. dbt reads exported shell
-environment variables; it does not load `.env` by itself, so use:
+Create a local `.env` file with the credentials needed by ingestion, dbt,
+Snowflake, and S3:
+
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_SESSION_TOKEN` if using temporary AWS credentials
+- `CS2_AWS_REGION`
+- `CS2_AWS_S3_BUCKET`
+- `CS2_FACEIT_API_KEY`
+- `CS2_PANDASCORE_API_KEY`
+- `CS2_LIQUIPEDIA_API_KEY` if using Liquipedia enrichment
+- `SNOWFLAKE_ACCOUNT`
+- `SNOWFLAKE_USER`
+- `SNOWFLAKE_WAREHOUSE`
+- `SNOWFLAKE_DATABASE`
+- `SNOWFLAKE_PRIVATE_KEY_PATH`
+
+dbt reads exported shell environment variables; it does not load `.env` by
+itself, so export the file before running ingestion, dbt, ML, or snapshot
+commands:
 
 ```bash
 set -a; source .env; set +a
 ```
 
 Do not commit `.env`, private keys, Snowflake credentials, or raw secrets.
+
+Verify the local project after setup:
+
+```bash
+uv run ruff check .
+uv run pytest
+```
+
+To enable automated dashboard refreshes on GitHub:
+
+1. Add the GitHub repository secrets listed in the GitHub Actions Refresh
+   section.
+2. Run the `Dashboard Refresh` workflow manually with the `daily` profile.
+3. Confirm the run succeeds and commits any changed files in
+   `dashboard/snapshots/` and weekly ML artifact paths.
+4. Deploy or refresh the Streamlit app from `main`.
 
 ## Daily Operations
 
@@ -167,6 +203,62 @@ Use Streamlit Community Cloud for the simplest free deployment:
 GitHub Student Developer Pack credits can help with alternatives like
 DigitalOcean or Azure, but Streamlit Community Cloud is the lowest-maintenance
 fit for this app.
+
+## GitHub Actions Refresh
+
+The repository includes `.github/workflows/dashboard-refresh.yml` to keep hosted
+dashboard snapshots fresh without running a 24/7 server.
+
+GitHub only runs scheduled workflows from the default branch, so merge this
+workflow to `main` before relying on the daily and weekly timers.
+
+After the pull request is merged:
+
+1. Go to GitHub repo Settings, then Secrets and variables, then Actions.
+2. Add each required value as a repository secret.
+3. Go to the Actions tab and select `Dashboard Refresh`.
+4. Click Run workflow, choose `daily`, and run it from `main`.
+5. Open the workflow logs if it fails. Missing or misspelled secrets usually
+   show up during the ingest, Snowflake key, dbt, or S3 steps.
+6. After the first successful daily run, let the scheduled daily and weekly
+   runs take over.
+
+You can also start the first run from the GitHub CLI:
+
+```bash
+gh workflow run dashboard-refresh.yml --ref main -f profile=daily
+```
+
+Schedules are in UTC:
+
+- Daily refresh: `17 10 * * *`
+- Weekly refresh: `43 11 * * 1`
+
+You can also run it manually from GitHub Actions with the `daily` or `weekly`
+profile. The daily run ingests recent CS API data, rebuilds/test the dashboard
+marts, exports snapshots, and commits changed snapshots. The weekly run also
+rebuilds `mart_choke_profile` and retrains the Upset Tracker model before
+exporting snapshots.
+
+Add these repository secrets in GitHub before enabling the workflow:
+
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_SESSION_TOKEN` if using temporary AWS credentials
+- `CS2_AWS_REGION`
+- `CS2_AWS_S3_BUCKET`
+- `CS2_FACEIT_API_KEY`
+- `CS2_PANDASCORE_API_KEY`
+- `CS2_LIQUIPEDIA_API_KEY` if using Liquipedia enrichment
+- `SNOWFLAKE_ACCOUNT`
+- `SNOWFLAKE_USER`
+- `SNOWFLAKE_WAREHOUSE`
+- `SNOWFLAKE_DATABASE`
+- `SNOWFLAKE_PRIVATE_KEY`
+
+`SNOWFLAKE_PRIVATE_KEY` should contain the full private key text. Escaped
+newlines (`\n`) and normal multi-line secret values are both handled by the
+workflow.
 
 ## Airflow
 

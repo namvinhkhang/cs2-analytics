@@ -8,9 +8,9 @@ from typing import Any
 import pandas as pd
 
 DISPLAY_COLUMNS = [
-    "display_name",
-    "player_id",
-    "team_id",
+    "player",
+    "team",
+    "team_region",
     "world_ranking",
     "player_tier",
     "comparison_tier",
@@ -23,6 +23,32 @@ DISPLAY_COLUMNS = [
     "previous_90_day_gap_to_tier_above",
     "gap_delta_to_tier_above",
 ]
+
+
+def _readable_value(value: Any, fallback: str = "Unknown") -> str:
+    """Return a compact label for nullable dashboard values."""
+    if pd.isna(value):
+        return fallback
+    text = str(value).strip()
+    return text if text else fallback
+
+
+def _team_filter_column(frame: pd.DataFrame) -> str:
+    """Use team names when the mart provides them, otherwise fall back to IDs."""
+    if "team" in frame.columns:
+        return "team"
+    return "team_name" if "team_name" in frame.columns else "team_id"
+
+
+def _team_label(row: pd.Series) -> str:
+    """Prefer team names, with an ID fallback for snapshots exported before names existed."""
+    name = row.get("team_name")
+    if not pd.isna(name) and str(name).strip():
+        return str(name)
+    team_id = row.get("team_id")
+    if not pd.isna(team_id) and str(team_id).strip():
+        return f"Team {team_id}"
+    return "Unknown team"
 
 
 def _available_columns(frame: pd.DataFrame, columns: Iterable[str]) -> list[str]:
@@ -43,10 +69,32 @@ def _max_int(frame: pd.DataFrame, column: str) -> int:
     return max(int(value), 1) if pd.notna(value) else 1
 
 
+def _prepare_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    """Add readable display aliases while keeping raw columns available for filters."""
+    prepared = frame.copy()
+    if "display_name" in prepared.columns:
+        prepared["player"] = prepared["display_name"].map(_readable_value)
+    elif "player_id" in prepared.columns:
+        prepared["player"] = prepared["player_id"].map(lambda value: f"Player {value}")
+
+    if {"team_name", "team_id"}.intersection(prepared.columns):
+        prepared["team"] = prepared.apply(_team_label, axis=1)
+    if "team_region" in prepared.columns:
+        prepared["team_region"] = prepared["team_region"].map(_readable_value)
+    return prepared
+
+
+def _display_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    """Return the public prospect table without duplicate raw IDs."""
+    prepared = _prepare_frame(frame)
+    return prepared[_available_columns(prepared, DISPLAY_COLUMNS)]
+
+
 def _filter_players(frame: pd.DataFrame, st: Any) -> pd.DataFrame:
-    filtered = frame.copy()
+    filtered = _prepare_frame(frame)
     tiers = _sorted_values(filtered, "player_tier")
-    teams = _sorted_values(filtered, "team_id")
+    team_filter_column = _team_filter_column(filtered)
+    teams = _sorted_values(filtered, team_filter_column)
     trends = _sorted_values(filtered, "trend_direction")
 
     top_controls = st.columns(4)
@@ -64,13 +112,14 @@ def _filter_players(frame: pd.DataFrame, st: Any) -> pd.DataFrame:
         "Recent map sample floor",
         min_value=0,
         max_value=_max_int(filtered, "recent_90_day_maps_played"),
-        value=_max_int(filtered, "minimum_recent_90_day_maps"),
+        value=0,
+        help="Use this to include or exclude lower-sample candidates after the mart loads them.",
     )
 
     if selected_tiers and "player_tier" in filtered.columns:
         filtered = filtered[filtered["player_tier"].isin(selected_tiers)]
-    if selected_teams and "team_id" in filtered.columns:
-        filtered = filtered[filtered["team_id"].isin(selected_teams)]
+    if selected_teams and team_filter_column in filtered.columns:
+        filtered = filtered[filtered[team_filter_column].isin(selected_teams)]
     if selected_trends and "trend_direction" in filtered.columns:
         filtered = filtered[filtered["trend_direction"].isin(selected_trends)]
     if "stats_above_tier_threshold" in filtered.columns:
@@ -161,8 +210,26 @@ def render() -> None:
 
     _render_gap_chart(st, filtered)
 
-    table_columns = _available_columns(filtered, DISPLAY_COLUMNS)
-    st.dataframe(filtered[table_columns], hide_index=True, width="stretch")
+    st.dataframe(
+        _display_frame(filtered),
+        hide_index=True,
+        width="stretch",
+        column_config={
+            "player": st.column_config.TextColumn("Player", pinned=True),
+            "team": st.column_config.TextColumn("Team", pinned=True),
+            "prospect_score": st.column_config.ProgressColumn(
+                "Prospect score",
+                min_value=0,
+                max_value=105,
+                format="%.1f",
+            ),
+            "recent_90_day_gap_to_tier_above": st.column_config.NumberColumn(
+                "Recent gap",
+                format="%.2f",
+            ),
+            "gap_delta_to_tier_above": st.column_config.NumberColumn("Gap delta", format="%.2f"),
+        },
+    )
 
 
 if __name__ == "__main__":

@@ -55,9 +55,13 @@ models:
           - not_null
           - accepted_values:
               values: [0, 1]
+      - name: team_a_name
+        description: "Readable team label for dashboard display."
+      - name: team_b_name
+        description: "Readable team label for dashboard display."
 
   - name: mart_hidden_gems
-    description: "Players in tier 2/3/4 with 3+ available stats clearing top-15% thresholds from the tier above, at least 20 recent 90-day stat rows, and 90-day benchmark-gap trend direction (HG-01..04). Player-level clutch rate is skipped until a trustworthy source is persisted."
+    description: "Players in tier 2/3/4 with 3+ available stats clearing top-15% thresholds from the tier above, a dashboard-filterable recent 90-day sample-size field, and 90-day benchmark-gap trend direction (HG-01..04). Player-level clutch rate is skipped until a trustworthy source is persisted."
     columns:
       - name: player_id
         data_tests:
@@ -69,6 +73,10 @@ models:
         description: "Sortable score based on tier-above threshold clears and sample size."
         data_tests:
           - not_null
+      - name: team_name
+        description: "Readable current team label for dashboard display."
+      - name: team_region
+        description: "Team region when available from current team metadata."
       - name: recent_90_day_maps_played
         description: "Recent 90-day player stat rows used as the sample-size eligibility count."
         data_tests:

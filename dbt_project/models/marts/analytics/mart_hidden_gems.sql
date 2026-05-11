@@ -4,7 +4,8 @@
 -- percentile thresholds from the next stronger tier, plus a 90-day trend direction.
 -- Player-level clutch rate is not available in the current stat facts, so HG-02/HG-03
 -- use rating, ADR, K/D, and KAST until a trustworthy source is persisted.
--- Require at least 20 recent 90-day stat rows to avoid one-off outliers.
+-- Expose the recommended 20 recent 90-day stat-row floor so the dashboard can
+-- filter interactively without hiding lower-sample candidates at the mart layer.
 -- Grain: one row per qualifying hidden-gem player.
 with stats as (
     select * from {{ ref('fact_player_stats') }}
@@ -22,7 +23,7 @@ current_players as (
 ),
 
 teams as (
-    select team_id, world_ranking from {{ ref('dim_teams') }}
+    select team_id, team_name, region, world_ranking from {{ ref('dim_teams') }}
 ),
 
 player_match_stats as (
@@ -30,6 +31,8 @@ player_match_stats as (
         s.player_id,
         s.display_name,
         coalesce(cp.current_team_id, s.team_id) as team_id,
+        t.team_name,
+        t.region as team_region,
         cast(s.recorded_at as date) as recorded_at,
         s.adr,
         s.kd_ratio,
@@ -55,6 +58,8 @@ player_agg as (
         player_id,
         display_name,
         team_id,
+        team_name,
+        team_region,
         world_ranking,
         player_tier,
         count(*) as matches_played,
@@ -65,7 +70,7 @@ player_agg as (
         avg(kills) as avg_kills,
         max(recorded_at) as latest_recorded_at
     from player_match_stats
-    group by player_id, display_name, team_id, world_ranking, player_tier
+    group by player_id, display_name, team_id, team_name, team_region, world_ranking, player_tier
 ),
 
 tier_above_thresholds as (
@@ -286,6 +291,8 @@ select
     player_id,
     display_name,
     team_id,
+    team_name,
+    team_region,
     world_ranking,
     player_tier,
     player_tier - 1 as comparison_tier,
@@ -332,4 +339,3 @@ select
     true as is_hidden_gem
 from scored
 where stats_above_tier_threshold >= 3
-  and recent_90_day_maps_played >= minimum_recent_90_day_maps

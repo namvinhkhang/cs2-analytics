@@ -46,11 +46,12 @@ def test_hidden_gems_documents_clutch_rate_unavailable() -> None:
     assert "clutch_rate" not in sql
 
 
-def test_hidden_gems_requires_recent_sample_size() -> None:
-    """Hidden gems should filter out one-off recent performances."""
+def test_hidden_gems_exposes_recent_sample_size_without_hard_filter() -> None:
+    """Hidden Gem Scout should let the dashboard slider control the recent-map floor."""
     sql = SQL_PATH.read_text()
 
     assert "minimum_recent_90_day_maps" in sql
     assert "recent_90_day_maps_played" in sql
     assert "20 as minimum_recent_90_day_maps" in sql
-    assert "recent_90_day_maps_played >= minimum_recent_90_day_maps" in sql
+    assert "meets_recent_sample_size" in sql
+    assert "and recent_90_day_maps_played >= minimum_recent_90_day_maps" not in sql.lower()

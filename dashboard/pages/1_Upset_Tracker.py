@@ -11,9 +11,9 @@ DISPLAY_COLUMNS = [
     "upset_probability",
     "played_at",
     "match_id",
+    "team_a",
+    "team_b",
     "map_name",
-    "team_a_id",
-    "team_b_id",
     "team_a_ranking",
     "team_b_ranking",
     "ranking_delta",
@@ -22,6 +22,31 @@ DISPLAY_COLUMNS = [
     "is_cross_region",
     "is_upset",
 ]
+
+
+def _readable_value(value: Any, fallback: str = "Unknown") -> str:
+    """Return a user-facing string for nullable mart values."""
+    if pd.isna(value):
+        return fallback
+    text = str(value).strip()
+    return text if text else fallback
+
+
+def _team_label(row: pd.Series, name_column: str, id_column: str) -> str:
+    """Prefer team names, while keeping old snapshots usable until the next export."""
+    name = row.get(name_column)
+    if not pd.isna(name) and str(name).strip():
+        return str(name)
+    team_id = row.get(id_column)
+    if not pd.isna(team_id) and str(team_id).strip():
+        return f"Team {team_id}"
+    return "Unknown team"
+
+
+def _normalize_region(value: Any) -> str:
+    """Treat CS API's old Global placeholder as unknown rather than a real region."""
+    text = _readable_value(value)
+    return "Unknown" if text.casefold() == "global" else text
 
 
 def _available_columns(frame: pd.DataFrame, columns: Iterable[str]) -> list[str]:
@@ -42,6 +67,31 @@ def _max_int(frame: pd.DataFrame, column: str) -> int:
     return max(int(value), 1) if pd.notna(value) else 1
 
 
+def _prepare_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    """Add dashboard display fields while preserving raw columns for model features."""
+    prepared = frame.copy()
+    if {"team_a_id", "team_a_name"}.intersection(prepared.columns):
+        prepared["team_a"] = prepared.apply(
+            lambda row: _team_label(row, "team_a_name", "team_a_id"),
+            axis=1,
+        )
+    if {"team_b_id", "team_b_name"}.intersection(prepared.columns):
+        prepared["team_b"] = prepared.apply(
+            lambda row: _team_label(row, "team_b_name", "team_b_id"),
+            axis=1,
+        )
+    for column in ("team_a_region", "team_b_region"):
+        if column in prepared.columns:
+            prepared[column] = prepared[column].map(_normalize_region)
+    return prepared
+
+
+def _display_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    """Return the public match table without raw provider IDs when labels exist."""
+    prepared = _prepare_frame(frame)
+    return prepared[_available_columns(prepared, DISPLAY_COLUMNS)]
+
+
 def _match_labels(frame: pd.DataFrame) -> list[str]:
     if "match_id" not in frame.columns:
         return frame.index.astype(str).tolist()
@@ -52,7 +102,7 @@ def _match_labels(frame: pd.DataFrame) -> list[str]:
 
 
 def _filter_matches(frame: pd.DataFrame, st: Any) -> pd.DataFrame:
-    filtered = frame.copy()
+    filtered = _prepare_frame(frame)
 
     region_values = _sorted_values(filtered, "team_a_region") + _sorted_values(
         filtered,
@@ -167,8 +217,23 @@ def render() -> None:
         f"{filtered['ranking_delta'].median():.1f}" if "ranking_delta" in filtered else "n/a",
     )
 
-    table_columns = _available_columns(filtered, DISPLAY_COLUMNS)
-    st.dataframe(filtered[table_columns], hide_index=True, width="stretch")
+    st.dataframe(
+        _display_frame(filtered),
+        hide_index=True,
+        width="stretch",
+        column_config={
+            "upset_probability": st.column_config.ProgressColumn(
+                "Upset score",
+                format="%.1f",
+                min_value=0,
+                max_value=1,
+            ),
+            "played_at": st.column_config.DateColumn("Played"),
+            "team_a": st.column_config.TextColumn("Team A", pinned=True),
+            "team_b": st.column_config.TextColumn("Team B", pinned=True),
+            "ranking_delta": st.column_config.NumberColumn("Ranking delta", format="%d"),
+        },
+    )
 
     match_labels = _match_labels(filtered)
     selected_label = st.selectbox("Signal detail", match_labels)

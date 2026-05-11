@@ -11,7 +11,7 @@ with matches as (
 ),
 
 teams as (
-    select team_id, world_ranking, region from {{ ref('dim_teams') }}
+    select team_id, team_name, world_ranking, region from {{ ref('dim_teams') }}
 ),
 
 -- Enrich each match with rankings for both sides
@@ -28,6 +28,8 @@ enriched as (
         m.score_a,
         m.score_b,
         m.is_overtime,
+        ta.team_name                                    as team_a_name,
+        tb.team_name                                    as team_b_name,
         coalesce(m.team_a_ranking, ta.world_ranking)    as team_a_ranking,
         coalesce(m.team_b_ranking, tb.world_ranking)    as team_b_ranking,
         ta.region                                       as team_a_region,
@@ -70,6 +72,8 @@ select
     score_a,
     score_b,
     is_overtime,
+    team_a_name,
+    team_b_name,
     team_a_ranking,
     team_b_ranking,
     team_a_region,

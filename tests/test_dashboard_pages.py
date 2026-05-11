@@ -69,3 +69,56 @@ def test_upset_tracker_match_labels_fall_back_to_row_index() -> None:
     frame = pd.DataFrame({"match_id": [2387419, None]}, index=[10, 11])
 
     assert module._match_labels(frame) == ["2387419", "11"]
+
+
+def test_upset_tracker_display_frame_uses_team_names_instead_of_raw_ids() -> None:
+    """The match table should show readable teams once the mart exports names."""
+    module = _load_module(REPO_ROOT / "dashboard" / "pages" / "1_Upset_Tracker.py")
+    frame = pd.DataFrame(
+        [
+            {
+                "upset_probability": 0.72,
+                "played_at": "2026-05-10",
+                "match_id": "2394126",
+                "team_a_id": "7020",
+                "team_a_name": "Spirit",
+                "team_b_id": "6248",
+                "team_b_name": "The MongolZ",
+                "team_a_region": None,
+                "team_b_region": "Asia",
+                "ranking_delta": 3,
+            }
+        ]
+    )
+
+    display = module._display_frame(frame)
+
+    assert "team_a_id" not in display.columns
+    assert "team_b_id" not in display.columns
+    assert display.loc[0, "team_a"] == "Spirit"
+    assert display.loc[0, "team_b"] == "The MongolZ"
+    assert display.loc[0, "team_a_region"] == "Unknown"
+
+
+def test_hidden_gem_display_frame_hides_player_and_team_ids_when_names_exist() -> None:
+    """Player/team IDs are technical keys and should not crowd the public table."""
+    module = _load_module(REPO_ROOT / "dashboard" / "pages" / "2_Hidden_Gem_Scout.py")
+    frame = pd.DataFrame(
+        [
+            {
+                "player_id": "22473",
+                "display_name": "qlocuu",
+                "team_id": "13314",
+                "team_name": "ECLOT",
+                "world_ranking": 88,
+                "prospect_score": 77.7,
+            }
+        ]
+    )
+
+    display = module._display_frame(frame)
+
+    assert "player_id" not in display.columns
+    assert "team_id" not in display.columns
+    assert display.loc[0, "player"] == "qlocuu"
+    assert display.loc[0, "team"] == "ECLOT"
