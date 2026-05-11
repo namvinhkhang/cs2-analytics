@@ -21,8 +21,6 @@ _DUMMY_ENV: dict[str, str] = {
     "CS2_LIQUIPEDIA_API_KEY": "test_liquipedia_key",
     "CS2_AWS_S3_BUCKET": "test-bucket",
     "CS2_AWS_REGION": "us-east-1",
-    "CS2_KAGGLE_USERNAME": "test_kaggle_user",
-    "CS2_KAGGLE_KEY": "test_kaggle_key",
 }
 
 for _key, _val in _DUMMY_ENV.items():

@@ -1,16 +1,12 @@
--- Union player sources and deduplicate by player_id.
--- When a player appears in both FACEIT and PandaScore, keep FACEIT record
--- (richer stats: ELO, KAST). Uses ROW_NUMBER with source priority ordering.
+-- Union modern player sources and deduplicate by player_id.
+-- Profile snapshots prefer CS API because it carries current HLTV-style team
+-- context; match rows keep FACEIT/PandaScore priority for richer stat fields.
 with faceit as (
     select * from {{ ref('stg_faceit_players') }}
 ),
 
 pandascore as (
     select * from {{ ref('stg_pandascore_players') }}
-),
-
-kaggle as (
-    select * from {{ ref('stg_kaggle_players') }}
 ),
 
 csapi as (
@@ -21,8 +17,6 @@ unioned as (
     select * from faceit
     union all
     select * from pandascore
-    union all
-    select * from kaggle
     union all
     select * from csapi
 ),
@@ -35,12 +29,12 @@ ranked as (
         row_number() over (
             partition by player_id, coalesce(match_id, '__profile__')
             order by
-                case source
-                    when 'faceit' then 1
-                    when 'pandascore' then 2
-                    when 'csapi' then 3
-                    when 'kaggle' then 4
-                    else 4
+                case
+                    when match_id is null and source = 'csapi' then 1
+                    when source = 'faceit' then 2
+                    when source = 'pandascore' then 3
+                    when source = 'csapi' then 4
+                    else 5
                 end
         ) as _row_num
     from unioned

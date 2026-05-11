@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: int_matches_unioned
-    description: "All matches from FACEIT, PandaScore, and Kaggle unioned with source column preserved"
+    description: "Modern matches from FACEIT and PandaScore unioned with source column preserved"
     columns:
       - name: match_id
         data_tests:
@@ -11,10 +11,10 @@ models:
         data_tests:
           - not_null
           - accepted_values:
-              values: ['faceit', 'pandascore', 'kaggle']
+              values: ['faceit', 'pandascore']
 
   - name: int_players_unioned
-    description: "Deduplicated player stats from FACEIT, PandaScore, Kaggle, and CS API"
+    description: "Deduplicated modern player stats from FACEIT, PandaScore, and CS API"
     columns:
       - name: player_id
         data_tests:
@@ -23,4 +23,4 @@ models:
         data_tests:
           - not_null
           - accepted_values:
-              values: ['faceit', 'pandascore', 'kaggle', 'csapi']
+              values: ['faceit', 'pandascore', 'csapi']

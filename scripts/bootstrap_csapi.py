@@ -66,6 +66,20 @@ def _read_float_env(name: str, default: float, *, minimum: float = 0.0) -> float
     return max(value, minimum)
 
 
+def _read_bool_env(name: str, default: bool) -> bool:
+    """Read a boolean environment override."""
+    raw_value = os.environ.get(name)
+    if raw_value is None or not raw_value.strip():
+        return default
+    normalized = raw_value.strip().casefold()
+    if normalized in {"1", "true", "yes", "y", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "n", "off"}:
+        return False
+    logger.warning("invalid_bool_env_using_default", name=name, value=raw_value, default=default)
+    return default
+
+
 def _output_filename(offset: int, max_matches: int | None) -> str:
     """Choose an S3 object name that is safe for chunked bootstraps."""
     explicit_filename = os.environ.get("CS2_CSAPI_OUTPUT_FILENAME")
@@ -90,6 +104,7 @@ async def _run() -> tuple[int, int]:
         minimum=0.0,
     )
     progress_interval = _read_int_env("CS2_CSAPI_PROGRESS_INTERVAL", 10, minimum=0)
+    refresh_current_profiles = _read_bool_env("CS2_CSAPI_REFRESH_CURRENT_PROFILES", True)
     output_filename = _output_filename(match_offset, max_matches)
 
     logger.info(
@@ -100,6 +115,7 @@ async def _run() -> tuple[int, int]:
         max_matches=max_matches,
         request_delay_seconds=request_delay_seconds,
         progress_interval=progress_interval,
+        refresh_current_profiles=refresh_current_profiles,
         output_filename=output_filename,
     )
 
@@ -119,6 +135,7 @@ async def _run() -> tuple[int, int]:
             request_delay_seconds=request_delay_seconds,
             progress_interval=progress_interval,
             output_filename=output_filename,
+            refresh_current_profiles=refresh_current_profiles,
             region=settings.aws_region,
         )
     return ranking_count, player_count

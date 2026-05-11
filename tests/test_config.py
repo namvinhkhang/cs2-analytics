@@ -33,8 +33,6 @@ class TestSettings:
             "CS2_FACEIT_API_KEY": "test_faceit",
             "CS2_PANDASCORE_API_KEY": "test_ps",
             "CS2_AWS_S3_BUCKET": "test-bucket",
-            "CS2_KAGGLE_USERNAME": "test_user",
-            "CS2_KAGGLE_KEY": "test_kaggle_key",
         }
         with patch.dict("os.environ", env_vars, clear=True):
             s = Settings(_env_file=None)
@@ -50,8 +48,6 @@ class TestSettings:
             "CS2_PANDASCORE_API_KEY": "test_ps",
             "CS2_LIQUIPEDIA_API_KEY": "lp_key",
             "CS2_AWS_S3_BUCKET": "test-bucket",
-            "CS2_KAGGLE_USERNAME": "test_user",
-            "CS2_KAGGLE_KEY": "test_kaggle_key",
         }
         with patch.dict("os.environ", env_vars, clear=True):
             s = Settings(_env_file=None)
@@ -66,8 +62,6 @@ class TestSettings:
             "CS2_PANDASCORE_API_KEY": "test_ps",
             "CS2_LIQUIPEDIA_API_KEY": "your_liquipedia_api_key_here",
             "CS2_AWS_S3_BUCKET": "test-bucket",
-            "CS2_KAGGLE_USERNAME": "test_user",
-            "CS2_KAGGLE_KEY": "test_kaggle_key",
         }
         with patch.dict("os.environ", env_vars, clear=True):
             s = Settings(_env_file=None)
@@ -82,8 +76,6 @@ class TestSettings:
             "CS2_PANDASCORE_API_KEY": "ps_key",
             "CS2_LIQUIPEDIA_API_KEY": "lp_key",
             "CS2_AWS_S3_BUCKET": "my-bucket",
-            "CS2_KAGGLE_USERNAME": "kaggle_user",
-            "CS2_KAGGLE_KEY": "kaggle_key_abc",
         }
         with patch.dict("os.environ", env_vars, clear=True):
             s = Settings(_env_file=None)
@@ -99,8 +91,6 @@ class TestSettings:
             "CS2_LIQUIPEDIA_API_KEY": "x",
             "CS2_AWS_S3_BUCKET": "x",
             "CS2_AWS_REGION": "eu-west-1",
-            "CS2_KAGGLE_USERNAME": "x",
-            "CS2_KAGGLE_KEY": "x",
         }
         with patch.dict("os.environ", env_vars, clear=True):
             s = Settings(_env_file=None)

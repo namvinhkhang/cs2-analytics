@@ -5,16 +5,18 @@ from __future__ import annotations
 from pathlib import Path
 
 
-def test_dim_teams_uses_modern_rankings_before_kaggle_fallback() -> None:
-    """Modern VRS rankings should outrank legacy Kaggle fallback rankings."""
+def test_dim_teams_uses_only_current_ranking_sources() -> None:
+    """Team IDs must come from sources with stable team IDs, not Kaggle names."""
     sql = Path("dbt_project/models/marts/core/dim_teams.sql").read_text()
 
     assert "stg_csapi_team_rankings" in sql
-    assert "stg_kaggle_matches" in sql
+    assert "stg_liquipedia_teams" in sql
+    assert "stg_kaggle_matches" not in sql
+    assert "kaggle_rankings" not in sql
+    assert "ranking_source = 'kaggle'" not in sql
     assert "ranking_source_priority" in sql
     assert "when 'liquipedia' then 1" in sql
     assert "when 'csapi' then 2" in sql
-    assert "when 'kaggle' then 3" in sql
 
 
 def test_player_leaderboard_uses_four_tiers() -> None:
@@ -32,3 +34,39 @@ def test_hidden_gems_exposes_prospect_score_without_tier4_fallback() -> None:
     assert "prospect_score" in sql
     assert "where stats_above_tier_threshold >= 3" in sql
     assert "or player_tier = 4" not in sql
+
+
+def test_hidden_gems_uses_current_player_team_for_rankings() -> None:
+    """Historical match teams should not decide a player's current hidden-gem tier."""
+    sql = Path("dbt_project/models/marts/analytics/mart_hidden_gems.sql").read_text()
+
+    assert "current_players as" in sql
+    assert "coalesce(cp.current_team_id, s.team_id)" in sql
+    assert "left join current_players cp" in sql
+
+
+def test_player_leaderboard_uses_current_player_team_for_rankings() -> None:
+    """Leaderboard tiers should follow dim_players' latest profile team."""
+    sql = Path("dbt_project/models/marts/analytics/mart_player_leaderboard.sql").read_text()
+
+    assert "current_players as" in sql
+    assert "coalesce(cp.current_team_id, s.team_id)" in sql
+    assert "left join current_players cp" in sql
+
+
+def test_player_union_prefers_csapi_current_profiles() -> None:
+    """Current CS API profile rows should survive profile-level deduplication."""
+    sql = Path("dbt_project/models/intermediate/int_players_unioned.sql").read_text()
+
+    assert "when match_id is null and source = 'csapi' then 1" in sql
+
+
+def test_modern_intermediate_models_exclude_kaggle_sources() -> None:
+    """Historical Kaggle rows should stay out of modern CS2 mart lineage."""
+    matches_sql = Path("dbt_project/models/intermediate/int_matches_unioned.sql").read_text()
+    players_sql = Path("dbt_project/models/intermediate/int_players_unioned.sql").read_text()
+    schema_yml = Path("dbt_project/models/intermediate/intermediate.yml").read_text()
+
+    assert "stg_kaggle_matches" not in matches_sql
+    assert "stg_kaggle_players" not in players_sql
+    assert "'kaggle'" not in schema_yml

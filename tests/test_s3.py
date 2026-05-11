@@ -48,12 +48,12 @@ def test_build_s3_key_custom_filename() -> None:
     assert key == "raw/pandascore/matches/year=2024/month=03/day=07/part-0.parquet"
 
 
-def test_build_s3_key_kaggle_source() -> None:
-    """Kaggle source should produce valid Hive-partitioned path."""
+def test_build_s3_key_csapi_source() -> None:
+    """CS API source should produce valid Hive-partitioned path."""
     from cs2_analytics.utils.s3 import build_s3_key
 
-    key = build_s3_key("kaggle", "players", 2023, 11, 30)
-    assert key == "raw/kaggle/players/year=2023/month=11/day=30/data.parquet"
+    key = build_s3_key("csapi", "player_stats", 2026, 5, 11)
+    assert key == "raw/csapi/player_stats/year=2026/month=05/day=11/data.parquet"
 
 
 def test_build_s3_key_default_filename_is_data_parquet() -> None:

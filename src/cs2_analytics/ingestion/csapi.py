@@ -72,6 +72,13 @@ class CSAPIClient(BaseAPIClient):
             return []
         return data
 
+    async def get_current_player_stats(self) -> list[CSAPIPlayerStat]:
+        """Fetch current aggregate player snapshots for profile/team context."""
+        data = await self.get("/players/stats/raw")
+        if not isinstance(data, list):
+            return []
+        return [CSAPIPlayerStat.model_validate(player) for player in data]
+
     @staticmethod
     def _match_team_context(
         match: dict[str, Any],
@@ -177,9 +184,10 @@ class CSAPIClient(BaseAPIClient):
         request_delay_seconds: float = 0.1,
         progress_interval: int = 25,
         output_filename: str = "data.parquet",
+        refresh_current_profiles: bool = True,
         region: str = "us-east-1",
     ) -> int:
-        """Fetch match-level modern player stats and write them to S3."""
+        """Fetch match-level stats plus current player profiles and write them to S3."""
         matches: list[dict[str, Any]] = []
         for page_index in range(pages):
             if max_matches is not None and len(matches) >= max_matches:
@@ -239,6 +247,18 @@ class CSAPIClient(BaseAPIClient):
             if request_delay_seconds > 0:
                 await asyncio.sleep(request_delay_seconds)
 
+        if refresh_current_profiles:
+            current_profiles = await self.get_current_player_stats()
+            profile_records = [
+                profile.to_current_profile_record(recorded_at=ingest_date.isoformat())
+                for profile in current_profiles
+            ]
+            records.extend(profile_records)
+            logger.info(
+                "csapi_current_player_profiles_ingested",
+                count=len(profile_records),
+            )
+
         if records:
             y, m, d = ingest_date.year, ingest_date.month, ingest_date.day
             write_parquet_to_s3(
@@ -253,6 +273,7 @@ class CSAPIClient(BaseAPIClient):
             "csapi_player_stats_ingested",
             count=len(records),
             matches=len(matches),
+            refresh_current_profiles=refresh_current_profiles,
             output_filename=output_filename,
         )
         return len(records)

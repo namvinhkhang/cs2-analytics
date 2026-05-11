@@ -17,18 +17,6 @@ sources:
       - name: raw_pandascore_matches
         description: "PandaScore tier-1 pro match results from the /csgo/ legacy endpoint."
 
-      - name: raw_kaggle_matches
-        description: "Historical HLTV match data from Kaggle CSV bootstrap (one-time load)."
-
-      - name: raw_kaggle_players
-        description: "Historical HLTV player stat rows from Kaggle players.csv bootstrap."
-
-      - name: raw_kaggle_map_vetoes
-        description: "Historical HLTV map pick/ban rows from Kaggle picks.csv bootstrap."
-
-      - name: raw_kaggle_economy
-        description: "Historical HLTV round economy rows from Kaggle economy.csv bootstrap."
-
       - name: raw_csapi_team_rankings
         description: "Modern CS2 VRS-style team rankings from the public CS API."
 

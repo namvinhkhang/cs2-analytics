@@ -5,6 +5,13 @@ with stats as (
     select * from {{ ref('fact_player_stats') }}
 ),
 
+current_players as (
+    select
+        player_id,
+        team_id as current_team_id
+    from {{ ref('dim_players') }}
+),
+
 teams as (
     select team_id, world_ranking from {{ ref('dim_teams') }}
 ),
@@ -14,7 +21,7 @@ player_agg as (
     select
         s.player_id,
         s.display_name,
-        s.team_id,
+        coalesce(cp.current_team_id, s.team_id) as team_id,
         count(*)                           as matches_played,
         round(avg(s.adr), 2)               as avg_adr,
         round(avg(s.kd_ratio), 3)          as avg_kd_ratio,
@@ -24,7 +31,9 @@ player_agg as (
         round(avg(s.deaths), 1)            as avg_deaths,
         max(s.elo)                         as peak_elo
     from stats s
-    group by s.player_id, s.display_name, s.team_id
+    left join current_players cp
+        on s.player_id = cp.player_id
+    group by s.player_id, s.display_name, coalesce(cp.current_team_id, s.team_id)
 ),
 
 -- Enrich with team tier (based on world ranking)

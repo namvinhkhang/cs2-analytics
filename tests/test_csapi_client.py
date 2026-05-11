@@ -103,10 +103,81 @@ def test_player_stat_maps_to_modern_player_record() -> None:
     assert record["matches_played"] == 52
 
 
+def test_player_stat_maps_to_current_profile_record() -> None:
+    """Current CS API player snapshots should update dim_players without polluting facts."""
+    stat = CSAPIPlayerStat(
+        id=11893,
+        name="zywoo",
+        team_id=9565,
+        team_name="Vitality",
+        k=18.962,
+        d=11.788,
+        swing=4.616,
+        adr=89.123,
+        kast=79.34,
+        rating=1.472,
+        matches_played=52,
+    )
+
+    record = stat.to_current_profile_record(recorded_at="2026-05-11")
+
+    assert record["player_id"] == "11893"
+    assert record["team_id"] == "9565"
+    assert record["team_name"] == "Vitality"
+    assert record["match_id"] is None
+    assert record["recorded_at"] == "2026-05-11"
+    assert record["matches_played"] == 52
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_get_current_player_stats_parses_profile_snapshot() -> None:
+    """CS API raw player stats are current profile snapshots, not match trend rows."""
+    respx.get("https://api.csapi.de/players/stats/raw").mock(
+        return_value=Response(
+            200,
+            json=[
+                {
+                    "id": 11893,
+                    "name": "zywoo",
+                    "team_id": 9565,
+                    "team_name": "Vitality",
+                    "k": 18.962,
+                    "d": 11.788,
+                    "swing": 4.616,
+                    "adr": 89.123,
+                    "kast": 79.34,
+                    "rating": 1.472,
+                    "N": 52,
+                }
+            ],
+        )
+    )
+
+    async with CSAPIClient() as client:
+        stats = await client.get_current_player_stats()
+
+    assert stats == [
+        CSAPIPlayerStat(
+            id=11893,
+            name="zywoo",
+            team_id=9565,
+            team_name="Vitality",
+            k=18.962,
+            d=11.788,
+            swing=4.616,
+            adr=89.123,
+            kast=79.34,
+            rating=1.472,
+            matches_played=52,
+        )
+    ]
+
+
 @pytest.mark.asyncio
 @respx.mock
 async def test_ingest_player_stats_writes_csapi_prefix() -> None:
-    """Modern player stats should use match IDs and match dates from /matches."""
+    """Modern player stats should combine match rows with current player profiles."""
     respx.get(
         "https://api.csapi.de/matches/",
         params={"limit": 1, "offset": 0},
@@ -170,6 +241,26 @@ async def test_ingest_player_stats_writes_csapi_prefix() -> None:
             ],
         )
     )
+    respx.get("https://api.csapi.de/players/stats/raw").mock(
+        return_value=Response(
+            200,
+            json=[
+                {
+                    "id": 19230,
+                    "name": "m0nesy",
+                    "team_id": 11283,
+                    "team_name": "Falcons",
+                    "k": 20.0,
+                    "d": 12.0,
+                    "swing": 4.0,
+                    "adr": 88.0,
+                    "kast": 80.0,
+                    "rating": 1.45,
+                    "N": 12,
+                }
+            ],
+        )
+    )
 
     with patch("cs2_analytics.ingestion.csapi.write_parquet_to_s3") as mock_write:
         async with CSAPIClient() as client:
@@ -181,7 +272,7 @@ async def test_ingest_player_stats_writes_csapi_prefix() -> None:
                 request_delay_seconds=0.0,
             )
 
-    assert count == 2
+    assert count == 3
     call = mock_write.call_args.kwargs
     assert call["bucket"] == "bucket"
     assert call["key"] == "raw/csapi/player_stats/year=2026/month=05/day=10/data.parquet"
@@ -192,6 +283,11 @@ async def test_ingest_player_stats_writes_csapi_prefix() -> None:
     assert call["records"][0]["match_id"] == "2394120"
     assert call["records"][0]["recorded_at"] == "2026-05-09"
     assert call["records"][0]["matches_played"] == 1
+    assert call["records"][2]["player_id"] == "19230"
+    assert call["records"][2]["team_id"] == "11283"
+    assert call["records"][2]["team_name"] == "Falcons"
+    assert call["records"][2]["match_id"] is None
+    assert call["records"][2]["recorded_at"] == "2026-05-10"
 
 
 @pytest.mark.asyncio
@@ -248,6 +344,9 @@ async def test_ingest_player_stats_paginates_matches() -> None:
                 }
             ],
         )
+    )
+    respx.get("https://api.csapi.de/players/stats/raw").mock(
+        return_value=Response(200, json=[])
     )
 
     with patch("cs2_analytics.ingestion.csapi.write_parquet_to_s3") as mock_write:
@@ -317,6 +416,9 @@ async def test_ingest_player_stats_can_limit_matches_and_use_chunk_filename() ->
                 }
             ],
         )
+    )
+    respx.get("https://api.csapi.de/players/stats/raw").mock(
+        return_value=Response(200, json=[])
     )
 
     with patch("cs2_analytics.ingestion.csapi.write_parquet_to_s3") as mock_write:

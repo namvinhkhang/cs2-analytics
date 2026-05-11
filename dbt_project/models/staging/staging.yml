@@ -5,8 +5,7 @@ models:
     description: "Cleaned FACEIT match data — renames raw_faceit_matches columns, filters nulls"
     columns:
       - name: match_id
-        data_tests:
-          - not_null
+        description: "Real CS API match ID for match-stat rows; null for current profile snapshots."
       - name: source
         data_tests:
           - not_null
@@ -33,33 +32,6 @@ models:
           - not_null
           - accepted_values:
               values: ['pandascore']
-
-  - name: stg_kaggle_matches
-    description: "Cleaned Kaggle historical match data — renames raw_kaggle_matches columns, filters nulls"
-    columns:
-      - name: match_id
-        data_tests:
-          - not_null
-      - name: source
-        data_tests:
-          - not_null
-          - accepted_values:
-              values: ['kaggle']
-
-  - name: stg_kaggle_players
-    description: "Cleaned Kaggle historical player stat rows from players.csv"
-    columns:
-      - name: player_id
-        data_tests:
-          - not_null
-      - name: source
-        data_tests:
-          - not_null
-          - accepted_values:
-              values: ['kaggle']
-      - name: match_id
-        data_tests:
-          - not_null
 
   - name: stg_csapi_team_rankings
     description: "Modern CS2 VRS-style team rankings from CS API"

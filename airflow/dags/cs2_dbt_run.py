@@ -30,26 +30,6 @@ COPY_INTO_STATEMENTS = [
        FILE_FORMAT = (TYPE = PARQUET)
        MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
        ON_ERROR = CONTINUE PURGE = FALSE""",
-    """COPY INTO CS2_ANALYTICS.RAW.raw_kaggle_matches
-       FROM @CS2_ANALYTICS.RAW.cs2_raw_stage/kaggle/matches/
-       FILE_FORMAT = (TYPE = PARQUET)
-       MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
-       ON_ERROR = CONTINUE PURGE = FALSE""",
-    """COPY INTO CS2_ANALYTICS.RAW.raw_kaggle_players
-       FROM @CS2_ANALYTICS.RAW.cs2_raw_stage/kaggle/players/
-       FILE_FORMAT = (TYPE = PARQUET)
-       MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
-       ON_ERROR = CONTINUE PURGE = FALSE""",
-    """COPY INTO CS2_ANALYTICS.RAW.raw_kaggle_map_vetoes
-       FROM @CS2_ANALYTICS.RAW.cs2_raw_stage/kaggle/map_vetoes/
-       FILE_FORMAT = (TYPE = PARQUET)
-       MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
-       ON_ERROR = CONTINUE PURGE = FALSE""",
-    """COPY INTO CS2_ANALYTICS.RAW.raw_kaggle_economy
-       FROM @CS2_ANALYTICS.RAW.cs2_raw_stage/kaggle/economy/
-       FILE_FORMAT = (TYPE = PARQUET)
-       MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
-       ON_ERROR = CONTINUE PURGE = FALSE""",
     """COPY INTO CS2_ANALYTICS.RAW.raw_csapi_team_rankings
        FROM @CS2_ANALYTICS.RAW.cs2_raw_stage/csapi/team_rankings/
        FILE_FORMAT = (TYPE = PARQUET)

@@ -33,7 +33,7 @@ def test_build_s3_key_zero_pads_month_and_day() -> None:
 
 def test_build_s3_key_custom_filename() -> None:
     """Custom filename= replaces default 'data.parquet' in the path."""
-    key = build_s3_key("kaggle", "matches", 2024, 1, 15, filename="part-0.parquet")
+    key = build_s3_key("csapi", "player_stats", 2026, 5, 11, filename="part-0.parquet")
     assert key.endswith("part-0.parquet")
     assert "data.parquet" not in key
 

@@ -45,8 +45,7 @@ src/cs2_analytics/
 │   ├── base.py       # BaseAPIClient: httpx + tenacity retries + asyncio.Semaphore rate limiting
 │   ├── faceit.py     # FACEIT API client (best per-match stats: ADR, KAST, kills)
 │   ├── liquipedia.py # Liquipedia API v3 (tournament metadata, rosters, placements)
-│   ├── pandascore.py # PandaScore API (tier-1 pro match results)
-│   └── kaggle.py     # One-time historical CSV bootstrap loader
+│   └── pandascore.py # PandaScore API (tier-1 pro match results)
 └── utils/
     ├── config.py     # Settings(BaseSettings) — all config via CS2_* env vars
     ├── parquet.py    # Serialize canonical models to Parquet via pyarrow
@@ -62,7 +61,7 @@ src/cs2_analytics/
 
 ### Config Pattern
 
-All settings come from environment variables with `CS2_` prefix (e.g., `CS2_FACEIT_API_KEY`). Copy `.env.example` to `.env` to run locally. Required vars: `CS2_FACEIT_API_KEY`, `CS2_PANDASCORE_API_KEY`, `CS2_AWS_S3_BUCKET`, `CS2_KAGGLE_USERNAME`, `CS2_KAGGLE_KEY`. Airflow vars: `CS2_AIRFLOW_FERNET_KEY`, `CS2_AIRFLOW_SECRET_KEY`, `CS2_SLACK_WEBHOOK_URL`. Optional: `CS2_AWS_REGION` (defaults to `us-east-1`), `CS2_LIQUIPEDIA_API_KEY` (blank or placeholder skips Liquipedia-only tasks).
+All settings come from environment variables with `CS2_` prefix (e.g., `CS2_FACEIT_API_KEY`). Copy `.env.example` to `.env` to run locally. Required vars: `CS2_FACEIT_API_KEY`, `CS2_PANDASCORE_API_KEY`, `CS2_AWS_S3_BUCKET`. Airflow vars: `CS2_AIRFLOW_FERNET_KEY`, `CS2_AIRFLOW_SECRET_KEY`, `CS2_SLACK_WEBHOOK_URL`. Optional: `CS2_AWS_REGION` (defaults to `us-east-1`), `CS2_LIQUIPEDIA_API_KEY` (blank or placeholder skips Liquipedia-only tasks).
 
 ### BaseAPIClient
 

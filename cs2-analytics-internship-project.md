@@ -541,8 +541,7 @@ cs2-analytics-platform/
 │   ├── clients/
 │   │   ├── liquipedia.py          # Liquipedia API v3 client
 │   │   ├── faceit.py              # FACEIT API client (per-match stats)
-│   │   ├── pandascore.py          # PandaScore API client (tier-1 pro)
-│   │   └── kaggle_bootstrap.py    # One-time historical CSV loader
+│   │   └── pandascore.py          # PandaScore API client (tier-1 pro)
 │   ├── models/                    # Pydantic data models
 │   │   ├── match.py
 │   │   ├── player.py

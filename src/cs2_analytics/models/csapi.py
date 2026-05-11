@@ -101,3 +101,14 @@ class CSAPIPlayerStat(BaseModel):
             "match_id": row_key or f"csapi:{recorded_at}:{self.id}",
             "recorded_at": recorded_at,
         }
+
+    def to_current_profile_record(self, *, recorded_at: str) -> dict[str, Any]:
+        """Return a current player snapshot without creating a fake match fact row.
+
+        CS API's aggregate player endpoint carries useful current team context, but
+        it has no real match ID. Keeping ``match_id`` null lets dim_players refresh
+        current team assignment while fact_player_stats remains match-grained.
+        """
+        record = self.to_player_stat_record(recorded_at=recorded_at, row_key=str(self.id))
+        record["match_id"] = None
+        return record

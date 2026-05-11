@@ -20,7 +20,7 @@ class Match(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     match_id: str
-    source: str  # "faceit" | "liquipedia" | "pandascore" | "kaggle"
+    source: str  # "faceit" | "liquipedia" | "pandascore" | "csapi"
     team_a_id: str
     team_b_id: str
     winner_id: str | None

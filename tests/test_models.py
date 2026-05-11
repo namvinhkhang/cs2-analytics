@@ -562,36 +562,3 @@ class TestPandaScoreScoreExtraction:
         assert canonical.score_a is None
         assert canonical.score_b is None
         assert canonical.is_overtime is None
-
-
-class TestKaggleScoreExtraction:
-    """Tests for KaggleBootstrapIngester.csv_to_matches() score field extraction."""
-
-    def test_kaggle_csv_with_map_wins_columns(self) -> None:
-        """CSV with _map_wins_team_1/_map_wins_team_2 maps to score_a/score_b."""
-        import tempfile
-        from pathlib import Path
-
-        from cs2_analytics.ingestion.kaggle import KaggleBootstrapIngester
-
-        csv_content = (
-            "match_id,date,team_1,team_2,map,map_winner,_map_wins_team_1,"
-            "_map_wins_team_2,rank_1,rank_2\n"
-            "m1,2024-01-15,TeamA,TeamB,de_dust2,TeamA,16,10,4,9\n"
-        )
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".csv", delete=False, encoding="utf-8"
-        ) as f:
-            f.write(csv_content)
-            tmp_path = Path(f.name)
-
-        ingester = KaggleBootstrapIngester(bucket="test-bucket")
-        matches = ingester.csv_to_matches(tmp_path)
-        tmp_path.unlink()
-
-        assert len(matches) == 1
-        assert matches[0].score_a == 16
-        assert matches[0].score_b == 10
-        assert matches[0].is_overtime is False
-        assert matches[0].team_a_ranking == 4
-        assert matches[0].team_b_ranking == 9

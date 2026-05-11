@@ -20,8 +20,7 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables with CS2_ prefix.
 
     Required variables (no default):
-      CS2_FACEIT_API_KEY, CS2_PANDASCORE_API_KEY, CS2_AWS_S3_BUCKET,
-      CS2_KAGGLE_USERNAME, CS2_KAGGLE_KEY
+      CS2_FACEIT_API_KEY, CS2_PANDASCORE_API_KEY, CS2_AWS_S3_BUCKET
 
     Optional variables (have defaults):
       CS2_AWS_REGION — defaults to "us-east-1"
@@ -40,8 +39,6 @@ class Settings(BaseSettings):
     faceit_api_key: str
     pandascore_api_key: str
     aws_s3_bucket: str
-    kaggle_username: str
-    kaggle_key: str
 
     # --- Optional fields with defaults ---
     liquipedia_api_key: str | None = None

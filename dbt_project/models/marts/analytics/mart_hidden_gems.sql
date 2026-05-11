@@ -7,6 +7,13 @@ with stats as (
     select * from {{ ref('fact_player_stats') }}
 ),
 
+current_players as (
+    select
+        player_id,
+        team_id as current_team_id
+    from {{ ref('dim_players') }}
+),
+
 teams as (
     select team_id, world_ranking from {{ ref('dim_teams') }}
 ),
@@ -15,7 +22,7 @@ player_match_stats as (
     select
         s.player_id,
         s.display_name,
-        s.team_id,
+        coalesce(cp.current_team_id, s.team_id) as team_id,
         cast(s.recorded_at as date) as recorded_at,
         s.adr,
         s.kd_ratio,
@@ -30,7 +37,10 @@ player_match_stats as (
         end as player_tier,
         t.world_ranking
     from stats s
-    left join teams t on s.team_id = t.team_id
+    left join current_players cp
+        on s.player_id = cp.player_id
+    left join teams t
+        on coalesce(cp.current_team_id, s.team_id) = t.team_id
 ),
 
 player_agg as (
