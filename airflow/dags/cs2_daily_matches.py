@@ -140,9 +140,29 @@ def cs2_daily_matches_dag() -> None:
         log.info("pandascore_ingestion_complete", count=count, date=today)
         return count
 
-    # Both tasks are independent — TaskFlow runs them in parallel by default
+    @task()
+    def ingest_csapi_daily_profile() -> dict[str, int]:
+        """Run the bounded CS API daily profile alongside daily match ingestion."""
+        # Import inside the task so DagBag parsing stays lightweight and env-safe.
+        from scripts.bootstrap_csapi import run_profile
+
+        ranking_count, match_count, player_count = asyncio.run(run_profile("daily"))
+        log.info(
+            "csapi_daily_profile_ingestion_complete",
+            team_rankings=ranking_count,
+            matches=match_count,
+            player_stats=player_count,
+        )
+        return {
+            "team_rankings": ranking_count,
+            "matches": match_count,
+            "player_stats": player_count,
+        }
+
+    # Tasks are independent — TaskFlow runs them in parallel by default
     ingest_faceit_matches()
     ingest_pandascore_matches()
+    ingest_csapi_daily_profile()
 
 
 cs2_daily_matches_dag()

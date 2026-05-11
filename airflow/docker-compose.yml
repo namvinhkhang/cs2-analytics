@@ -20,8 +20,8 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__FERNET_KEY: "${CS2_AIRFLOW_FERNET_KEY:-}"
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__WEBSERVER__SECRET_KEY: "${CS2_AIRFLOW_SECRET_KEY:-dev_secret_change_me}"
-    # PYTHONPATH points to the live-mounted src directory for dev iteration
-    PYTHONPATH: /opt/cs2-analytics/src
+    # PYTHONPATH points to the repo root plus live-mounted src/scripts for dev iteration
+    PYTHONPATH: /opt/cs2-analytics:/opt/cs2-analytics/src
     # Prevents Celery signal handling issues inside Docker (required for worker;
     # harmless on other services). Defined here because YAML <<: merge replaces
     # entire `environment` blocks — a worker-level override would lose all common vars.
@@ -32,6 +32,7 @@ x-airflow-common: &airflow-common
     - ../logs:/opt/airflow/logs
     # Live-mount source so package changes take effect without rebuild in dev
     - ../src:/opt/cs2-analytics/src
+    - ../scripts:/opt/cs2-analytics/scripts
   depends_on:
     postgres:
       condition: service_healthy

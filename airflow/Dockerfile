@@ -6,6 +6,7 @@ USER root
 # Copy package metadata and source for pip install
 COPY --chown=airflow:0 pyproject.toml /opt/cs2-analytics/pyproject.toml
 COPY --chown=airflow:0 src /opt/cs2-analytics/src
+COPY --chown=airflow:0 scripts /opt/cs2-analytics/scripts
 # Copy dbt project into the image — BashOperator runs dbt CLI from this path
 COPY --chown=airflow:0 dbt_project /opt/cs2-analytics/dbt_project
 
@@ -24,6 +25,6 @@ RUN pip install --no-cache-dir /opt/cs2-analytics \
     "dbt-snowflake==1.11.3" \
     "snowflake-connector-python>=3.0" \
     "cryptography>=41.0"
-# Add src to PYTHONPATH so `from cs2_analytics.ingestion.faceit import FACEITClient` works
-# in all containers (scheduler + worker + webserver share this anchor)
-ENV PYTHONPATH="/opt/cs2-analytics/src:${PYTHONPATH}"
+# Add the repo root and src to PYTHONPATH so DAG tasks can import both
+# `scripts.bootstrap_csapi` and the installed package modules.
+ENV PYTHONPATH="/opt/cs2-analytics:/opt/cs2-analytics/src:${PYTHONPATH}"

@@ -13,3 +13,4 @@
 - Do not invent player-level clutch metrics when raw player stats do not contain clutch events; document the missing source and use available stats until round/event-level clutch data is persisted.
 - Hidden Gem Scout needs a recent sample-size floor; require enough recent stat rows before flagging a player so one-off games do not become prospect signals.
 - When graphifying the current codebase after the user says to ignore dot-prefixed folders, filter every detected path with any directory part beginning with `.` before extraction so planning/cache metadata does not pollute the graph.
+- Scheduled raw-data bootstraps must not overwrite same-partition S3 objects. Check each target object before API calls and either skip existing outputs or add a downstream dedupe contract before using unique run filenames.
