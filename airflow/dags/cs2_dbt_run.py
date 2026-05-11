@@ -7,11 +7,13 @@ Uses key-pair auth for Snowflake (password auth deprecated Nov 2025).
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
+from typing import cast
 
 import pendulum
 from airflow.decorators import dag, task
 from airflow.operators.bash import BashOperator
-
+from airflow.utils.context import Context
 from utils.slack_alerts import on_failure_callback
 
 # COPY INTO SQL statements — one per raw source table.
@@ -30,6 +32,31 @@ COPY_INTO_STATEMENTS = [
        ON_ERROR = CONTINUE PURGE = FALSE""",
     """COPY INTO CS2_ANALYTICS.RAW.raw_kaggle_matches
        FROM @CS2_ANALYTICS.RAW.cs2_raw_stage/kaggle/matches/
+       FILE_FORMAT = (TYPE = PARQUET)
+       MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
+       ON_ERROR = CONTINUE PURGE = FALSE""",
+    """COPY INTO CS2_ANALYTICS.RAW.raw_kaggle_players
+       FROM @CS2_ANALYTICS.RAW.cs2_raw_stage/kaggle/players/
+       FILE_FORMAT = (TYPE = PARQUET)
+       MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
+       ON_ERROR = CONTINUE PURGE = FALSE""",
+    """COPY INTO CS2_ANALYTICS.RAW.raw_kaggle_map_vetoes
+       FROM @CS2_ANALYTICS.RAW.cs2_raw_stage/kaggle/map_vetoes/
+       FILE_FORMAT = (TYPE = PARQUET)
+       MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
+       ON_ERROR = CONTINUE PURGE = FALSE""",
+    """COPY INTO CS2_ANALYTICS.RAW.raw_kaggle_economy
+       FROM @CS2_ANALYTICS.RAW.cs2_raw_stage/kaggle/economy/
+       FILE_FORMAT = (TYPE = PARQUET)
+       MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
+       ON_ERROR = CONTINUE PURGE = FALSE""",
+    """COPY INTO CS2_ANALYTICS.RAW.raw_csapi_team_rankings
+       FROM @CS2_ANALYTICS.RAW.cs2_raw_stage/csapi/team_rankings/
+       FILE_FORMAT = (TYPE = PARQUET)
+       MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
+       ON_ERROR = CONTINUE PURGE = FALSE""",
+    """COPY INTO CS2_ANALYTICS.RAW.raw_csapi_player_stats
+       FROM @CS2_ANALYTICS.RAW.cs2_raw_stage/csapi/player_stats/
        FILE_FORMAT = (TYPE = PARQUET)
        MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
        ON_ERROR = CONTINUE PURGE = FALSE""",
@@ -59,7 +86,7 @@ DBT_PROJECT_DIR = "/opt/cs2-analytics/dbt_project"
     schedule="0 8 * * *",
     start_date=pendulum.datetime(2024, 1, 1, tz="UTC"),
     catchup=False,
-    on_failure_callback=on_failure_callback,
+    on_failure_callback=cast(Callable[[Context], None], on_failure_callback),
     tags=["cs2", "warehouse"],
     default_args={
         "retries": 2,
@@ -80,19 +107,20 @@ def cs2_dbt_run_dag() -> None:
         """
         # Import inside task body to avoid module-level import errors when Snowflake
         # connector is absent at DagBag load time (follows Pitfall 3 pattern from RESEARCH.md)
-        import snowflake.connector  # type: ignore[import-untyped]
+        import snowflake.connector
 
         # Read connection params from env vars (set in docker-compose environment block)
         account = os.environ["SNOWFLAKE_ACCOUNT"]
         user = os.environ["SNOWFLAKE_USER"]
-        private_key = os.environ["SNOWFLAKE_PRIVATE_KEY"]
+        private_key_path = os.environ["SNOWFLAKE_PRIVATE_KEY_PATH"]
         warehouse = os.environ["SNOWFLAKE_WAREHOUSE"]
         database = os.environ["SNOWFLAKE_DATABASE"]
 
         conn = snowflake.connector.connect(
             account=account,
             user=user,
-            private_key=private_key,
+            authenticator="SNOWFLAKE_JWT",
+            private_key_file=private_key_path,
             warehouse=warehouse,
             database=database,
         )

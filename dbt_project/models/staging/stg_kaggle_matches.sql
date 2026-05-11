@@ -16,7 +16,9 @@ renamed as (
         map_name,
         score_a,
         score_b,
-        is_overtime
+        is_overtime,
+        team_a_ranking,
+        team_b_ranking
     from source
     where match_id is not null
 )

@@ -26,21 +26,25 @@ enriched as (
         m.score_a,
         m.score_b,
         m.is_overtime,
-        ta.world_ranking                                as team_a_ranking,
-        tb.world_ranking                                as team_b_ranking,
+        coalesce(m.team_a_ranking, ta.world_ranking)    as team_a_ranking,
+        coalesce(m.team_b_ranking, tb.world_ranking)    as team_b_ranking,
         ta.region                                       as team_a_region,
         tb.region                                       as team_b_region,
         -- Ranking delta (absolute difference between the two teams' rankings).
         -- Unranked teams are coalesced to 999 so they are always treated as heavy underdogs.
         abs(
-            coalesce(ta.world_ranking, 999)
-            - coalesce(tb.world_ranking, 999)
+            coalesce(m.team_a_ranking, ta.world_ranking, 999)
+            - coalesce(m.team_b_ranking, tb.world_ranking, 999)
         )                                               as ranking_delta,
         -- Favored team = lower ranking number (better world standing).
         -- NULL when teams have equal rankings.
         case
-            when coalesce(ta.world_ranking, 999) < coalesce(tb.world_ranking, 999) then m.team_a_id
-            when coalesce(tb.world_ranking, 999) < coalesce(ta.world_ranking, 999) then m.team_b_id
+            when coalesce(m.team_a_ranking, ta.world_ranking, 999)
+                 < coalesce(m.team_b_ranking, tb.world_ranking, 999)
+            then m.team_a_id
+            when coalesce(m.team_b_ranking, tb.world_ranking, 999)
+                 < coalesce(m.team_a_ranking, ta.world_ranking, 999)
+            then m.team_b_id
             else null
         end                                             as favored_team_id,
         -- Round differential (positive = team_a won more rounds)

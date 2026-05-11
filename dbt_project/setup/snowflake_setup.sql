@@ -39,8 +39,8 @@ CREATE STORAGE INTEGRATION IF NOT EXISTS cs2_s3_int
   TYPE = EXTERNAL_STAGE
   STORAGE_PROVIDER = 'S3'
   ENABLED = TRUE
-  STORAGE_AWS_ROLE_ARN = '<your_iam_role_arn>'
-  STORAGE_ALLOWED_LOCATIONS = ('s3://<your_bucket>/raw/');
+  STORAGE_AWS_ROLE_ARN = 'arn:aws:iam::850610451085:role/cs2-snowflake-s3-role'
+  STORAGE_ALLOWED_LOCATIONS = ('s3://cs2-analytics-850610451085-us-east-2-an/raw/');
 
 -- Reveals Snowflake IAM user ARN + external ID for AWS trust policy
 DESC INTEGRATION cs2_s3_int;
@@ -54,7 +54,7 @@ USE SCHEMA CS2_ANALYTICS.RAW;
 -- raw/{source}/{entity_type}/year={y}/month={mm}/day={dd}/data.parquet
 CREATE OR REPLACE STAGE cs2_raw_stage
   STORAGE_INTEGRATION = cs2_s3_int
-  URL = 's3://<your_bucket>/raw/'
+  URL = 's3://cs2-analytics-850610451085-us-east-2-an/raw/'
   FILE_FORMAT = (TYPE = PARQUET);
 
 -- =============================================================================
@@ -75,7 +75,9 @@ CREATE TABLE IF NOT EXISTS RAW.raw_faceit_matches (
   map_name    VARCHAR,
   score_a     INTEGER,
   score_b     INTEGER,
-  is_overtime BOOLEAN
+  is_overtime BOOLEAN,
+  team_a_ranking INTEGER,
+  team_b_ranking INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS RAW.raw_pandascore_matches (
@@ -88,7 +90,9 @@ CREATE TABLE IF NOT EXISTS RAW.raw_pandascore_matches (
   map_name    VARCHAR,
   score_a     INTEGER,
   score_b     INTEGER,
-  is_overtime BOOLEAN
+  is_overtime BOOLEAN,
+  team_a_ranking INTEGER,
+  team_b_ranking INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS RAW.raw_kaggle_matches (
@@ -101,7 +105,104 @@ CREATE TABLE IF NOT EXISTS RAW.raw_kaggle_matches (
   map_name    VARCHAR,
   score_a     INTEGER,
   score_b     INTEGER,
-  is_overtime BOOLEAN
+  is_overtime BOOLEAN,
+  team_a_ranking INTEGER,
+  team_b_ranking INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS RAW.raw_kaggle_players (
+  source        VARCHAR,
+  player_id     VARCHAR,
+  display_name  VARCHAR,
+  team_id       VARCHAR,
+  opponent_id   VARCHAR,
+  country       VARCHAR,
+  match_id      VARCHAR,
+  event_id      VARCHAR,
+  event_name    VARCHAR,
+  best_of       INTEGER,
+  map_1         VARCHAR,
+  map_2         VARCHAR,
+  map_3         VARCHAR,
+  kills         INTEGER,
+  assists       INTEGER,
+  deaths        INTEGER,
+  headshots     INTEGER,
+  flash_assists FLOAT,
+  kast          FLOAT,
+  kd_diff       INTEGER,
+  adr           FLOAT,
+  fk_diff       INTEGER,
+  rating        FLOAT,
+  recorded_at   VARCHAR
+);
+
+CREATE TABLE IF NOT EXISTS RAW.raw_kaggle_map_vetoes (
+  source         VARCHAR,
+  match_id       VARCHAR,
+  event_id       VARCHAR,
+  played_at      VARCHAR,
+  team_a_id      VARCHAR,
+  team_b_id      VARCHAR,
+  inverted_teams BOOLEAN,
+  best_of        INTEGER,
+  system         VARCHAR,
+  t1_removed_1   VARCHAR,
+  t1_removed_2   VARCHAR,
+  t1_removed_3   VARCHAR,
+  t2_removed_1   VARCHAR,
+  t2_removed_2   VARCHAR,
+  t2_removed_3   VARCHAR,
+  t1_picked_1    VARCHAR,
+  t2_picked_1    VARCHAR,
+  left_over      VARCHAR
+);
+
+CREATE TABLE IF NOT EXISTS RAW.raw_kaggle_economy (
+  source            VARCHAR,
+  match_id          VARCHAR,
+  event_id          VARCHAR,
+  played_at         VARCHAR,
+  team_a_id         VARCHAR,
+  team_b_id         VARCHAR,
+  best_of           INTEGER,
+  map_name          VARCHAR,
+  team_a_start_side VARCHAR,
+  team_b_start_side VARCHAR,
+  rounds_json       VARCHAR
+);
+
+CREATE TABLE IF NOT EXISTS RAW.raw_csapi_team_rankings (
+  team_id       VARCHAR,
+  source        VARCHAR,
+  name          VARCHAR,
+  region        VARCHAR,
+  world_ranking INTEGER,
+  vrs_points    INTEGER,
+  rank_diff     INTEGER,
+  points_diff   INTEGER,
+  ranking_date  VARCHAR,
+  ingested_at   VARCHAR
+);
+
+CREATE TABLE IF NOT EXISTS RAW.raw_csapi_player_stats (
+  player_id      VARCHAR,
+  source         VARCHAR,
+  display_name   VARCHAR,
+  team_id        VARCHAR,
+  team_name      VARCHAR,
+  nationality    VARCHAR,
+  kills          FLOAT,
+  deaths         FLOAT,
+  adr            FLOAT,
+  kd_ratio       FLOAT,
+  kast           FLOAT,
+  rating         FLOAT,
+  swing          FLOAT,
+  matches_played INTEGER,
+  elo            INTEGER,
+  match_id       VARCHAR,
+  recorded_at    VARCHAR
 );
 
 CREATE TABLE IF NOT EXISTS RAW.raw_faceit_players (
@@ -159,12 +260,14 @@ CREATE ROLE IF NOT EXISTS TRANSFORMER;
 
 -- Database and schema access
 GRANT USAGE ON DATABASE CS2_ANALYTICS TO ROLE TRANSFORMER;
+GRANT CREATE SCHEMA ON DATABASE CS2_ANALYTICS TO ROLE TRANSFORMER;
 GRANT USAGE ON SCHEMA CS2_ANALYTICS.RAW TO ROLE TRANSFORMER;
 GRANT USAGE ON SCHEMA CS2_ANALYTICS.STAGING TO ROLE TRANSFORMER;
 GRANT USAGE ON SCHEMA CS2_ANALYTICS.MARTS TO ROLE TRANSFORMER;
 
 -- Read from raw tables (dbt staging models SELECT from these)
 GRANT SELECT ON ALL TABLES IN SCHEMA CS2_ANALYTICS.RAW TO ROLE TRANSFORMER;
+GRANT SELECT ON FUTURE TABLES IN SCHEMA CS2_ANALYTICS.RAW TO ROLE TRANSFORMER;
 
 -- Write to staging and marts (dbt creates views and tables here)
 GRANT CREATE VIEW ON SCHEMA CS2_ANALYTICS.STAGING TO ROLE TRANSFORMER;
@@ -211,6 +314,41 @@ COPY INTO CS2_ANALYTICS.RAW.raw_pandascore_matches
 
 COPY INTO CS2_ANALYTICS.RAW.raw_kaggle_matches
   FROM @cs2_raw_stage/kaggle/matches/
+  FILE_FORMAT = (TYPE = PARQUET)
+  MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
+  ON_ERROR = CONTINUE
+  PURGE = FALSE;
+
+COPY INTO CS2_ANALYTICS.RAW.raw_kaggle_players
+  FROM @cs2_raw_stage/kaggle/players/
+  FILE_FORMAT = (TYPE = PARQUET)
+  MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
+  ON_ERROR = CONTINUE
+  PURGE = FALSE;
+
+COPY INTO CS2_ANALYTICS.RAW.raw_kaggle_map_vetoes
+  FROM @cs2_raw_stage/kaggle/map_vetoes/
+  FILE_FORMAT = (TYPE = PARQUET)
+  MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
+  ON_ERROR = CONTINUE
+  PURGE = FALSE;
+
+COPY INTO CS2_ANALYTICS.RAW.raw_kaggle_economy
+  FROM @cs2_raw_stage/kaggle/economy/
+  FILE_FORMAT = (TYPE = PARQUET)
+  MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
+  ON_ERROR = CONTINUE
+  PURGE = FALSE;
+
+COPY INTO CS2_ANALYTICS.RAW.raw_csapi_team_rankings
+  FROM @cs2_raw_stage/csapi/team_rankings/
+  FILE_FORMAT = (TYPE = PARQUET)
+  MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
+  ON_ERROR = CONTINUE
+  PURGE = FALSE;
+
+COPY INTO CS2_ANALYTICS.RAW.raw_csapi_player_stats
+  FROM @cs2_raw_stage/csapi/player_stats/
   FILE_FORMAT = (TYPE = PARQUET)
   MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
   ON_ERROR = CONTINUE

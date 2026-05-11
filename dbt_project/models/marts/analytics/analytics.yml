@@ -57,7 +57,7 @@ models:
               values: [0, 1]
 
   - name: mart_hidden_gems
-    description: "Players in tier 2/3 with 3+ stats in the top 15th percentile of their tier (WH-09)"
+    description: "Players in tier 2/3/4 with 3+ stats clearing top-15% thresholds from the tier above, plus 90-day trend direction (HG-01..04)"
     columns:
       - name: player_id
         data_tests:
@@ -65,14 +65,34 @@ models:
       - name: is_hidden_gem
         data_tests:
           - not_null
+      - name: prospect_score
+        description: "Sortable score based on tier-above threshold clears and sample size."
+        data_tests:
+          - not_null
+      - name: trend_direction
+        description: "ADR trend over the latest 90-day window compared with the previous 90-day window."
+        data_tests:
+          - not_null
 
   - name: mart_choke_profile
-    description: "Team pressure performance: lead-blown rate, comeback rate, and overtime record (WH-10)"
+    description: "Team pressure performance: lead-blown rate, final-score comeback proxy, overtime record, and explicit data availability flags (CC-01..04)"
     columns:
       - name: team_id
         data_tests:
           - unique
           - not_null
       - name: lead_blown_rate
+        data_tests:
+          - not_null
+      - name: comeback_metric_type
+        description: "Documents whether comeback_rate is exact halftime logic or a final-score pressure proxy."
+        data_tests:
+          - not_null
+      - name: halftime_data_available
+        description: "False until halftime score facts are ingested."
+        data_tests:
+          - not_null
+      - name: bracket_data_available
+        description: "False until bracket-position facts are ingested."
         data_tests:
           - not_null

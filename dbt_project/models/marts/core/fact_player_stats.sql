@@ -16,6 +16,7 @@ select
     adr,
     kd_ratio,
     kast,
+    rating,
     elo,
     recorded_at,
     -- Derived stats for downstream analytics

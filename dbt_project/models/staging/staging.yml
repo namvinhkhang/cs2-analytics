@@ -46,6 +46,54 @@ models:
           - accepted_values:
               values: ['kaggle']
 
+  - name: stg_kaggle_players
+    description: "Cleaned Kaggle historical player stat rows from players.csv"
+    columns:
+      - name: player_id
+        data_tests:
+          - not_null
+      - name: source
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['kaggle']
+      - name: match_id
+        data_tests:
+          - not_null
+
+  - name: stg_csapi_team_rankings
+    description: "Modern CS2 VRS-style team rankings from CS API"
+    columns:
+      - name: team_id
+        data_tests:
+          - not_null
+      - name: source
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['csapi']
+      - name: world_ranking
+        data_tests:
+          - not_null
+      - name: ranking_date
+        data_tests:
+          - not_null
+
+  - name: stg_csapi_player_stats
+    description: "Modern CS2 current-form player stats from CS API"
+    columns:
+      - name: player_id
+        data_tests:
+          - not_null
+      - name: source
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['csapi']
+      - name: match_id
+        data_tests:
+          - not_null
+
   - name: stg_faceit_players
     description: "Cleaned FACEIT player stats — primary stats source with ADR, KAST, and ELO"
     columns:

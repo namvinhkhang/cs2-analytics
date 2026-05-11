@@ -1,5 +1,5 @@
 -- Per-player aggregated stats with tier percentile rankings.
--- Tier assignment: T1 = world_ranking 1–10, T2 = 11–30, T3 = 31+.
+-- Tier assignment: T1 = world_ranking 1-10, T2 = 11-30, T3 = 31-50, T4 = 51+.
 -- Grain: one row per player with avg stats and within-tier percent_rank columns.
 with stats as (
     select * from {{ ref('fact_player_stats') }}
@@ -19,6 +19,7 @@ player_agg as (
         round(avg(s.adr), 2)               as avg_adr,
         round(avg(s.kd_ratio), 3)          as avg_kd_ratio,
         round(avg(s.kast), 2)              as avg_kast,
+        round(avg(s.rating), 3)            as avg_rating,
         round(avg(s.kills), 1)             as avg_kills,
         round(avg(s.deaths), 1)            as avg_deaths,
         max(s.elo)                         as peak_elo
@@ -34,7 +35,8 @@ tiered as (
         case
             when t.world_ranking between 1 and 10 then 1
             when t.world_ranking between 11 and 30 then 2
-            else 3
+            when t.world_ranking between 31 and 50 then 3
+            else 4
         end                                as tier
     from player_agg pa
     left join teams t on pa.team_id = t.team_id
@@ -48,6 +50,7 @@ ranked as (
         percent_rank() over (partition by tier order by avg_adr asc)       as adr_pct_rank,
         percent_rank() over (partition by tier order by avg_kd_ratio asc)  as kd_pct_rank,
         percent_rank() over (partition by tier order by avg_kast asc)      as kast_pct_rank,
+        percent_rank() over (partition by tier order by avg_rating asc)    as rating_pct_rank,
         percent_rank() over (partition by tier order by avg_kills asc)     as kills_pct_rank
     from tiered
 )

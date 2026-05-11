@@ -1,8 +1,8 @@
--- Players flagged as outliers relative to their tier cohort (WH-09).
--- Tier boundaries: T1 = world_ranking 1–10, T2 = 11–30, T3 = 31+.
--- A "hidden gem" is a player in tier 2 or 3 whose stats rank in the top 15th
--- percentile (>= 0.85 percent_rank) of their own tier on 3 or more key metrics.
--- Grain: one row per player (only tier 2/3 players with 3+ elite stats).
+-- Players flagged as outliers compared with the tier above them (HG-01..HG-04).
+-- Tier boundaries: T1 = world_ranking 1-10, T2 = 11-30, T3 = 31-50, T4 = 51+.
+-- A hidden gem is a tier 2/3/4 player whose aggregate stats clear 3+ 85th
+-- percentile thresholds from the next stronger tier, plus a 90-day trend direction.
+-- Grain: one row per qualifying hidden-gem player.
 with stats as (
     select * from {{ ref('fact_player_stats') }}
 ),
@@ -11,51 +11,116 @@ teams as (
     select team_id, world_ranking from {{ ref('dim_teams') }}
 ),
 
--- Aggregate per-player stats across all their matches
-player_agg as (
+player_match_stats as (
     select
         s.player_id,
         s.display_name,
         s.team_id,
-        count(*)          as matches_played,
-        avg(s.adr)        as avg_adr,
-        avg(s.kd_ratio)   as avg_kd_ratio,
-        avg(s.kast)       as avg_kast,
-        avg(s.kills)      as avg_kills
-    from stats s
-    group by s.player_id, s.display_name, s.team_id
-),
-
--- Assign tier based on team's current world ranking
-tiered as (
-    select
-        pa.*,
-        t.world_ranking,
+        cast(s.recorded_at as date) as recorded_at,
+        s.adr,
+        s.kd_ratio,
+        s.kast,
+        s.rating,
+        s.kills,
         case
             when t.world_ranking between 1 and 10 then 1
             when t.world_ranking between 11 and 30 then 2
-            else 3
-        end                as player_tier
-    from player_agg pa
-    left join teams t on pa.team_id = t.team_id
+            when t.world_ranking between 31 and 50 then 3
+            else 4
+        end as player_tier,
+        t.world_ranking
+    from stats s
+    left join teams t on s.team_id = t.team_id
 ),
 
--- Compute within-tier percentile ranks and flag stats in the top 15th percentile
-tier_percentiles as (
+player_agg as (
     select
-        *,
-        percent_rank() over (partition by player_tier order by avg_adr asc)       as adr_pct,
-        percent_rank() over (partition by player_tier order by avg_kd_ratio asc)  as kd_pct,
-        percent_rank() over (partition by player_tier order by avg_kast asc)      as kast_pct,
-        percent_rank() over (partition by player_tier order by avg_kills asc)     as kills_pct,
-        -- Count how many of the four key stats fall in the top 15th percentile of the tier
+        player_id,
+        display_name,
+        team_id,
+        world_ranking,
+        player_tier,
+        count(*) as matches_played,
+        avg(adr) as avg_adr,
+        avg(kd_ratio) as avg_kd_ratio,
+        avg(kast) as avg_kast,
+        avg(rating) as avg_rating,
+        avg(kills) as avg_kills,
+        max(recorded_at) as latest_recorded_at
+    from player_match_stats
+    group by player_id, display_name, team_id, world_ranking, player_tier
+),
+
+tier_above_thresholds as (
+    select
+        player_tier,
+        percentile_cont(0.85) within group (order by avg_adr) as adr_threshold,
+        percentile_cont(0.85) within group (order by avg_kd_ratio) as kd_threshold,
+        percentile_cont(0.85) within group (order by avg_kast) as kast_threshold,
+        percentile_cont(0.85) within group (order by avg_rating) as rating_threshold
+    from player_agg
+    group by player_tier
+),
+
+trend_windows as (
+    select
+        pms.*,
+        max(recorded_at) over (partition by player_id) as max_recorded_at
+    from player_match_stats pms
+),
+
+player_trends as (
+    select
+        player_id,
+        avg(
+            case
+                when recorded_at >= dateadd(day, -89, max_recorded_at) then adr
+                else null
+            end
+        ) as recent_90_day_adr,
+        avg(
+            case
+                when recorded_at < dateadd(day, -89, max_recorded_at)
+                     and recorded_at >= dateadd(day, -179, max_recorded_at)
+                then adr
+                else null
+            end
+        ) as previous_90_day_adr
+    from trend_windows
+    group by player_id
+),
+
+scored as (
+    select
+        pa.*,
+        tabove.adr_threshold,
+        tabove.kd_threshold,
+        tabove.kast_threshold,
+        tabove.rating_threshold,
         (
-            case when percent_rank() over (partition by player_tier order by avg_adr asc)       >= 0.85 then 1 else 0 end
-          + case when percent_rank() over (partition by player_tier order by avg_kd_ratio asc)  >= 0.85 then 1 else 0 end
-          + case when percent_rank() over (partition by player_tier order by avg_kast asc)      >= 0.85 then 1 else 0 end
-          + case when percent_rank() over (partition by player_tier order by avg_kills asc)     >= 0.85 then 1 else 0 end
-        )                                                                         as stats_in_top_15_pct
-    from tiered
+            case when pa.avg_adr >= tabove.adr_threshold then 1 else 0 end
+          + case when pa.avg_kd_ratio >= tabove.kd_threshold then 1 else 0 end
+          + case when pa.avg_kast >= tabove.kast_threshold then 1 else 0 end
+          + case when pa.avg_rating >= tabove.rating_threshold then 1 else 0 end
+        ) as stats_above_tier_threshold,
+        round(
+            (
+                case when pa.avg_adr >= tabove.adr_threshold then 25 else 0 end
+              + case when pa.avg_kd_ratio >= tabove.kd_threshold then 25 else 0 end
+              + case when pa.avg_kast >= tabove.kast_threshold then 25 else 0 end
+              + case when pa.avg_rating >= tabove.rating_threshold then 25 else 0 end
+              + least(pa.matches_played, 50) / 10.0
+            ),
+            2
+        ) as prospect_score,
+        pt.recent_90_day_adr,
+        pt.previous_90_day_adr
+    from player_agg pa
+    left join tier_above_thresholds tabove
+        on tabove.player_tier = pa.player_tier - 1
+    left join player_trends pt
+        on pa.player_id = pt.player_id
+    where pa.player_tier > 1
 )
 
 select
@@ -64,19 +129,27 @@ select
     team_id,
     world_ranking,
     player_tier,
+    player_tier - 1 as comparison_tier,
     matches_played,
-    round(avg_adr, 2)       as avg_adr,
-    round(avg_kd_ratio, 3)  as avg_kd_ratio,
-    round(avg_kast, 2)      as avg_kast,
-    round(avg_kills, 1)     as avg_kills,
-    round(adr_pct, 4)       as adr_percentile,
-    round(kd_pct, 4)        as kd_percentile,
-    round(kast_pct, 4)      as kast_percentile,
-    round(kills_pct, 4)     as kills_percentile,
-    stats_in_top_15_pct,
-    -- is_hidden_gem: true when player qualifies as an outlier in their tier
-    case when stats_in_top_15_pct >= 3 and player_tier > 1 then true else false end as is_hidden_gem
-from tier_percentiles
--- Only return tier 2/3 players with at least 3 elite stats (the "hidden gem" candidates)
-where player_tier > 1
-  and stats_in_top_15_pct >= 3
+    round(avg_adr, 2) as avg_adr,
+    round(avg_kd_ratio, 3) as avg_kd_ratio,
+    round(avg_kast, 2) as avg_kast,
+    round(avg_rating, 3) as avg_rating,
+    round(avg_kills, 1) as avg_kills,
+    round(adr_threshold, 2) as tier_above_adr_threshold,
+    round(kd_threshold, 3) as tier_above_kd_threshold,
+    round(kast_threshold, 2) as tier_above_kast_threshold,
+    round(rating_threshold, 3) as tier_above_rating_threshold,
+    stats_above_tier_threshold,
+    prospect_score,
+    round(recent_90_day_adr, 2) as recent_90_day_adr,
+    round(previous_90_day_adr, 2) as previous_90_day_adr,
+    case
+        when previous_90_day_adr is null then 'insufficient_history'
+        when recent_90_day_adr > previous_90_day_adr then 'improving'
+        when recent_90_day_adr < previous_90_day_adr then 'declining'
+        else 'flat'
+    end as trend_direction,
+    true as is_hidden_gem
+from scored
+where stats_above_tier_threshold >= 3

@@ -17,6 +17,7 @@ renamed as (
         adr,
         kd_ratio,
         kast,
+        null as rating,
         elo,
         match_id,
         recorded_at

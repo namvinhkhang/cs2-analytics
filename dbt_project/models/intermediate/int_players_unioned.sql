@@ -9,10 +9,22 @@ pandascore as (
     select * from {{ ref('stg_pandascore_players') }}
 ),
 
+kaggle as (
+    select * from {{ ref('stg_kaggle_players') }}
+),
+
+csapi as (
+    select * from {{ ref('stg_csapi_player_stats') }}
+),
+
 unioned as (
     select * from faceit
     union all
     select * from pandascore
+    union all
+    select * from kaggle
+    union all
+    select * from csapi
 ),
 
 -- Deduplicate: for each (player_id, match_id) combo, prefer FACEIT over PandaScore.
@@ -26,7 +38,9 @@ ranked as (
                 case source
                     when 'faceit' then 1
                     when 'pandascore' then 2
-                    else 3
+                    when 'csapi' then 3
+                    when 'kaggle' then 4
+                    else 4
                 end
         ) as _row_num
     from unioned
@@ -43,6 +57,7 @@ select
     adr,
     kd_ratio,
     kast,
+    rating,
     elo,
     match_id,
     recorded_at

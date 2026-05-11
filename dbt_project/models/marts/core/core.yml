@@ -48,6 +48,8 @@ models:
       - name: team_name
         data_tests:
           - not_null
+      - name: ranking_source
+        description: "Source selected for the team's world_ranking."
 
   - name: dim_players
     description: "Player dimension with latest profile data"
