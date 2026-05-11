@@ -173,26 +173,67 @@ class CSAPIClient(BaseAPIClient):
         limit: int = 100,
         offset: int = 0,
         pages: int = 25,
+        max_matches: int | None = None,
         request_delay_seconds: float = 0.1,
+        progress_interval: int = 25,
+        output_filename: str = "data.parquet",
         region: str = "us-east-1",
     ) -> int:
         """Fetch match-level modern player stats and write them to S3."""
         matches: list[dict[str, Any]] = []
         for page_index in range(pages):
+            if max_matches is not None and len(matches) >= max_matches:
+                break
+
             page_offset = offset + page_index * limit
-            page_matches = await self.get_matches(limit=limit, offset=page_offset)
+            page_limit = limit
+            if max_matches is not None:
+                page_limit = min(limit, max_matches - len(matches))
+
+            page_matches = await self.get_matches(limit=page_limit, offset=page_offset)
             matches.extend(page_matches)
-            if len(page_matches) < limit:
+            logger.info(
+                "csapi_matches_page_fetched",
+                page=page_index + 1,
+                offset=page_offset,
+                limit=page_limit,
+                count=len(page_matches),
+                total_matches=len(matches),
+            )
+            if len(page_matches) < page_limit:
                 break
 
         records: list[dict[str, Any]] = []
-        for match in matches:
+        total_matches = len(matches)
+        for match_index, match in enumerate(matches, start=1):
             match_id_raw = match.get("id")
             if match_id_raw is None:
                 continue
 
+            if progress_interval > 0 and (
+                match_index == 1 or match_index % progress_interval == 0
+            ):
+                logger.info(
+                    "csapi_match_stats_fetching",
+                    processed=match_index,
+                    total=total_matches,
+                    match_id=match_id_raw,
+                    records=len(records),
+                )
+
             stats_payload = await self.get_match_stats(int(match_id_raw))
             records.extend(self._flatten_match_player_stats(match, stats_payload))
+
+            if progress_interval > 0 and (
+                match_index % progress_interval == 0 or match_index == total_matches
+            ):
+                logger.info(
+                    "csapi_match_stats_progress",
+                    processed=match_index,
+                    total=total_matches,
+                    match_id=match_id_raw,
+                    records=len(records),
+                )
 
             # Keep the public API polite when bootstrapping thousands of match details.
             if request_delay_seconds > 0:
@@ -204,7 +245,7 @@ class CSAPIClient(BaseAPIClient):
                 records=records,
                 schema=CSAPI_PLAYER_STATS_SCHEMA,
                 bucket=bucket,
-                key=build_s3_key("csapi", "player_stats", y, m, d),
+                key=build_s3_key("csapi", "player_stats", y, m, d, filename=output_filename),
                 region=region,
             )
 
@@ -212,5 +253,6 @@ class CSAPIClient(BaseAPIClient):
             "csapi_player_stats_ingested",
             count=len(records),
             matches=len(matches),
+            output_filename=output_filename,
         )
         return len(records)

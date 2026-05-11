@@ -1,5 +1,7 @@
 # CS2-Era Hidden Gem Scout Implementation
 
+- [x] Add CS API bootstrap progress logging and chunk controls after rate-limit/hang report.
+
 - [x] Confirm product direction: use Valve VRS + PandaScore + CS API before HLTV scraping.
 - [x] Add failing tests for CS API VRS ranking parsing.
 - [x] Add failing tests for CS API player-stat parsing.

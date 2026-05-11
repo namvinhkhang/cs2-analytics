@@ -267,3 +267,75 @@ async def test_ingest_player_stats_paginates_matches() -> None:
     records = mock_write.call_args.kwargs["records"]
     assert records[0]["match_id"] == "1"
     assert records[0]["recorded_at"] == "2026-05-09"
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_ingest_player_stats_can_limit_matches_and_use_chunk_filename() -> None:
+    """Chunked bootstraps should process a bounded match slice and avoid overwriting files."""
+    matches_route = respx.get(
+        "https://api.csapi.de/matches/",
+        params={"limit": 1, "offset": 100},
+    ).mock(
+        return_value=Response(
+            200,
+            json=[
+                {
+                    "id": 2,
+                    "team1": {"id": 10, "name": "A"},
+                    "team2": {"id": 20, "name": "B"},
+                    "date": "2026-05-09",
+                    "event": "Event",
+                }
+            ],
+        )
+    )
+    stats_route = respx.get("https://api.csapi.de/matches/2/stats").mock(
+        return_value=Response(
+            200,
+            json=[
+                {
+                    "id": 0,
+                    "name": "All",
+                    "team1": {
+                        "id": 10,
+                        "name": "A",
+                        "players": [
+                            {
+                                "id": 1,
+                                "name": "p1",
+                                "k": 10,
+                                "d": 5,
+                                "swing": 1.0,
+                                "adr": 90.0,
+                                "kast": 80.0,
+                                "rating": 1.4,
+                            }
+                        ],
+                    },
+                    "team2": {"id": 20, "name": "B", "players": []},
+                }
+            ],
+        )
+    )
+
+    with patch("cs2_analytics.ingestion.csapi.write_parquet_to_s3") as mock_write:
+        async with CSAPIClient() as client:
+            count = await client.ingest_player_stats(
+                bucket="bucket",
+                ingest_date=date(2026, 5, 10),
+                limit=100,
+                offset=100,
+                pages=30,
+                max_matches=1,
+                request_delay_seconds=0.0,
+                output_filename="matches_offset_100.parquet",
+            )
+
+    assert count == 1
+    assert matches_route.call_count == 1
+    assert stats_route.call_count == 1
+    assert (
+        mock_write.call_args.kwargs["key"]
+        == "raw/csapi/player_stats/year=2026/month=05/day=10/matches_offset_100.parquet"
+    )
