@@ -148,10 +148,45 @@ def cs2_weekly_rankings_dag() -> None:
             "player_stats": player_count,
         }
 
+    @task()
+    def ingest_valve_team_regions() -> int:
+        """Ingest Valve regional standings for missing team-region enrichment."""
+        # Imports stay inside task body so DagBag parsing does not need project deps.
+        from datetime import date
+
+        from cs2_analytics.ingestion.valve import (
+            build_valve_team_regions_s3_key,
+            ingest_latest_team_regions,
+        )
+        from cs2_analytics.utils.config import Settings
+
+        settings = Settings()
+        ingest_date = date.today()
+        s3_key = build_valve_team_regions_s3_key(ingest_date)
+
+        if _s3_key_exists(settings.aws_s3_bucket, s3_key):
+            log.info("s3_key_already_exists__skipping", key=s3_key)
+            return 0
+
+        count = asyncio.run(
+            ingest_latest_team_regions(
+                bucket=settings.aws_s3_bucket,
+                ingest_date=ingest_date,
+                region=settings.aws_region,
+            )
+        )
+        log.info(
+            "valve_team_regions_ingestion_complete",
+            count=count,
+            key=s3_key,
+        )
+        return count
+
     # Tasks are independent — run in parallel
     ingest_team_rankings()
     ingest_player_rankings()
     ingest_csapi_weekly_profile()
+    ingest_valve_team_regions()
 
 
 cs2_weekly_rankings_dag()

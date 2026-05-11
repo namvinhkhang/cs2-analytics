@@ -11,12 +11,26 @@ def test_dim_teams_uses_only_current_ranking_sources() -> None:
 
     assert "stg_csapi_team_rankings" in sql
     assert "stg_liquipedia_teams" in sql
+    assert "stg_valve_team_regions" in sql
     assert "stg_kaggle_matches" not in sql
     assert "kaggle_rankings" not in sql
     assert "ranking_source = 'kaggle'" not in sql
     assert "ranking_source_priority" in sql
     assert "when 'liquipedia' then 1" in sql
     assert "when 'csapi' then 2" in sql
+    assert "coalesce(" in sql
+    assert "vr.region" in sql
+
+
+def test_valve_regions_do_not_replace_world_rankings() -> None:
+    """Valve enrichment should fill missing geography without changing rank lineage."""
+    dim_sql = Path("dbt_project/models/marts/core/dim_teams.sql").read_text()
+    staging_sql = Path("dbt_project/models/staging/stg_valve_team_regions.sql").read_text()
+
+    assert "stg_valve_team_regions" in dim_sql
+    assert "world_ranking" not in staging_sql
+    assert "global_rank" in staging_sql
+    assert "c.world_ranking" in dim_sql
 
 
 def test_player_leaderboard_uses_four_tiers() -> None:

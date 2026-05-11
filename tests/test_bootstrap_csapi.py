@@ -270,3 +270,18 @@ def test_weekly_airflow_dag_wires_weekly_csapi_profile() -> None:
     task = dag.get_task("ingest_csapi_weekly_profile")
     task_source = inspect.getsource(task.python_callable)
     assert 'run_profile("weekly")' in task_source
+
+
+def test_weekly_airflow_dag_wires_valve_region_ingestion() -> None:
+    from airflow.models import DagBag
+
+    dagbag = DagBag(dag_folder="airflow/dags", include_examples=False)
+    assert not dagbag.import_errors
+
+    dag = dagbag.dags.get("cs2_weekly_rankings")
+    assert dag is not None
+
+    task = dag.get_task("ingest_valve_team_regions")
+    task_source = inspect.getsource(task.python_callable)
+    assert "ingest_latest_team_regions" in task_source
+    assert "build_valve_team_regions_s3_key" in task_source

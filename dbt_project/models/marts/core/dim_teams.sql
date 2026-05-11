@@ -31,13 +31,38 @@ liquipedia_region_names as (
     qualify count(*) over (partition by normalized_team_name) = 1
 ),
 
+latest_valve_snapshot as (
+    select max(snapshot_date) as snapshot_date
+    from {{ ref('stg_valve_team_regions') }}
+),
+
+latest_valve_regions as (
+    select
+        normalized_team_name,
+        region
+    from {{ ref('stg_valve_team_regions') }}
+    where normalized_team_name is not null
+      and region is not null
+      and snapshot_date = (select snapshot_date from latest_valve_snapshot)
+),
+
+valve_region_names as (
+    select
+        normalized_team_name,
+        max(region) as region
+    from latest_valve_regions
+    group by normalized_team_name
+    having count(distinct region) = 1
+),
+
 csapi_rankings as (
     select
         c.team_id,
         c.name as team_name,
         coalesce(
             case when lower(c.region) = 'global' then null else c.region end,
-            lr.region
+            lr.region,
+            vr.region
         ) as region,
         c.world_ranking,
         c.ranking_date as last_updated,
@@ -55,6 +80,14 @@ csapi_rankings as (
                 ''
             )
         ) = lr.normalized_team_name
+    left join valve_region_names vr
+        on lower(
+            regexp_replace(
+                regexp_replace(c.name, '^team[ _-]+', '', 1, 1, 'i'),
+                '[^a-z0-9]+',
+                ''
+            )
+        ) = vr.normalized_team_name
 ),
 
 unioned as (

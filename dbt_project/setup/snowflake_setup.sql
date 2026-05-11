@@ -143,6 +143,19 @@ CREATE TABLE IF NOT EXISTS RAW.raw_csapi_player_stats (
   recorded_at    VARCHAR
 );
 
+CREATE TABLE IF NOT EXISTS RAW.raw_valve_team_regions (
+  snapshot_date        VARCHAR,
+  team_name            VARCHAR,
+  normalized_team_name VARCHAR,
+  region               VARCHAR,
+  regional_rank        INTEGER,
+  global_rank          INTEGER,
+  points               INTEGER,
+  roster               VARCHAR,
+  detail_path          VARCHAR,
+  source               VARCHAR
+);
+
 CREATE TABLE IF NOT EXISTS RAW.raw_faceit_players (
   player_id    VARCHAR,
   source       VARCHAR,
@@ -266,6 +279,13 @@ COPY INTO CS2_ANALYTICS.RAW.raw_csapi_team_rankings
 
 COPY INTO CS2_ANALYTICS.RAW.raw_csapi_player_stats
   FROM @cs2_raw_stage/csapi/player_stats/
+  FILE_FORMAT = (TYPE = PARQUET)
+  MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
+  ON_ERROR = CONTINUE
+  PURGE = FALSE;
+
+COPY INTO CS2_ANALYTICS.RAW.raw_valve_team_regions
+  FROM @cs2_raw_stage/valve/team_regions/
   FILE_FORMAT = (TYPE = PARQUET)
   MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
   ON_ERROR = CONTINUE

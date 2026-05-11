@@ -258,6 +258,58 @@ tier-2/3/4 prospect, with tier-above thresholds, trend direction, and a numeric
 
 - Root cause: CS API ranking records hard-coded `region = 'global'`, and the dashboard simply displayed that mart value. CS API `/rankings/` does not return a region field, so CS API records now keep region null and `dim_teams` enriches region from unique Liquipedia team-name matches when available.
 - Added `team_a_name` and `team_b_name` to `mart_upset_features`; added `team_name` and `team_region` to `mart_hidden_gems`; dashboard tables now prefer names and hide raw provider IDs when names/display names are present.
+
+## Valve Region Enrichment Plan - 2026-05-11
+
+Goal: use Valve's public `counter-strike_regional_standings` repo only to fill missing team regions in Upset Tracker and related marts. Do not replace CS API match rankings or world-ranking features in this slice.
+
+Architecture: add a small Valve standings ingestion path that discovers the latest `live/{year}` snapshot, parses regional standings markdown into raw records, stages those records in dbt, and lets `dim_teams` coalesce missing CS API regions from unique Valve team-name matches. Keep provider-ID-sensitive ranking features unchanged.
+
+- [x] Confirm latest Valve snapshot discovery behavior.
+  - [x] Test selecting the max numeric year under `live/`.
+  - [x] Test selecting the latest date with all regional standings files available.
+  - [x] Test parser handles Valve markdown tables and `<br />` formatting.
+
+- [x] Add Valve region parser and model contract.
+  - [x] Create a typed Valve standings model with `snapshot_date`, `team_name`, `normalized_team_name`, `region`, `regional_rank`, `global_rank`, `points`, `roster`, and `detail_path`.
+  - [x] Parse regional standings files as the primary source of `region` and `regional_rank`.
+  - [x] Parse global standings for `global_rank` only as context, not as a replacement for existing ranking features.
+  - [x] Keep unknown or malformed rows out of the output with structured logging.
+
+- [x] Add raw storage and warehouse staging.
+  - [x] Add a Parquet schema for Valve standings records.
+  - [x] Write records to the existing Hive-style `raw/valve/team_regions/year={yyyy}/month={mm}/day={dd}/data.parquet` path.
+  - [x] Add Snowflake `RAW.raw_valve_team_regions` DDL and COPY support.
+  - [x] Add `raw_valve_team_regions` to `sources.yml`.
+  - [x] Add `stg_valve_team_regions` with one row per Valve team per snapshot.
+
+- [x] Enrich team regions without changing rankings.
+  - [x] Update `dim_teams` to coalesce CS API missing/`Global` regions from unique Valve normalized team-name matches.
+  - [x] Prefer existing non-null Liquipedia regions over Valve.
+  - [x] Do not change `world_ranking`, `ranking_source`, match-side rankings, or upset label logic.
+  - [x] Add SQL regression tests that Valve fills null CS API regions while rankings remain CS API-backed.
+
+- [x] Wire scheduled ingestion conservatively.
+  - [x] Add Valve region refresh to the weekly rankings/profile path.
+  - [x] Skip the S3 write when the same partition already exists.
+  - [x] Log selected year/date and record count for observability.
+
+- [x] Verify before marking done.
+  - [x] Run targeted parser/model/dbt SQL tests.
+  - [x] Run `uv run ruff check .`.
+  - [x] Run `uv run pytest` or document any environment blocker.
+  - [x] Run `dbt parse --no-partial-parse` with exported Snowflake env vars or document any environment blocker.
+  - [ ] Export refreshed dashboard snapshot if warehouse access is available.
+
+## Review - Valve Region Enrichment
+
+- Added `cs2_analytics.ingestion.valve`, which discovers the newest complete Valve live snapshot, parses regional standings Markdown, attaches global-rank context, and writes region records to S3 with the existing Hive-style raw key convention.
+- Added `RAW.raw_valve_team_regions`, `stg_valve_team_regions`, source metadata, Parquet schema, Snowflake COPY support, and `cs2_dbt_run` COPY wiring.
+- Updated `dim_teams` so CS API teams with missing/`Global` region coalesce region from Liquipedia first, then the latest unique Valve normalized-name match. Rankings remain CS API-backed; Valve `global_rank` is staged for context but is not used as `world_ranking`.
+- Wired the weekly rankings DAG to ingest Valve regions idempotently, skipping an already-written S3 key.
+- Live smoke test on 2026-05-11 parsed 356 records from Valve snapshot `2026-05-04`; first parsed row was `FURIA`, `Americas`, regional rank 1, global rank 10.
+- Verification passed: targeted pytest (`tests/test_valve_standings.py tests/test_modern_hidden_gems_sql.py tests/test_bootstrap_csapi.py`), `uv run ruff check .`, full `uv run pytest` (248 passed, 3 skipped, 1 existing Airflow warning), and `dbt parse --no-partial-parse` with dummy Snowflake env vars. `dbt parse` still reports the existing accepted-values deprecation warnings.
+- Not run locally: Snowflake `dbt run/test` and dashboard snapshot export, because they require the live warehouse/raw table state after the new table is created and loaded.
 - Removed the mart-level `recent_90_day_maps_played >= minimum_recent_90_day_maps` hard filter so Hidden Gem Scout can use the Streamlit sample-floor slider interactively.
 - Reworked Home into a data-rich dashboard with KPI cards, match/prospect charts, region coverage, top prospect preview, page links, and snapshot freshness.
 - Verification: targeted dashboard/source/SQL tests passed; `uv run ruff check .` passed; `dbt parse --no-partial-parse` passed with existing accepted-values deprecation warnings; full `uv run pytest -q` passed with 239 tests, 3 skipped, and 1 existing Airflow warning; browser smoke tests passed against `http://localhost:8501`.

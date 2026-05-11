@@ -87,6 +87,24 @@ models:
       - name: match_id
         description: "Real CS API match ID for match-stat rows; null for current profile snapshots."
 
+  - name: stg_valve_team_regions
+    description: "Valve regional standings used only to fill missing team regions."
+    columns:
+      - name: snapshot_date
+        data_tests:
+          - not_null
+      - name: source
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['valve']
+      - name: normalized_team_name
+        data_tests:
+          - not_null
+      - name: region
+        data_tests:
+          - not_null
+
   - name: stg_faceit_players
     description: "Cleaned FACEIT player stats — primary stats source with ADR, KAST, and ELO"
     columns:
