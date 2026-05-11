@@ -27,6 +27,19 @@ def test_dashboard_refresh_workflow_has_required_schedule_and_steps() -> None:
     assert "AWS_ACCESS_KEY_ID" in text
 
 
+def test_dbt_profile_exists_for_dashboard_refresh_workflow() -> None:
+    """GitHub Actions dbt run needs to create the gitignored profiles-dir file."""
+    workflow = (REPO_ROOT / ".github" / "workflows" / "dashboard-refresh.yml").read_text(
+        encoding="utf-8",
+    )
+
+    assert "--profiles-dir dbt_project" in workflow
+    assert "Generate dbt profile" in workflow
+    assert "cat > dbt_project/profiles.yml" in workflow
+    assert "cs2_analytics:" in workflow
+    assert "SNOWFLAKE_PRIVATE_KEY_PATH" in workflow
+
+
 def test_dashboard_refresh_workflow_is_not_gitignored() -> None:
     workflow = ".github/workflows/dashboard-refresh.yml"
 
