@@ -27,6 +27,17 @@ def test_dashboard_refresh_workflow_has_required_schedule_and_steps() -> None:
     assert "AWS_ACCESS_KEY_ID" in text
 
 
+def test_dashboard_refresh_workflow_rebases_artifact_commit_before_push() -> None:
+    """Snapshot commits must handle remote main moving while the workflow runs."""
+    workflow = (REPO_ROOT / ".github" / "workflows" / "dashboard-refresh.yml").read_text(
+        encoding="utf-8",
+    )
+
+    assert "git pull --rebase" in workflow
+    assert "git push origin" in workflow
+    assert "HEAD:${branch}" in workflow
+
+
 def test_dbt_profile_exists_for_dashboard_refresh_workflow() -> None:
     """GitHub Actions dbt run needs to create the gitignored profiles-dir file."""
     workflow = (REPO_ROOT / ".github" / "workflows" / "dashboard-refresh.yml").read_text(

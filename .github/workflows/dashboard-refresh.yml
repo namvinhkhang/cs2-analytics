@@ -153,4 +153,14 @@ jobs:
             exit 0
           fi
           git commit -m "chore(dashboard): refresh snapshots"
-          git push
+          branch="${GITHUB_REF_NAME:-main}"
+          for attempt in 1 2 3; do
+            git pull --rebase origin "${branch}"
+            if git push origin "HEAD:${branch}"; then
+              exit 0
+            fi
+            echo "Push failed because ${branch} moved; retrying (${attempt}/3)."
+            sleep $((attempt * 5))
+          done
+          echo "Unable to push refreshed dashboard artifacts after 3 attempts."
+          exit 1
