@@ -17,7 +17,6 @@ import pendulum
 import structlog
 from airflow.decorators import dag, task
 from botocore.exceptions import ClientError
-
 from utils.slack_alerts import on_failure_callback
 
 log = structlog.get_logger()

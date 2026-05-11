@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import pendulum
 from airflow.decorators import dag, task
-
 from utils.slack_alerts import on_failure_callback
 
 
