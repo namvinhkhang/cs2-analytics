@@ -89,6 +89,25 @@ jobs:
           chmod 600 "$key_path"
           echo "SNOWFLAKE_PRIVATE_KEY_PATH=$key_path" >> "$GITHUB_ENV"
 
+      - name: Generate dbt profile
+        shell: bash
+        run: |
+          cat > dbt_project/profiles.yml <<'YAML'
+          cs2_analytics:
+            target: dev
+            outputs:
+              dev:
+                type: snowflake
+                account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+                user: "{{ env_var('SNOWFLAKE_USER') }}"
+                private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH') }}"
+                role: TRANSFORMER
+                warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE') }}"
+                database: "{{ env_var('SNOWFLAKE_DATABASE') }}"
+                schema: STAGING
+                threads: 4
+          YAML
+
       - name: Ingest CS API profile
         shell: bash
         run: uv run python scripts/bootstrap_csapi.py --profile "${{ steps.refresh.outputs.profile }}"
