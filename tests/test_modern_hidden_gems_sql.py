@@ -33,6 +33,15 @@ def test_valve_regions_do_not_replace_world_rankings() -> None:
     assert "c.world_ranking" in dim_sql
 
 
+def test_dim_teams_lowercases_names_before_region_normalization() -> None:
+    """Uppercase team names like FURIA and MOUZ must still match Valve regions."""
+    sql = Path("dbt_project/models/marts/core/dim_teams.sql").read_text()
+    compact_sql = "".join(sql.split())
+
+    assert "regexp_replace(lower(" in compact_sql
+    assert "normalized_team_name" in sql
+
+
 def test_player_leaderboard_uses_four_tiers() -> None:
     """HG-01 requires tier-4 instead of folding every rank 31+ player into tier 3."""
     sql = Path("dbt_project/models/marts/analytics/mart_player_leaderboard.sql").read_text()

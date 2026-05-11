@@ -17,12 +17,12 @@ with liquipedia as (
 
 liquipedia_region_names as (
     select
-        lower(
-            regexp_replace(
-                regexp_replace(name, '^team[ _-]+', '', 1, 1, 'i'),
-                '[^a-z0-9]+',
-                ''
-            )
+        regexp_replace(
+            lower(
+                regexp_replace(name, '^team[ _-]+', '', 1, 1, 'i')
+            ),
+            '[^a-z0-9]+',
+            ''
         ) as normalized_team_name,
         region
     from {{ ref('stg_liquipedia_teams') }}
@@ -73,20 +73,20 @@ csapi_rankings as (
         end as ranking_source_priority
     from {{ ref('stg_csapi_team_rankings') }} c
     left join liquipedia_region_names lr
-        on lower(
-            regexp_replace(
-                regexp_replace(c.name, '^team[ _-]+', '', 1, 1, 'i'),
-                '[^a-z0-9]+',
-                ''
-            )
+        on regexp_replace(
+            lower(
+                regexp_replace(c.name, '^team[ _-]+', '', 1, 1, 'i')
+            ),
+            '[^a-z0-9]+',
+            ''
         ) = lr.normalized_team_name
     left join valve_region_names vr
-        on lower(
-            regexp_replace(
-                regexp_replace(c.name, '^team[ _-]+', '', 1, 1, 'i'),
-                '[^a-z0-9]+',
-                ''
-            )
+        on regexp_replace(
+            lower(
+                regexp_replace(c.name, '^team[ _-]+', '', 1, 1, 'i')
+            ),
+            '[^a-z0-9]+',
+            ''
         ) = vr.normalized_team_name
 ),
 
