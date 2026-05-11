@@ -57,7 +57,7 @@ models:
               values: [0, 1]
 
   - name: mart_hidden_gems
-    description: "Players in tier 2/3/4 with 3+ stats clearing top-15% thresholds from the tier above, plus 90-day trend direction (HG-01..04)"
+    description: "Players in tier 2/3/4 with 3+ available stats clearing top-15% thresholds from the tier above, at least 20 recent 90-day stat rows, and 90-day benchmark-gap trend direction (HG-01..04). Player-level clutch rate is skipped until a trustworthy source is persisted."
     columns:
       - name: player_id
         data_tests:
@@ -69,10 +69,31 @@ models:
         description: "Sortable score based on tier-above threshold clears and sample size."
         data_tests:
           - not_null
-      - name: trend_direction
-        description: "ADR trend over the latest 90-day window compared with the previous 90-day window."
+      - name: recent_90_day_maps_played
+        description: "Recent 90-day player stat rows used as the sample-size eligibility count."
         data_tests:
           - not_null
+      - name: minimum_recent_90_day_maps
+        description: "Minimum recent 90-day stat rows required for Hidden Gem eligibility."
+        data_tests:
+          - not_null
+      - name: meets_recent_sample_size
+        description: "True when the player has enough recent 90-day stat rows to avoid one-off outliers."
+        data_tests:
+          - not_null
+      - name: trend_direction
+        description: "Trend of the player's normalized gap to tier-above benchmarks over the latest 90-day window compared with the previous 90-day window."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['gap_growing', 'gap_shrinking', 'gap_flat', 'insufficient_history']
+      - name: recent_90_day_gap_to_tier_above
+        description: "Average normalized gap between recent 90-day available stats and tier-above thresholds."
+      - name: previous_90_day_gap_to_tier_above
+        description: "Average normalized gap between previous 90-day available stats and tier-above thresholds."
+      - name: gap_delta_to_tier_above
+        description: "Recent 90-day benchmark gap minus previous 90-day benchmark gap."
 
   - name: mart_choke_profile
     description: "Team pressure performance: lead-blown rate, final-score comeback proxy, overtime record, and explicit data availability flags (CC-01..04)"

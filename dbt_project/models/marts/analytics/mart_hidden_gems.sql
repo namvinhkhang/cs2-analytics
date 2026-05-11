@@ -2,9 +2,16 @@
 -- Tier boundaries: T1 = world_ranking 1-10, T2 = 11-30, T3 = 31-50, T4 = 51+.
 -- A hidden gem is a tier 2/3/4 player whose aggregate stats clear 3+ 85th
 -- percentile thresholds from the next stronger tier, plus a 90-day trend direction.
+-- Player-level clutch rate is not available in the current stat facts, so HG-02/HG-03
+-- use rating, ADR, K/D, and KAST until a trustworthy source is persisted.
+-- Require at least 20 recent 90-day stat rows to avoid one-off outliers.
 -- Grain: one row per qualifying hidden-gem player.
 with stats as (
     select * from {{ ref('fact_player_stats') }}
+),
+
+eligibility_criteria as (
+    select 20 as minimum_recent_90_day_maps
 ),
 
 current_players as (
@@ -82,6 +89,20 @@ trend_windows as (
 player_trends as (
     select
         player_id,
+        sum(
+            case
+                when recorded_at >= dateadd(day, -89, max_recorded_at) then 1
+                else 0
+            end
+        ) as recent_90_day_maps_played,
+        sum(
+            case
+                when recorded_at < dateadd(day, -89, max_recorded_at)
+                     and recorded_at >= dateadd(day, -179, max_recorded_at)
+                then 1
+                else 0
+            end
+        ) as previous_90_day_maps_played,
         avg(
             case
                 when recorded_at >= dateadd(day, -89, max_recorded_at) then adr
@@ -90,17 +111,59 @@ player_trends as (
         ) as recent_90_day_adr,
         avg(
             case
+                when recorded_at >= dateadd(day, -89, max_recorded_at) then kd_ratio
+                else null
+            end
+        ) as recent_90_day_kd_ratio,
+        avg(
+            case
+                when recorded_at >= dateadd(day, -89, max_recorded_at) then kast
+                else null
+            end
+        ) as recent_90_day_kast,
+        avg(
+            case
+                when recorded_at >= dateadd(day, -89, max_recorded_at) then rating
+                else null
+            end
+        ) as recent_90_day_rating,
+        avg(
+            case
                 when recorded_at < dateadd(day, -89, max_recorded_at)
                      and recorded_at >= dateadd(day, -179, max_recorded_at)
                 then adr
                 else null
             end
-        ) as previous_90_day_adr
+        ) as previous_90_day_adr,
+        avg(
+            case
+                when recorded_at < dateadd(day, -89, max_recorded_at)
+                     and recorded_at >= dateadd(day, -179, max_recorded_at)
+                then kd_ratio
+                else null
+            end
+        ) as previous_90_day_kd_ratio,
+        avg(
+            case
+                when recorded_at < dateadd(day, -89, max_recorded_at)
+                     and recorded_at >= dateadd(day, -179, max_recorded_at)
+                then kast
+                else null
+            end
+        ) as previous_90_day_kast,
+        avg(
+            case
+                when recorded_at < dateadd(day, -89, max_recorded_at)
+                     and recorded_at >= dateadd(day, -179, max_recorded_at)
+                then rating
+                else null
+            end
+        ) as previous_90_day_rating
     from trend_windows
     group by player_id
 ),
 
-scored as (
+scored_base as (
     select
         pa.*,
         tabove.adr_threshold,
@@ -123,14 +186,100 @@ scored as (
             ),
             2
         ) as prospect_score,
+        pt.recent_90_day_maps_played,
+        pt.previous_90_day_maps_played,
+        ec.minimum_recent_90_day_maps,
         pt.recent_90_day_adr,
-        pt.previous_90_day_adr
+        pt.recent_90_day_kd_ratio,
+        pt.recent_90_day_kast,
+        pt.recent_90_day_rating,
+        pt.previous_90_day_adr,
+        pt.previous_90_day_kd_ratio,
+        pt.previous_90_day_kast,
+        pt.previous_90_day_rating
     from player_agg pa
     left join tier_above_thresholds tabove
         on tabove.player_tier = pa.player_tier - 1
     left join player_trends pt
         on pa.player_id = pt.player_id
+    cross join eligibility_criteria ec
     where pa.player_tier > 1
+),
+
+gap_components as (
+    select
+        *,
+        case
+            when recent_90_day_adr is not null and nullif(adr_threshold, 0) is not null
+            then (recent_90_day_adr / adr_threshold) - 1
+            else null
+        end as recent_adr_gap,
+        case
+            when recent_90_day_kd_ratio is not null and nullif(kd_threshold, 0) is not null
+            then (recent_90_day_kd_ratio / kd_threshold) - 1
+            else null
+        end as recent_kd_gap,
+        case
+            when recent_90_day_kast is not null and nullif(kast_threshold, 0) is not null
+            then (recent_90_day_kast / kast_threshold) - 1
+            else null
+        end as recent_kast_gap,
+        case
+            when recent_90_day_rating is not null and nullif(rating_threshold, 0) is not null
+            then (recent_90_day_rating / rating_threshold) - 1
+            else null
+        end as recent_rating_gap,
+        case
+            when previous_90_day_adr is not null and nullif(adr_threshold, 0) is not null
+            then (previous_90_day_adr / adr_threshold) - 1
+            else null
+        end as previous_adr_gap,
+        case
+            when previous_90_day_kd_ratio is not null and nullif(kd_threshold, 0) is not null
+            then (previous_90_day_kd_ratio / kd_threshold) - 1
+            else null
+        end as previous_kd_gap,
+        case
+            when previous_90_day_kast is not null and nullif(kast_threshold, 0) is not null
+            then (previous_90_day_kast / kast_threshold) - 1
+            else null
+        end as previous_kast_gap,
+        case
+            when previous_90_day_rating is not null and nullif(rating_threshold, 0) is not null
+            then (previous_90_day_rating / rating_threshold) - 1
+            else null
+        end as previous_rating_gap
+    from scored_base
+),
+
+scored as (
+    select
+        *,
+        (
+            coalesce(recent_adr_gap, 0)
+          + coalesce(recent_kd_gap, 0)
+          + coalesce(recent_kast_gap, 0)
+          + coalesce(recent_rating_gap, 0)
+        ) / nullif(
+            case when recent_adr_gap is not null then 1 else 0 end
+          + case when recent_kd_gap is not null then 1 else 0 end
+          + case when recent_kast_gap is not null then 1 else 0 end
+          + case when recent_rating_gap is not null then 1 else 0 end,
+            0
+        ) as recent_90_day_gap_to_tier_above,
+        (
+            coalesce(previous_adr_gap, 0)
+          + coalesce(previous_kd_gap, 0)
+          + coalesce(previous_kast_gap, 0)
+          + coalesce(previous_rating_gap, 0)
+        ) / nullif(
+            case when previous_adr_gap is not null then 1 else 0 end
+          + case when previous_kd_gap is not null then 1 else 0 end
+          + case when previous_kast_gap is not null then 1 else 0 end
+          + case when previous_rating_gap is not null then 1 else 0 end,
+            0
+        ) as previous_90_day_gap_to_tier_above
+    from gap_components
 )
 
 select
@@ -152,14 +301,35 @@ select
     round(rating_threshold, 3) as tier_above_rating_threshold,
     stats_above_tier_threshold,
     prospect_score,
+    recent_90_day_maps_played,
+    previous_90_day_maps_played,
+    minimum_recent_90_day_maps,
+    recent_90_day_maps_played >= minimum_recent_90_day_maps as meets_recent_sample_size,
     round(recent_90_day_adr, 2) as recent_90_day_adr,
+    round(recent_90_day_kd_ratio, 3) as recent_90_day_kd_ratio,
+    round(recent_90_day_kast, 2) as recent_90_day_kast,
+    round(recent_90_day_rating, 3) as recent_90_day_rating,
     round(previous_90_day_adr, 2) as previous_90_day_adr,
+    round(previous_90_day_kd_ratio, 3) as previous_90_day_kd_ratio,
+    round(previous_90_day_kast, 2) as previous_90_day_kast,
+    round(previous_90_day_rating, 3) as previous_90_day_rating,
+    round(recent_90_day_gap_to_tier_above, 4) as recent_90_day_gap_to_tier_above,
+    round(previous_90_day_gap_to_tier_above, 4) as previous_90_day_gap_to_tier_above,
+    round(
+        recent_90_day_gap_to_tier_above - previous_90_day_gap_to_tier_above,
+        4
+    ) as gap_delta_to_tier_above,
     case
-        when previous_90_day_adr is null then 'insufficient_history'
-        when recent_90_day_adr > previous_90_day_adr then 'improving'
-        when recent_90_day_adr < previous_90_day_adr then 'declining'
-        else 'flat'
+        when previous_90_day_gap_to_tier_above is null
+             or recent_90_day_gap_to_tier_above is null
+        then 'insufficient_history'
+        when recent_90_day_gap_to_tier_above > previous_90_day_gap_to_tier_above
+        then 'gap_growing'
+        when recent_90_day_gap_to_tier_above < previous_90_day_gap_to_tier_above
+        then 'gap_shrinking'
+        else 'gap_flat'
     end as trend_direction,
     true as is_hidden_gem
 from scored
 where stats_above_tier_threshold >= 3
+  and recent_90_day_maps_played >= minimum_recent_90_day_maps
