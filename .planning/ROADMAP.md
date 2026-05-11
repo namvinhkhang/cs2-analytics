@@ -91,7 +91,10 @@ Plans:
   3. Hidden Gem Scout flags at least one tier-2/3 player with 3+ stats in the top 15th percentile of the tier above, with a 90-day trend direction
   4. Choke/Clutch Profile returns lead-blown rate, comeback rate, OT record, and elimination vs winners' bracket win % for any queried team
   5. `ml/MODEL_CARD.md` documents Upset Tracker features, evaluation metrics, and known limitations
-**Plans**: TBD
+**Plans**: 1 active plan plus implementation slices
+
+Plans:
+- [ ] FUTURE_WORK_PLAN.md — Workstream 1 completes Choke/Clutch Profile after source-data audit
 
 ### Phase 5: Dashboard & Deployment
 **Goal**: All three products are publicly accessible via a live Streamlit URL with correct caching and UX
@@ -103,7 +106,10 @@ Plans:
   3. Hidden Gem Scout page shows a leaderboard of flagged players with tier comparison and rolling trend sparklines
   4. Choke/Clutch Profile page shows team cards with all five pressure metrics color-coded against league average
   5. All warehouse queries use `st.cache_data` with TTL aligned to Airflow schedule, so repeated page loads do not re-query Snowflake
-**Plans**: TBD
+**Plans**: 1 active plan plus implementation slices
+
+Plans:
+- [ ] FUTURE_WORK_PLAN.md — Workstream 2 adds CS API bootstrap profiles; Workstream 3 builds the product dashboard
 
 ### Phase 6: CI & Polish
 **Goal**: The project passes automated quality gates on every PR and is fully presentable to hiring managers and the CS2 community
@@ -125,6 +131,14 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Data Ingestion | 8/8 | Complete    | 2026-03-17 |
 | 2. Orchestration | 5/5 | Complete   | 2026-03-17 |
 | 3. Warehouse & dbt | 6/6 | Complete | 2026-03-18 |
-| 4. Analytical Products | 0/TBD | Not started | - |
-| 5. Dashboard & Deployment | 0/TBD | Not started | - |
+| 4. Analytical Products | 2/3 product tracks | In progress | - |
+| 5. Dashboard & Deployment | 0/1 active plan | Planned | - |
 | 6. CI & Polish | 0/TBD | Not started | - |
+
+## v2 Expansion
+
+Detailed plan: [V2_PLAN.md](V2_PLAN.md)
+
+v2 adds Kafka streaming, Terraform-managed AWS infrastructure, Great Expectations,
+MLflow, an optional BI layer, Discord bot access, and upgraded model iterations
+for Upset Tracker and Hidden Gem Scout.

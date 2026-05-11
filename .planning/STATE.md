@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-06-PLAN.md (cs2_dbt_run DAG + Dockerfile dbt deps)
-last_updated: "2026-03-18T00:00:00Z"
-last_activity: 2026-03-18 — Completed plan 03-06 (cs2_dbt_run DAG + Dockerfile dbt deps)
+stopped_at: Phase 4 partial completion; v1 future-work and v2 expansion plans created
+last_updated: "2026-05-11T00:00:00Z"
+last_activity: 2026-05-11 — Upset Tracker and Hidden Gem Scout completed; Choke/Clutch, CS API profiles, and dashboard planned
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 19
   completed_plans: 19
-  percent: 50
+  percent: 62
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-18)
 
 **Core value:** Three analytical products that answer questions HLTV.org never answers — surfaced from a production-grade pipeline that any interviewer can inspect end-to-end.
-**Current focus:** Phase 4 — Analytical Products
+**Current focus:** Phase 4 — finish Choke/Clutch Profile, then Phase 5 dashboard
 
 ## Current Position
 
 Phase: 4 of 6 (Analytical Products)
-Plan: 0 of TBD in current phase
-Status: Ready to begin
-Last activity: 2026-03-18 — Completed plan 03-06 (cs2_dbt_run DAG + Dockerfile dbt deps)
+Plan: 2 of 3 product tracks complete
+Status: In progress
+Last activity: 2026-05-11 — Upset Tracker and Hidden Gem Scout completed; future work planned
 
-Progress: [█████░░░░░] 50%
+Progress: [██████░░░░] 62%
 
 ## Performance Metrics
 
 **Velocity:**
 - Total plans completed: 19
 - Completed phases: 3 of 6
-- Milestone progress: 50%
+- Milestone progress: 62%
 
 **By Phase:**
 
@@ -46,14 +46,16 @@ Progress: [█████░░░░░] 50%
 | 01-data-ingestion | 8/8 | Complete | 2026-03-17 |
 | 02-orchestration | 5/5 | Complete | 2026-03-17 |
 | 03-warehouse-dbt | 6/6 | Complete | 2026-03-18 |
+| 04-analytical-products | 2/3 product tracks | In progress | - |
+| 05-dashboard-deployment | 0/1 active plan | Planned | - |
 
 **Recent Trend:**
-- Last 5 plans: 03-02, 03-03, 03-04, 03-05, 03-06
-- Trend: Phase 3 completed; Phase 4 is next
+- Last 5 completed work items: Kaggle removal, CS API match lineage, Upset Tracker leakage fix, Upset Tracker threshold tuning, Hidden Gem benchmark-gap trend
+- Trend: Phase 4 is mostly complete; Choke/Clutch Profile is the next analytical product
 
 *Updated after each plan completion*
-- Most recent completion: 03-06-PLAN.md
-- Next milestone target: begin Phase 4 planning
+- Most recent completion: Upset Tracker and Hidden Gem Scout
+- Next milestone target: implement Choke/Clutch Profile and CS API bootstrap profiles
 
 ## Accumulated Context
 
@@ -108,10 +110,17 @@ Recent decisions affecting current work:
 - [Phase 03-06]: BashOperator for dbt tasks (not Cosmos) — simpler, matches existing DAG patterns
 - [Phase 03-06]: snowflake.connector imported inside @task() body — avoids DagBag load-time ImportError
 - [Phase 03-06]: PURGE = FALSE on all COPY INTO statements — raw S3 layer remains intact as immutable source of truth
+- [2026-05-11]: Kaggle historical data removed from default modern marts — stale player/team mappings polluted CS API-backed features
+- [2026-05-11]: Upset Tracker feature set limited to pre-match fields — final scores and winner-derived fields caused perfect leakage
+- [2026-05-11]: Hidden Gem Scout skips clutch rate until a trustworthy clutch-event source is persisted
+- [2026-05-11]: Hidden Gem Scout requires at least 20 recent 90-day stat rows to avoid one-off outliers
 
 ### Pending Todos
 
-None yet.
+- Implement Choke/Clutch Profile from exact round/half/bracket data where available.
+- Add daily, weekly, and backfill profiles to `scripts/bootstrap_csapi.py`.
+- Build Streamlit dashboard for Upset Tracker, Hidden Gem Scout, and Choke/Clutch Profile.
+- Use `.planning/V2_PLAN.md` for post-v1 platform expansion.
 
 ### Blockers/Concerns
 
@@ -120,6 +129,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T21:16:20.049Z
-Stopped at: Completed 03-06-PLAN.md (cs2_dbt_run DAG + Dockerfile dbt deps)
+Last session: 2026-05-11T00:00:00.000Z
+Stopped at: Phase 4 partial completion; v1 future-work and v2 expansion plans created
 Resume file: None

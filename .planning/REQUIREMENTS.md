@@ -41,18 +41,18 @@
 
 ### Upset Tracker
 
-- [ ] **UP-01**: XGBoost classifier trained on mart_upset_features with temporal train/test split (no future leakage)
-- [ ] **UP-02**: Model evaluated with ROC-AUC, calibration curve, and confusion matrix
-- [ ] **UP-03**: SHAP values computed per prediction for explainability
-- [ ] **UP-04**: Model saved with joblib and versioned in `ml/models/`
-- [ ] **UP-05**: Model card (`ml/MODEL_CARD.md`) documents features, evaluation metrics, and known limitations
+- [x] **UP-01**: XGBoost classifier trained on mart_upset_features with temporal train/test split (no future leakage)
+- [x] **UP-02**: Model evaluated with ROC-AUC, calibration curve, and confusion matrix
+- [x] **UP-03**: SHAP values computed per prediction for explainability
+- [x] **UP-04**: Model saved with joblib and versioned in `ml/models/`
+- [x] **UP-05**: Model card (`ml/MODEL_CARD.md`) documents features, evaluation metrics, and known limitations
 
 ### Hidden Gem Scout
 
-- [ ] **HG-01**: `mart_hidden_gems` assigns tier to each player based on team world ranking (tier-1: top 10, tier-2: 11-30, etc.)
-- [ ] **HG-02**: Percentile rank computed for each player stat (rating, ADR, K/D, clutch rate) within their tier cohort
-- [ ] **HG-03**: Players flagged when 3+ stats are in top 15th percentile of the tier above theirs
-- [ ] **HG-04**: 90-day rolling trend computed per flagged player (gap growing or shrinking)
+- [x] **HG-01**: `mart_hidden_gems` assigns tier to each player based on team world ranking (tier-1: top 10, tier-2: 11-30, etc.)
+- [x] **HG-02**: Percentile rank computed for each available player stat (rating, ADR, K/D, KAST) within their tier cohort; player-level clutch rate is skipped until a trustworthy source is persisted
+- [x] **HG-03**: Players flagged when 3+ available stats are in the top 15th percentile of the tier above theirs and they have at least 20 recent 90-day stat rows
+- [x] **HG-04**: 90-day trend computed per flagged player as benchmark gap growing or shrinking versus tier-above thresholds
 
 ### Choke/Clutch Profile
 
@@ -98,6 +98,11 @@
 
 - **INT-01**: Discord bot that queries the warehouse for CS2 stats on demand
 
+### Model Update
+
+- **ML2-01**: Upset Tracker v2 adds richer pre-match features such as historical ranking snapshots, recent team form, map-pool strength, and roster stability when data is available
+- **ML2-02**: Hidden Gem Scout v2 evaluates supervised promotion labels from player/team snapshots while keeping the SQL scout as an explainable fallback
+
 ## Out of Scope
 
 | Feature | Reason |
@@ -137,15 +142,15 @@
 | WH-10 | Phase 3 — Warehouse & dbt | Complete |
 | WH-11 | Phase 3 — Warehouse & dbt | Complete |
 | WH-12 | Phase 3 — Warehouse & dbt | Complete |
-| UP-01 | Phase 4 — Analytical Products | Pending |
-| UP-02 | Phase 4 — Analytical Products | Pending |
-| UP-03 | Phase 4 — Analytical Products | Pending |
-| UP-04 | Phase 4 — Analytical Products | Pending |
-| UP-05 | Phase 4 — Analytical Products | Pending |
-| HG-01 | Phase 4 — Analytical Products | Pending |
-| HG-02 | Phase 4 — Analytical Products | Pending |
-| HG-03 | Phase 4 — Analytical Products | Pending |
-| HG-04 | Phase 4 — Analytical Products | Pending |
+| UP-01 | Phase 4 — Analytical Products | Complete |
+| UP-02 | Phase 4 — Analytical Products | Complete |
+| UP-03 | Phase 4 — Analytical Products | Complete |
+| UP-04 | Phase 4 — Analytical Products | Complete |
+| UP-05 | Phase 4 — Analytical Products | Complete |
+| HG-01 | Phase 4 — Analytical Products | Complete |
+| HG-02 | Phase 4 — Analytical Products | Complete |
+| HG-03 | Phase 4 — Analytical Products | Complete |
+| HG-04 | Phase 4 — Analytical Products | Complete |
 | CC-01 | Phase 4 — Analytical Products | Pending |
 | CC-02 | Phase 4 — Analytical Products | Pending |
 | CC-03 | Phase 4 — Analytical Products | Pending |
@@ -159,6 +164,16 @@
 | CI-01 | Phase 6 — CI & Polish | Pending |
 | CI-02 | Phase 6 — CI & Polish | Pending |
 | CI-03 | Phase 6 — CI & Polish | Pending |
+| STR-01 | v2 — Streaming | Planned |
+| STR-02 | v2 — Streaming | Planned |
+| INF-01 | v2 — Infrastructure | Planned |
+| INF-02 | v2 — Infrastructure | Planned |
+| INF-03 | v2 — Infrastructure | Planned |
+| BI-01 | v2 — BI Layer | Planned |
+| BI-02 | v2 — BI Layer | Planned |
+| INT-01 | v2 — Integrations | Planned |
+| ML2-01 | v2 — Model Update | Planned |
+| ML2-02 | v2 — Model Update | Planned |
 
 **Coverage:**
 - v1 requirements: 42 total
@@ -167,4 +182,4 @@
 
 ---
 *Requirements defined: 2026-03-16*
-*Last updated: 2026-03-16 — traceability updated to 6-phase roadmap structure*
+*Last updated: 2026-05-11 — Upset Tracker and Hidden Gem Scout status updated*

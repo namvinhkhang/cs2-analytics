@@ -1,5 +1,13 @@
 # CS2-Era Hidden Gem Scout Implementation
 
+- [x] Move Upset Tracker match lineage to CS API.
+  - [x] Add regression tests for CS API match ingestion and upset-source filtering.
+  - [x] Ingest CS API `/matches/` rows into `raw/csapi/matches/`.
+  - [x] Add `raw_csapi_matches`, `stg_csapi_matches`, and Snowflake/Airflow COPY support.
+  - [x] Include CS API matches in `int_matches_unioned`.
+  - [x] Filter `mart_upset_features` to `source = 'csapi'` to avoid provider-ID mismatch.
+  - [x] Verify targeted tests, dbt parse, ruff, and full pytest.
+
 - [x] Remove historical Kaggle data from CS2 mart lineage.
   - [x] Add regression tests that Kaggle no longer feeds match/player unions or team rankings.
   - [x] Remove Kaggle from `int_matches_unioned` and `int_players_unioned`.
@@ -53,16 +61,46 @@
 
 ## Design
 
-Hidden Gem Scout remains SQL-first. Modern data should come from:
+Hidden Gem Scout and Upset Tracker remain SQL-first. Modern data should come from:
 
 1. CS API's VRS ranking endpoint for team ranking/points from the CS2 era.
-2. PandaScore for recent match/team metadata already supported by the project.
-3. CS API for current player/team stats if the public endpoint shape is stable.
-4. Kaggle rankings only as legacy fallback for pre-CS2 historical rows.
+2. CS API match rows for ranking-compatible match outcomes.
+3. CS API match/player stat endpoints for current player/team form.
+4. PandaScore or FACEIT only behind explicit identity mapping, not as default mart joins.
+
+## Active Plan
+
+- [x] Tune Upset Tracker classification threshold for balanced upset predictions.
+  - [x] Measure default `0.5` threshold confusion matrix and class recall.
+  - [x] Add regression tests for validation-based threshold selection.
+  - [x] Persist the selected threshold and recall-oriented metrics.
+  - [x] Retrain model artifacts from Snowflake and verify tests/lint.
+
+- [x] Complete Hidden Gem Scout benchmark-gap trend.
+  - [x] Confirm player-level clutch rate is unavailable in current raw/fact schemas.
+  - [x] Keep HG-02/HG-03 on available stats: rating, ADR, K/D, and KAST.
+  - [x] Replace ADR-only trend with recent-vs-previous 90-day normalized gap to tier-above thresholds.
+  - [x] Add 20 recent 90-day stat-row eligibility floor to remove one-off outliers.
+  - [x] Update requirements and dbt metadata for gap trend outputs.
 
 The dashboard-facing output stays `mart_hidden_gems`: one row per flagged
 tier-2/3/4 prospect, with tier-above thresholds, trend direction, and a numeric
 `prospect_score` for sorting.
+
+## Future Work Plan
+
+- [x] Create `.planning/FUTURE_WORK_PLAN.md` for the remaining v1 work:
+  - [x] Choke/Clutch team profile.
+  - [x] CS API daily, weekly, and backfill bootstrap profiles.
+  - [x] Streamlit dashboard for every product feature.
+- [x] Create `.planning/V2_PLAN.md` for platform expansion:
+  - [x] Kafka streaming and real-time dashboard updates.
+  - [x] Terraform infrastructure.
+  - [x] Great Expectations data quality.
+  - [x] MLflow experiment tracking.
+  - [x] Metabase or Superset plus dbt Semantic Layer.
+  - [x] Discord bot integration.
+  - [x] Upset Tracker and Hidden Gem model upgrades.
 
 ## Review
 
@@ -98,6 +136,43 @@ tier-2/3/4 prospect, with tier-above thresholds, trend direction, and a numeric
   with 190 tests and 1 existing Airflow warning; `dbt parse --no-partial-parse`
   passed with dummy Snowflake env vars and existing accepted_values deprecation
   warnings.
+- Moved Upset Tracker to CS API match lineage. `bootstrap_csapi.py` now writes
+  CS API series-level match rows to `raw/csapi/matches/`; dbt exposes
+  `stg_csapi_matches`, includes CS API in `int_matches_unioned`, and filters
+  `mart_upset_features` to `source = 'csapi'` so match team IDs align with CS API
+  rankings. Verification: `uv run pytest tests/test_csapi_client.py
+  tests/test_modern_hidden_gems_sql.py` passed with 19 tests; `uv run ruff
+  check .` passed; `uv run pytest` passed with 194 tests and 1 existing Airflow
+  warning; `dbt parse --no-partial-parse` passed with dummy Snowflake env vars
+  and existing accepted_values deprecation warnings.
+- Fixed ML training against CS API/Snowflake upset features where nullable
+  boolean flags could crash `.astype(int)`. Verification: regression pytest
+  passed, `uv run pytest tests/test_ml` passed with 5 tests, `uv run ruff check
+  .` passed, and `set -a; source .env; set +a; uv run python -m ml.train`
+  exited successfully.
+- Converted Upset Tracker training from a completed-match classifier into a
+  pre-match predictor by removing final-score leakage columns from the shared
+  ML feature contract. The model now uses `ranking_delta`, `is_cross_region`,
+  `team_a_ranking`, and `team_b_ranking`; retraining on the CS API-backed mart
+  produced holdout ROC-AUC `0.7275` instead of the leaked `1.0000`.
+- Tuned Upset Tracker's binary cutoff for upset recall. The raw model still
+  ranks with ROC-AUC around `0.7258`, but the saved F2 decision threshold
+  `0.2168` raises holdout upset recall to `0.9739` with precision `0.3200`, so
+  predictions should be treated as a watchlist rather than a certainty score.
+- Retuned Upset Tracker away from the recall-heavy threshold because it
+  predicted too many upsets. The saved F0.75 threshold `0.3841` caps validation
+  alert rate at the validation upset base rate; on the newest holdout it predicts
+  upsets for `0.2604` of matches versus an actual `0.2516`, with precision
+  `0.4370` and recall `0.4522`.
+- Completed Hidden Gem HG-04 as a true benchmark-gap trend. `mart_hidden_gems`
+  now compares recent and previous 90-day averages for ADR, K/D, KAST, and
+  rating against the tier-above thresholds, emitting `gap_growing`,
+  `gap_shrinking`, `gap_flat`, or `insufficient_history`. Player-level clutch
+  rate remains explicitly skipped because the current fact tables do not contain
+  clutch-event data.
+- Added a 20-row recent 90-day sample-size floor to Hidden Gem Scout. The mart
+  now exposes `recent_90_day_maps_played`, `minimum_recent_90_day_maps`, and
+  `meets_recent_sample_size` so the dashboard can explain eligibility.
 
 - Reworked CS API player stats to use `/matches/` plus `/matches/{matchid}/stats`
   so each row has a real match ID and match date.
