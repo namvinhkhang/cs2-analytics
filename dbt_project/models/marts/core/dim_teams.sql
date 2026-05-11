@@ -38,12 +38,23 @@ latest_valve_snapshot as (
 
 latest_valve_regions as (
     select
+        team_name,
         normalized_team_name,
         region
     from {{ ref('stg_valve_team_regions') }}
     where normalized_team_name is not null
       and region is not null
       and snapshot_date = (select snapshot_date from latest_valve_snapshot)
+),
+
+exact_valve_region_names as (
+    select
+        lower(team_name) as team_name_key,
+        max(region) as region
+    from latest_valve_regions
+    where team_name is not null
+    group by lower(team_name)
+    having count(distinct region) = 1
 ),
 
 valve_region_names as (
@@ -62,6 +73,7 @@ csapi_rankings as (
         coalesce(
             case when lower(c.region) = 'global' then null else c.region end,
             lr.region,
+            ev.region,
             vr.region
         ) as region,
         c.world_ranking,
@@ -80,6 +92,8 @@ csapi_rankings as (
             '[^a-z0-9]+',
             ''
         ) = lr.normalized_team_name
+    left join exact_valve_region_names ev
+        on lower(c.name) = ev.team_name_key
     left join valve_region_names vr
         on regexp_replace(
             lower(

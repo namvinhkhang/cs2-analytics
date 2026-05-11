@@ -20,3 +20,4 @@
 - GitHub Actions that run as the dbt `TRANSFORMER` role must not create raw Snowflake tables in `RAW`; keep raw DDL as one-time setup/admin SQL, then grant the action role the minimum `SELECT`/`INSERT` table privileges it needs for COPY and dbt sources.
 - Snowflake `COPY INTO ... FROM @RAW.stage` requires the action role to have `USAGE` on the external stage as well as table `INSERT`; granting only raw table SELECT/INSERT is not enough.
 - Normalize team names in Snowflake by lowercasing before regex-stripping non-alphanumeric characters; otherwise uppercase teams like FURIA/MOUZ lose their letters and fail Valve/Liquipedia region joins.
+- When enriching team metadata from Valve, prefer exact case-insensitive team-name matches first and use normalized-name matching only as a fallback; exact matches are safer and easier to audit when users report region mismatches.

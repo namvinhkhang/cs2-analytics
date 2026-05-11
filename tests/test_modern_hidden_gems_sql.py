@@ -42,6 +42,17 @@ def test_dim_teams_lowercases_names_before_region_normalization() -> None:
     assert "normalized_team_name" in sql
 
 
+def test_dim_teams_prefers_exact_valve_region_names_before_normalized_fallback() -> None:
+    """Exact team-name matches are safer than fuzzy normalized joins."""
+    sql = Path("dbt_project/models/marts/core/dim_teams.sql").read_text()
+
+    assert "exact_valve_region_names" in sql
+    assert "ev.region" in sql
+    assert "vr.region" in sql
+    assert "on lower(c.name) = ev.team_name_key" in sql
+    assert sql.index("ev.region") < sql.index("vr.region")
+
+
 def test_player_leaderboard_uses_four_tiers() -> None:
     """HG-01 requires tier-4 instead of folding every rank 31+ player into tier 3."""
     sql = Path("dbt_project/models/marts/analytics/mart_player_leaderboard.sql").read_text()
