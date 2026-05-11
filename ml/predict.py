@@ -9,7 +9,7 @@ import joblib
 import pandas as pd
 import shap
 
-from ml.train import FEATURE_COLUMNS
+from ml.train import BOOLEAN_FEATURE_COLUMNS, DEFAULT_DECISION_THRESHOLD, FEATURE_COLUMNS
 
 
 @dataclass(frozen=True)
@@ -17,13 +17,23 @@ class PredictionExplanation:
     """One prediction plus per-feature SHAP attributions."""
 
     probability: float
+    prediction: int
+    threshold: float
     attributions: list[dict[str, float | str]]
+
+
+def load_decision_threshold(threshold_path: Path | None) -> float:
+    """Load a saved decision threshold, falling back to the default cutoff."""
+    if threshold_path is None:
+        return DEFAULT_DECISION_THRESHOLD
+    return float(threshold_path.read_text().strip())
 
 
 def explain_prediction(
     *,
     model_path: Path,
     feature_row: pd.DataFrame,
+    threshold_path: Path | None = None,
     shap_output_path: Path | None = None,
 ) -> PredictionExplanation:
     """Load a trained model and compute SHAP values for one match row."""
@@ -32,11 +42,13 @@ def explain_prediction(
 
     model = joblib.load(model_path)
     features = feature_row[FEATURE_COLUMNS].copy()
-    for column in ["is_overtime", "is_cross_region"]:
-        features[column] = features[column].astype(int)
+    for column in BOOLEAN_FEATURE_COLUMNS:
+        features[column] = features[column].fillna(False).astype(bool).astype(int)
     features = features.fillna(-1)
 
     probability = float(model.predict_proba(features)[:, 1][0])
+    threshold = load_decision_threshold(threshold_path)
+    prediction = int(probability >= threshold)
     explainer = shap.TreeExplainer(model)
     shap_values = explainer.shap_values(features)
     row_values = shap_values[0]
@@ -60,4 +72,9 @@ def explain_prediction(
         }
         for row in attribution_frame.to_dict(orient="records")
     ]
-    return PredictionExplanation(probability=probability, attributions=attributions)
+    return PredictionExplanation(
+        probability=probability,
+        prediction=prediction,
+        threshold=threshold,
+        attributions=attributions,
+    )

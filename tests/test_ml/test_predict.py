@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 
 def test_explain_prediction_returns_feature_attributions(
@@ -25,11 +26,17 @@ def test_explain_prediction_returns_feature_attributions(
     explanation = explain_prediction(
         model_path=result.model_path,
         feature_row=feature_row,
+        threshold_path=result.threshold_path,
         shap_output_path=ml_artifact_root / "shap" / "sample.parquet",
     )
 
     assert explanation.probability >= 0.0
     assert explanation.probability <= 1.0
+    assert explanation.threshold == pytest.approx(result.metrics["decision_threshold"])
+    assert explanation.prediction in {0, 1}
+    assert explanation.prediction == int(
+        explanation.probability >= result.metrics["decision_threshold"]
+    )
     assert len(explanation.attributions) == len(FEATURE_COLUMNS)
     assert {item["feature"] for item in explanation.attributions} == set(FEATURE_COLUMNS)
     assert (ml_artifact_root / "shap" / "sample.parquet").exists()
