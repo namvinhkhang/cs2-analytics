@@ -462,10 +462,10 @@ class TestMatchScoreFields:
         assert m.is_overtime is True
 
     def test_match_schema_field_count(self) -> None:
-        """MATCH_SCHEMA has 10 fields (original 7 + score_a + score_b + is_overtime)."""
+        """MATCH_SCHEMA includes score and ranking fields for dbt marts."""
         from cs2_analytics.utils.parquet import MATCH_SCHEMA
 
-        assert len(MATCH_SCHEMA) == 10
+        assert len(MATCH_SCHEMA) == 12
 
 
 class TestFACEITScoreExtraction:
@@ -575,8 +575,9 @@ class TestKaggleScoreExtraction:
         from cs2_analytics.ingestion.kaggle import KaggleBootstrapIngester
 
         csv_content = (
-            "match_id,date,team_1,team_2,map,map_winner,_map_wins_team_1,_map_wins_team_2\n"
-            "m1,2024-01-15,TeamA,TeamB,de_dust2,TeamA,16,10\n"
+            "match_id,date,team_1,team_2,map,map_winner,_map_wins_team_1,"
+            "_map_wins_team_2,rank_1,rank_2\n"
+            "m1,2024-01-15,TeamA,TeamB,de_dust2,TeamA,16,10,4,9\n"
         )
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".csv", delete=False, encoding="utf-8"
@@ -592,3 +593,5 @@ class TestKaggleScoreExtraction:
         assert matches[0].score_a == 16
         assert matches[0].score_b == 10
         assert matches[0].is_overtime is False
+        assert matches[0].team_a_ranking == 4
+        assert matches[0].team_b_ranking == 9

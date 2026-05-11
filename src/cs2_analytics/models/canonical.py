@@ -31,6 +31,8 @@ class Match(BaseModel):
     score_a: int | None = None
     score_b: int | None = None
     is_overtime: bool | None = None
+    team_a_ranking: int | None = None
+    team_b_ranking: int | None = None
 
 
 class Player(BaseModel):

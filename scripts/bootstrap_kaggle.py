@@ -28,9 +28,10 @@ from pathlib import Path
 # a full `pip install -e .` in the current environment.
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
+import structlog
+
 from cs2_analytics.ingestion.kaggle import KaggleBootstrapIngester
 from cs2_analytics.utils.config import settings
-import structlog
 
 logger = structlog.get_logger()
 

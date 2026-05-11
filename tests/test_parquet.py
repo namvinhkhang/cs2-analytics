@@ -12,11 +12,11 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 
-def test_match_schema_has_ten_fields() -> None:
-    """MATCH_SCHEMA must declare exactly 10 fields (7 original + score_a, score_b, is_overtime)."""
+def test_match_schema_has_twelve_fields() -> None:
+    """MATCH_SCHEMA includes scores, overtime, and optional team ranking fields."""
     from cs2_analytics.utils.parquet import MATCH_SCHEMA
 
-    assert len(MATCH_SCHEMA) == 10, f"Expected 10 match fields, got {len(MATCH_SCHEMA)}"
+    assert len(MATCH_SCHEMA) == 12, f"Expected 12 match fields, got {len(MATCH_SCHEMA)}"
 
 
 def test_match_schema_required_fields_non_nullable() -> None:
@@ -33,7 +33,7 @@ def test_match_schema_optional_fields_nullable() -> None:
     """Optional Match fields must be marked nullable=True in schema."""
     from cs2_analytics.utils.parquet import MATCH_SCHEMA
 
-    optional = ["winner_id", "map_name"]
+    optional = ["winner_id", "map_name", "team_a_ranking", "team_b_ranking"]
     for field_name in optional:
         field = MATCH_SCHEMA.field(field_name)
         assert field.nullable is True, f"Field '{field_name}' should be nullable"
