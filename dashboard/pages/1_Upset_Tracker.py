@@ -13,7 +13,6 @@ DISPLAY_COLUMNS = [
     "match_id",
     "team_a",
     "team_b",
-    "map_name",
     "team_a_ranking",
     "team_b_ranking",
     "ranking_delta",
@@ -109,26 +108,22 @@ def _filter_matches(frame: pd.DataFrame, st: Any) -> pd.DataFrame:
         "team_b_region",
     )
     regions = sorted(set(region_values))
-    maps = _sorted_values(filtered, "map_name")
 
-    controls = st.columns(4)
+    controls = st.columns(3)
     selected_regions = controls[0].multiselect("Regions", regions, default=regions)
-    selected_maps = controls[1].multiselect("Maps", maps, default=maps)
-    min_delta = controls[2].slider(
+    min_delta = controls[1].slider(
         "Ranking delta floor",
         min_value=0,
         max_value=_max_int(filtered, "ranking_delta"),
         value=0,
     )
-    signal_view = controls[3].selectbox("Outcome label", ["All", "Upsets only", "Non-upsets"])
+    signal_view = controls[2].selectbox("Outcome label", ["All", "Upsets only", "Non-upsets"])
 
     if selected_regions and {"team_a_region", "team_b_region"}.issubset(filtered.columns):
         filtered = filtered[
             filtered["team_a_region"].isin(selected_regions)
             | filtered["team_b_region"].isin(selected_regions)
         ]
-    if selected_maps and "map_name" in filtered.columns:
-        filtered = filtered[filtered["map_name"].isin(selected_maps)]
     if "ranking_delta" in filtered.columns:
         filtered = filtered[filtered["ranking_delta"].fillna(0) >= min_delta]
     if signal_view != "All" and "is_upset" in filtered.columns:
