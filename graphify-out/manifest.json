@@ -1,11 +1,11 @@
 {
   "/home/jerry/Project/cs2-analytics/tests/conftest.py": {
-    "mtime": 1773711002.2641094,
-    "hash": "469c7f8ff907cbaa6601669bfae074cc"
+    "mtime": 1778472772.3464448,
+    "hash": "81f49c366fd9ac799f1c99c3d6a39dc3"
   },
   "/home/jerry/Project/cs2-analytics/tests/test_s3.py": {
-    "mtime": 1773711002.2641094,
-    "hash": "17178a3d8476eff19fb902777099860c"
+    "mtime": 1778472898.7426133,
+    "hash": "4fcb0089a1fbcbc1117a4cb32157c056"
   },
   "/home/jerry/Project/cs2-analytics/tests/test_base_client.py": {
     "mtime": 1773711002.2641094,
@@ -16,36 +16,36 @@
     "hash": "ced4b58e4b8c6fff15dc5d8c5150cb0a"
   },
   "/home/jerry/Project/cs2-analytics/tests/test_s3_utils.py": {
-    "mtime": 1773711002.2641094,
-    "hash": "94adbc7bef66a25fbc3025c583745cd1"
-  },
-  "/home/jerry/Project/cs2-analytics/tests/test_kaggle.py": {
-    "mtime": 1773711002.2641094,
-    "hash": "c8c772eff0d65a656c81676b2f435048"
+    "mtime": 1778472903.962662,
+    "hash": "37c8293dacc8e2b6c030d817342daaa5"
   },
   "/home/jerry/Project/cs2-analytics/tests/test_faceit_client.py": {
     "mtime": 1773711002.2651093,
     "hash": "398ed1bda5400e7d505230827cecc837"
   },
-  "/home/jerry/Project/cs2-analytics/tests/test_kaggle_ingester.py": {
-    "mtime": 1773711002.2651093,
-    "hash": "82d6f3f395587325f3cb5c0bb24381f8"
-  },
   "/home/jerry/Project/cs2-analytics/tests/test_liquipedia_client.py": {
-    "mtime": 1773711002.2651093,
-    "hash": "ba42c5981cdcb98478ae884743157f75"
+    "mtime": 1778427480.401054,
+    "hash": "222d7ffc32cbff1f1879810820e150fc"
   },
   "/home/jerry/Project/cs2-analytics/tests/test_config.py": {
-    "mtime": 1773732706.0959885,
-    "hash": "ffd3f00338af7f267890e9f83e56d38a"
+    "mtime": 1778472783.7035494,
+    "hash": "ca89a39f0a5bb0d47710f45909578d2d"
   },
   "/home/jerry/Project/cs2-analytics/tests/test_parquet.py": {
-    "mtime": 1773781650.4656126,
-    "hash": "9dafb66e32d37c74d68f97e6226f14cd"
+    "mtime": 1778447443.6560638,
+    "hash": "8413698b3e8aacca7612538ea1fdad72"
   },
   "/home/jerry/Project/cs2-analytics/tests/test_models.py": {
-    "mtime": 1773781678.4047363,
-    "hash": "1ab6bc80ce2f255cbab35824ff311988"
+    "mtime": 1778472888.6655197,
+    "hash": "9980fcc3a895a5841669e615f4359b89"
+  },
+  "/home/jerry/Project/cs2-analytics/tests/test_csapi_client.py": {
+    "mtime": 1778474121.3578162,
+    "hash": "c6cdcfbb327a09e6ae042cad6d03cdb7"
+  },
+  "/home/jerry/Project/cs2-analytics/tests/test_modern_hidden_gems_sql.py": {
+    "mtime": 1778474130.0578892,
+    "hash": "824512ff95aabd7fb0b01d8b14a7300a"
   },
   "/home/jerry/Project/cs2-analytics/tests/test_dags/__init__.py": {
     "mtime": 1773722541.2658117,
@@ -71,6 +71,38 @@
     "mtime": 1773782096.5483482,
     "hash": "617b99431b96f9cef910d566b6a47e4e"
   },
+  "/home/jerry/Project/cs2-analytics/tests/test_dags/test_liquipedia_optional.py": {
+    "mtime": 1778427422.6095614,
+    "hash": "6702e908019de97e03581399bce795d7"
+  },
+  "/home/jerry/Project/cs2-analytics/tests/test_ml/__init__.py": {
+    "mtime": 1778430311.5220914,
+    "hash": "8a8ed45cf925f3f8d1af2292088ca05f"
+  },
+  "/home/jerry/Project/cs2-analytics/tests/test_ml/conftest.py": {
+    "mtime": 1778430311.5232942,
+    "hash": "f219a850467b1bf6a02ea2f571d7be44"
+  },
+  "/home/jerry/Project/cs2-analytics/tests/test_ml/test_train.py": {
+    "mtime": 1778480002.6937308,
+    "hash": "59cd95dcd32e22417f377c5fe89f461c"
+  },
+  "/home/jerry/Project/cs2-analytics/tests/test_ml/test_predict.py": {
+    "mtime": 1778479743.2626066,
+    "hash": "909d30e99a653cb89b44ba3ea32630a0"
+  },
+  "/home/jerry/Project/cs2-analytics/tests/test_marts/__init__.py": {
+    "mtime": 1778430424.9599917,
+    "hash": "7620c888c8a3cb1c17d4d17e2fa605f2"
+  },
+  "/home/jerry/Project/cs2-analytics/tests/test_marts/test_hidden_gems_sql.py": {
+    "mtime": 1778480922.2473574,
+    "hash": "a96b52ecbd244dcdac6afc80d9701bed"
+  },
+  "/home/jerry/Project/cs2-analytics/tests/test_marts/test_choke_profile_sql.py": {
+    "mtime": 1778430424.9611084,
+    "hash": "afeaf90f8929fe8a89d829c70c1dbc97"
+  },
   "/home/jerry/Project/cs2-analytics/src/cs2_analytics/__init__.py": {
     "mtime": 1773671092.8269825,
     "hash": "2bb54f0627413ee7974168b71fa8792d"
@@ -92,12 +124,12 @@
     "hash": "9bd70dd50df582e423051e315d2d66ef"
   },
   "/home/jerry/Project/cs2-analytics/src/cs2_analytics/ingestion/liquipedia.py": {
-    "mtime": 1773711002.2641094,
-    "hash": "a267afabda0fd45710608327c08d4c76"
+    "mtime": 1778427533.4515002,
+    "hash": "bb5bec36b13e062c1e45fe6b3af29378"
   },
-  "/home/jerry/Project/cs2-analytics/src/cs2_analytics/ingestion/kaggle.py": {
-    "mtime": 1773781613.893447,
-    "hash": "3fa87a6065330472eeb8ca3d7d4635fc"
+  "/home/jerry/Project/cs2-analytics/src/cs2_analytics/ingestion/csapi.py": {
+    "mtime": 1778474262.8240156,
+    "hash": "71c56b5886c041d0ab3de5dc8d7a6e70"
   },
   "/home/jerry/Project/cs2-analytics/src/cs2_analytics/models/__init__.py": {
     "mtime": 1773671100.726029,
@@ -108,8 +140,8 @@
     "hash": "b70b241678b10b5afd0543e3b9f7e307"
   },
   "/home/jerry/Project/cs2-analytics/src/cs2_analytics/models/canonical.py": {
-    "mtime": 1773781497.5878856,
-    "hash": "0e5cc47295b88a3539c31733eeab5fa0"
+    "mtime": 1778472875.0683935,
+    "hash": "4931a692ed76d65ea4fcbb3359863ee3"
   },
   "/home/jerry/Project/cs2-analytics/src/cs2_analytics/models/faceit.py": {
     "mtime": 1773781605.3254075,
@@ -118,6 +150,10 @@
   "/home/jerry/Project/cs2-analytics/src/cs2_analytics/models/pandascore.py": {
     "mtime": 1773781609.6074271,
     "hash": "00fbf1d28ca926a18e6249dea5945166"
+  },
+  "/home/jerry/Project/cs2-analytics/src/cs2_analytics/models/csapi.py": {
+    "mtime": 1778474147.2750342,
+    "hash": "13036ed231f6a0b3787e2c0383596527"
   },
   "/home/jerry/Project/cs2-analytics/src/cs2_analytics/utils/__init__.py": {
     "mtime": 1773671105.1000545,
@@ -128,40 +164,40 @@
     "hash": "e9f4e7021e49ec75218ad143f1721631"
   },
   "/home/jerry/Project/cs2-analytics/src/cs2_analytics/utils/config.py": {
-    "mtime": 1773732646.6795814,
-    "hash": "734ce55b4942cc2447061135af460f3b"
+    "mtime": 1778472768.439409,
+    "hash": "7cbd9ea4baa49c3a98481524f85d89f7"
   },
   "/home/jerry/Project/cs2-analytics/src/cs2_analytics/utils/parquet.py": {
-    "mtime": 1773781502.5209105,
-    "hash": "03d0f2086ab5581b26db962cb68b998b"
+    "mtime": 1778472803.9917362,
+    "hash": "b009b8d255ec939d7546f9c97808b012"
   },
   "/home/jerry/Project/cs2-analytics/scripts/__init__.py": {
     "mtime": 1773686804.1913514,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
-  "/home/jerry/Project/cs2-analytics/scripts/bootstrap_kaggle.py": {
-    "mtime": 1773686817.341432,
-    "hash": "de85dd02713a028344e1604a06b16a87"
+  "/home/jerry/Project/cs2-analytics/scripts/bootstrap_csapi.py": {
+    "mtime": 1778474174.5112784,
+    "hash": "7283b9f91c7099d0e1f4e70e200b5078"
   },
   "/home/jerry/Project/cs2-analytics/airflow/dags/cs2_daily_matches.py": {
-    "mtime": 1773732498.766579,
-    "hash": "ffa7198476be4101b5ec084443ca8a50"
+    "mtime": 1778430616.4215026,
+    "hash": "21a78644baa912dd0bc29e19260fc71f"
   },
   "/home/jerry/Project/cs2-analytics/airflow/dags/cs2_weekly_rankings.py": {
-    "mtime": 1773732499.9625869,
-    "hash": "0785596b50648c8f18bb6760ebd1ad82"
+    "mtime": 1778427609.5191317,
+    "hash": "eadf86299500f9159de19509c77c70f9"
   },
   "/home/jerry/Project/cs2-analytics/airflow/dags/cs2_tournament_sync.py": {
-    "mtime": 1773732500.864593,
-    "hash": "6e46f65507e038664598b109c2219a2a"
+    "mtime": 1778427609.5191317,
+    "hash": "66e3c708472fb3689c2c31071ffd5fc5"
   },
   "/home/jerry/Project/cs2-analytics/airflow/dags/fail_intentionally.py": {
-    "mtime": 1773732501.747599,
-    "hash": "13bbd0f77f0f178e799a1b9c0144b2fd"
+    "mtime": 1778430616.4215026,
+    "hash": "ca700b86188af9a8a2ca916f43b54682"
   },
   "/home/jerry/Project/cs2-analytics/airflow/dags/cs2_dbt_run.py": {
-    "mtime": 1773782064.3832364,
-    "hash": "0a487cc4b6ddb19e6c6b84653576e13b"
+    "mtime": 1778474239.2938144,
+    "hash": "fa0d072e7a484d57b004f29736b7bd1c"
   },
   "/home/jerry/Project/cs2-analytics/airflow/dags/utils/__init__.py": {
     "mtime": 1773722540.7398076,
@@ -172,40 +208,44 @@
     "hash": "90033237167508b1f3804e20a95f18b5"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/staging/stg_faceit_matches.sql": {
-    "mtime": 1773781844.395423,
-    "hash": "c45cf63cb77f15afb340a88408097a9b"
+    "mtime": 1778447420.2604082,
+    "hash": "076670215441b4922774ef30bc3ce141"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/staging/stg_pandascore_matches.sql": {
-    "mtime": 1773781845.437427,
-    "hash": "4717c51fab636a5bda20da38ff3fc59b"
-  },
-  "/home/jerry/Project/cs2-analytics/dbt_project/models/staging/stg_kaggle_matches.sql": {
-    "mtime": 1773781846.479431,
-    "hash": "0fa42f8d2309bcef65cb6cf22178b558"
+    "mtime": 1778447420.2604082,
+    "hash": "e20ac20e7146ab7937c05e34a9261c6a"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/staging/stg_faceit_players.sql": {
-    "mtime": 1773781847.5224352,
-    "hash": "21e78eacf27100006e09dc962ee8822b"
+    "mtime": 1778450262.566906,
+    "hash": "b89b22c0116017ee2f1dcbd007d2387f"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/staging/stg_pandascore_players.sql": {
-    "mtime": 1773781848.5644393,
-    "hash": "68252d7ef265d8dac90f6f3912f3d343"
+    "mtime": 1778450262.566906,
+    "hash": "dd98c95958c074a2f07c61a4632285b1"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/staging/stg_liquipedia_teams.sql": {
     "mtime": 1773781849.6114433,
     "hash": "c655acc82525881d69978ce24973c907"
   },
+  "/home/jerry/Project/cs2-analytics/dbt_project/models/staging/stg_csapi_team_rankings.sql": {
+    "mtime": 1778450262.566906,
+    "hash": "175c35c28e2ae27ba4920d6f7c3edcf1"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/models/staging/stg_csapi_player_stats.sql": {
+    "mtime": 1778463168.704823,
+    "hash": "65659266f2133805469a1082d5f1c910"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/models/staging/stg_csapi_matches.sql": {
+    "mtime": 1778474181.3803222,
+    "hash": "da946f3bbc2a226bf77d32b7dba7b69e"
+  },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/intermediate/int_matches_unioned.sql": {
-    "mtime": 1773781870.2405233,
-    "hash": "5160af1004c0231eb16e13340ed9b2db"
+    "mtime": 1778474212.1525834,
+    "hash": "4c066d874a6b723dcdee1340a8d37f03"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/intermediate/int_players_unioned.sql": {
-    "mtime": 1773781876.1695464,
-    "hash": "e287c7a515fe0fd19bf8b9fb2fe228a7"
-  },
-  "/home/jerry/Project/cs2-analytics/dbt_project/models/marts/core/dim_teams.sql": {
-    "mtime": 1773781813.9373024,
-    "hash": "cdb003acbf5532a1371df580e5ba4b1a"
+    "mtime": 1778472457.2076054,
+    "hash": "82fd68f4726273bbe3dd4eb20285cf0e"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/marts/core/dim_players.sql": {
     "mtime": 1773781819.3153238,
@@ -220,20 +260,24 @@
     "hash": "c5009e5a1ade65fb34a7738c907c7cfe"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/marts/core/fact_matches.sql": {
-    "mtime": 1773781848.249438,
-    "hash": "61e64ceb8922605557d2b2397a5121e4"
+    "mtime": 1778447413.9188151,
+    "hash": "b1323233b8130fafdfb1b47c4533c1a9"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/marts/core/fact_player_stats.sql": {
-    "mtime": 1773781855.2134652,
-    "hash": "4f277d07bb29e99ffb8ad605d6c9aec2"
+    "mtime": 1778450262.567906,
+    "hash": "2a757628925f43be5ad79c75dffe8598"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/models/marts/core/dim_teams.sql": {
+    "mtime": 1778472469.5317137,
+    "hash": "70985acdfcce5ca307c80753faef7fda"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/marts/analytics/mart_team_performance.sql": {
     "mtime": 1773782031.956122,
     "hash": "664008309bdc0970161becbf7f76f059"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/marts/analytics/mart_player_leaderboard.sql": {
-    "mtime": 1773782042.3281586,
-    "hash": "8349d44c1e88232f4b288a44d373be8d"
+    "mtime": 1778472096.8491402,
+    "hash": "09e7a88516ad9507d9991cc4583b718f"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/marts/analytics/mart_map_meta.sql": {
     "mtime": 1773782051.9231925,
@@ -244,32 +288,492 @@
     "hash": "63ef8810ad1d5426112610f2b048403c"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/marts/analytics/mart_upset_features.sql": {
-    "mtime": 1773782092.755335,
-    "hash": "0fea104ef349ee2c2a944985f6a0c718"
+    "mtime": 1778474221.1566598,
+    "hash": "55a03badd6db4cabd6e7094a3ecf27d2"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/marts/analytics/mart_hidden_gems.sql": {
-    "mtime": 1773782108.64439,
-    "hash": "f341215f7e299d23ac06d75fc3fdde04"
+    "mtime": 1778480949.080581,
+    "hash": "ad59e87c57577722a9465a24bca8e6b6"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/marts/analytics/mart_choke_profile.sql": {
-    "mtime": 1773782126.995453,
-    "hash": "ca16bd0ac518a7edcdaca3160b94db38"
+    "mtime": 1778430478.331414,
+    "hash": "837aae623814723cac78cf33c0bc45f6"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/macros/generate_schema_name.sql": {
+    "mtime": 1778446527.6643307,
+    "hash": "43ff35b8876fb716740b55fe22165c22"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/tests/assert_non_empty_marts.sql": {
-    "mtime": 1773782145.7025166,
-    "hash": "8364f2b79d461f2af879367e43e24bdb"
+    "mtime": 1778478597.4571548,
+    "hash": "7207815755f1edef112b5dfa1c7105f1"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/setup/snowflake_setup.sql": {
-    "mtime": 1773781600.2073836,
-    "hash": "d558ffab189e1392d46cd0179a62798b"
+    "mtime": 1778474233.3137636,
+    "hash": "4129d8fcbd80711121b85c76971d41c8"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/macros/assert_equal_values.sql": {
+    "mtime": 1724869925.0,
+    "hash": "b000a1db5e1678f073932eb57cc86ae4"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/macros/limit_zero.sql": {
+    "mtime": 1724869925.0,
+    "hash": "80d6f289e746d2ecca98b300665cbad7"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/macros/tests.sql": {
+    "mtime": 1724869925.0,
+    "hash": "974373a095ef2ea02a360c7ec658d251"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/datetime/test_date_spine.sql": {
+    "mtime": 1724869925.0,
+    "hash": "a4204c99de7121701aac769bae75efb0"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/generic_tests/equality_less_columns.sql": {
+    "mtime": 1724869925.0,
+    "hash": "e091b8304d5c348799389c1aabfe7191"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/generic_tests/recency_time_excluded.sql": {
+    "mtime": 1724869925.0,
+    "hash": "409d41609f7db31fb9724ae68a20b5df"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/generic_tests/recency_time_included.sql": {
+    "mtime": 1724869925.0,
+    "hash": "636a5a7f422289f2cdf16126449bac4b"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/generic_tests/test_equal_column_subset.sql": {
+    "mtime": 1724869925.0,
+    "hash": "bf1fe12e82aa02cabf0dbba4327cacc1"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/generic_tests/test_equal_rowcount.sql": {
+    "mtime": 1724869925.0,
+    "hash": "3f72f7d93ffb25d0a6e6c887ebb61c59"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/generic_tests/test_fewer_rows_than.sql": {
+    "mtime": 1724869925.0,
+    "hash": "cdcc8f7d5bc4618ef05ecd7f9bd68999"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/geo/test_haversine_distance_km.sql": {
+    "mtime": 1724869925.0,
+    "hash": "a142032111169d0967ec1c95156836f8"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/geo/test_haversine_distance_mi.sql": {
+    "mtime": 1724869925.0,
+    "hash": "a5f10e1ce5dbbb31a47817d5ec649220"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_deduplicate.sql": {
+    "mtime": 1724869925.0,
+    "hash": "3e130422924e5b59fe0a086c845af5d2"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_generate_series.sql": {
+    "mtime": 1724869925.0,
+    "hash": "392c2418f42d63c4a03b95cfaed1611e"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_generate_surrogate_key.sql": {
+    "mtime": 1724869925.0,
+    "hash": "9ac5fd278abaafe6f203216d348d6de5"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_get_column_values.sql": {
+    "mtime": 1724869925.0,
+    "hash": "4fa56974e1ad9dfab8b9058147523658"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_get_column_values_where.sql": {
+    "mtime": 1724869925.0,
+    "hash": "ac7026bf9e431c7c0e27f56454e232fc"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_get_filtered_columns_in_relation.sql": {
+    "mtime": 1724869925.0,
+    "hash": "b6a98ac10cbe196883d94c52902a8afc"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_get_relations_by_pattern.sql": {
+    "mtime": 1724869925.0,
+    "hash": "a28dbc7cb8da1abd0d1e32d3bc2d0ea8"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_get_relations_by_prefix_and_union.sql": {
+    "mtime": 1724869925.0,
+    "hash": "f230817e87dcaa3dacb8914a21dcbec1"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_get_single_value.sql": {
+    "mtime": 1724869925.0,
+    "hash": "1ae6e92109b3552116ec7f64ea8e943c"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_get_single_value_default.sql": {
+    "mtime": 1724869925.0,
+    "hash": "53c0f1af3c95ced54f489faa9eb45e04"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_groupby.sql": {
+    "mtime": 1724869925.0,
+    "hash": "1a1ce2dd35ce5d1235e217210c35b323"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_not_empty_string_failing.sql": {
+    "mtime": 1724869925.0,
+    "hash": "b5a99222ef12ad6c638dc434f0b7bc15"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_not_empty_string_passing.sql": {
+    "mtime": 1724869925.0,
+    "hash": "dbb388888d82b5bf5c277ff3c0026e11"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_nullcheck_table.sql": {
+    "mtime": 1724869925.0,
+    "hash": "0f4d428f2b26797b92031f713b891d64"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_pivot.sql": {
+    "mtime": 1724869925.0,
+    "hash": "51643ce03d798a27f86f9e18e9481e94"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_pivot_apostrophe.sql": {
+    "mtime": 1724869925.0,
+    "hash": "b8c00f226cd26082029a719aa4ff58ec"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_safe_add.sql": {
+    "mtime": 1724869925.0,
+    "hash": "2da8ba006a4eca5778f7a2a2feab2999"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_safe_divide.sql": {
+    "mtime": 1724869925.0,
+    "hash": "72445c0657939ba0cb6db4feb23e7609"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_safe_subtract.sql": {
+    "mtime": 1724869925.0,
+    "hash": "0e5340d2f170614a05f5172f3ebd2ac9"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_star.sql": {
+    "mtime": 1724869925.0,
+    "hash": "cc0047b036f202c94eda9b45f7689f4b"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_star_aggregate.sql": {
+    "mtime": 1724869925.0,
+    "hash": "8def3f7b1a7da3e7ee6d9c841b68bf30"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_star_no_columns.sql": {
+    "mtime": 1724869925.0,
+    "hash": "de7c9ed932ad798c2ec541a99075e7ea"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_star_prefix_suffix.sql": {
+    "mtime": 1724869925.0,
+    "hash": "5fa5dfb7a11e61f92ac809951bae0577"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_star_quote_identifiers.sql": {
+    "mtime": 1724869925.0,
+    "hash": "c1e09bc1b0ac5bcbfb3f03b96fa8c3b4"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_star_uppercase.sql": {
+    "mtime": 1724869925.0,
+    "hash": "2d9af8e4469d25a38588e1378ef32171"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_union.sql": {
+    "mtime": 1724869925.0,
+    "hash": "377e10ff443a0367aa5d892a941575ee"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_union_base.sql": {
+    "mtime": 1724869925.0,
+    "hash": "d611ea1e1384a14b2fec865dfa114a06"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_union_exclude_base_lowercase.sql": {
+    "mtime": 1724869925.0,
+    "hash": "1ab7aa68040ee3bde9e2bcde0b53d1ef"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_union_exclude_base_uppercase.sql": {
+    "mtime": 1724869925.0,
+    "hash": "ee237f46a703715a02cdc812a79fc073"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_union_exclude_lowercase.sql": {
+    "mtime": 1724869925.0,
+    "hash": "ff6fa5bcfb22062486e99873c87409ca"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_union_exclude_uppercase.sql": {
+    "mtime": 1724869925.0,
+    "hash": "be05fe162537e0b60cb236e41a44342e"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_union_no_source_column.sql": {
+    "mtime": 1724869925.0,
+    "hash": "85105fb64a391e2853e11cf8b83d50ee"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_union_where.sql": {
+    "mtime": 1724869925.0,
+    "hash": "4d112ac43f4e3a6dd9263c968c70b484"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_union_where_base.sql": {
+    "mtime": 1724869925.0,
+    "hash": "bcc61ba9c2772c3f9956b27d67017fbd"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_unpivot.sql": {
+    "mtime": 1724869925.0,
+    "hash": "028f73bacc5430bcc876672e0b7024f9"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_unpivot_bool.sql": {
+    "mtime": 1724869925.0,
+    "hash": "a5f9b4fa4dfbd29e7ffd2febdde6cb7a"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_unpivot_quote.sql": {
+    "mtime": 1724869925.0,
+    "hash": "4c2f4f98161706b5a031d73dad591cfa"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/test_width_bucket.sql": {
+    "mtime": 1724869925.0,
+    "hash": "6cbb416e4601bfed5f709e734db0427a"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/web/test_url_host.sql": {
+    "mtime": 1724869925.0,
+    "hash": "6ec6b99626367596bff0864b22eef35e"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/web/test_url_path.sql": {
+    "mtime": 1724869925.0,
+    "hash": "a6dffdca80208a01d683dbe67706d55d"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/web/test_urls.sql": {
+    "mtime": 1724869925.0,
+    "hash": "3dcd8bb21e9ccb3b90ecac6e7ef61b8e"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/tests/assert_get_query_results_as_dict_objects_equal.sql": {
+    "mtime": 1724869925.0,
+    "hash": "5776e8da3c40ad72bb79176a34b823d9"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/tests/generic/expect_table_columns_to_match_set.sql": {
+    "mtime": 1724869925.0,
+    "hash": "15f57c86cfa740311ffb290db8c828d1"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/tests/jinja_helpers/assert_pretty_output_msg_is_string.sql": {
+    "mtime": 1724869925.0,
+    "hash": "2339a0900275f96e912d267087f6cde0"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/tests/jinja_helpers/assert_pretty_time_is_string.sql": {
+    "mtime": 1724869925.0,
+    "hash": "bee13ec61e5c8ffc4c9dd41d58c255b7"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/tests/jinja_helpers/test_slugify.sql": {
+    "mtime": 1724869925.0,
+    "hash": "b8f114df6437e9cd29eef38901e974e3"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/tests/sql/test_get_column_values_use_default.sql": {
+    "mtime": 1724869925.0,
+    "hash": "04e355e740257544bf9764d9c9474f5e"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/tests/sql/test_get_single_value_multiple_rows.sql": {
+    "mtime": 1724869925.0,
+    "hash": "0adbb60adc92b6eb088ffe0ec5088162"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/generic_tests/accepted_range.sql": {
+    "mtime": 1724869925.0,
+    "hash": "de5d37bc335c5ce7defa8b1d480e2315"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/generic_tests/at_least_one.sql": {
+    "mtime": 1724869925.0,
+    "hash": "0845f88f31489c780e4584ec96776aa1"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/generic_tests/cardinality_equality.sql": {
+    "mtime": 1724869925.0,
+    "hash": "05156dcb155f67b74b0c899bf30261dc"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/generic_tests/equal_rowcount.sql": {
+    "mtime": 1724869925.0,
+    "hash": "410e3770c906626d3d37d4b0ca408f69"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/generic_tests/equality.sql": {
+    "mtime": 1724869925.0,
+    "hash": "492d8d7712bf68e0fb98522f2f30d3f5"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/generic_tests/expression_is_true.sql": {
+    "mtime": 1724869925.0,
+    "hash": "5bf1aa46e51ce7ec5093c1c7f6160188"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/generic_tests/fewer_rows_than.sql": {
+    "mtime": 1724869925.0,
+    "hash": "c7a46537d8abd5c62a52c9fa2c6e1b9f"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/generic_tests/mutually_exclusive_ranges.sql": {
+    "mtime": 1724869925.0,
+    "hash": "7e289ab00d09f99a6497239a5f6e107a"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/generic_tests/not_accepted_values.sql": {
+    "mtime": 1724869925.0,
+    "hash": "37c7cc748301fc3c9c56bfa9441cfc33"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/generic_tests/not_constant.sql": {
+    "mtime": 1724869925.0,
+    "hash": "4d4e5ed74c5d82993103a664cd3e648b"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/generic_tests/not_empty_string.sql": {
+    "mtime": 1724869925.0,
+    "hash": "32eddb11313f99ffb9473951d7ca0667"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/generic_tests/not_null_proportion.sql": {
+    "mtime": 1724869925.0,
+    "hash": "2bf4ac0d4db6c5139f8c3190eaa02e97"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/generic_tests/recency.sql": {
+    "mtime": 1724869925.0,
+    "hash": "d7b9df7d8060fb607c068eac7ad1d963"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/generic_tests/relationships_where.sql": {
+    "mtime": 1724869925.0,
+    "hash": "25b03ddee99a0f595a3c4e940d818458"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/generic_tests/sequential_values.sql": {
+    "mtime": 1724869925.0,
+    "hash": "7012ef29a464fa5dd193dd8d4db34d23"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/generic_tests/unique_combination_of_columns.sql": {
+    "mtime": 1724869925.0,
+    "hash": "1bda0b8ff5d0a29d2471b1f87adac377"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/jinja_helpers/_is_ephemeral.sql": {
+    "mtime": 1724869925.0,
+    "hash": "a80e86abde62c5dc1b9aa32743157e45"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/jinja_helpers/_is_relation.sql": {
+    "mtime": 1724869925.0,
+    "hash": "bbd08dc4829293a4f62846e6a1638315"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/jinja_helpers/log_info.sql": {
+    "mtime": 1724869925.0,
+    "hash": "708be89241a19c683045d87912965aab"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/jinja_helpers/pretty_log_format.sql": {
+    "mtime": 1724869925.0,
+    "hash": "ca99b538e732d4198f43d1e3f3716273"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/jinja_helpers/pretty_time.sql": {
+    "mtime": 1724869925.0,
+    "hash": "37bbeebaa71384e70417feab5af15f93"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/jinja_helpers/slugify.sql": {
+    "mtime": 1724869925.0,
+    "hash": "3c721727bbbc659a0efeb6494eee1caf"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/date_spine.sql": {
+    "mtime": 1724869925.0,
+    "hash": "85c572a7e9202ddfd6c41983d2cf6323"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/deduplicate.sql": {
+    "mtime": 1724869925.0,
+    "hash": "ebd24f95e0f1bb0a4139f1af4f10363b"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/generate_series.sql": {
+    "mtime": 1724869925.0,
+    "hash": "faa4c49c7bc9539db3f1d5d0bde465db"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/generate_surrogate_key.sql": {
+    "mtime": 1724869925.0,
+    "hash": "8fffff6435a2325a3b0d3bc227874faf"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/get_column_values.sql": {
+    "mtime": 1724869925.0,
+    "hash": "966d238f1a0d15bbdcf2b402d61f2fc9"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/get_filtered_columns_in_relation.sql": {
+    "mtime": 1724869925.0,
+    "hash": "1b1381c8e36232fe43f024c21133a9a1"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/get_query_results_as_dict.sql": {
+    "mtime": 1724869925.0,
+    "hash": "2b31c4e82dbcde1c02b2ac2409c25e12"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/get_relations_by_pattern.sql": {
+    "mtime": 1724869925.0,
+    "hash": "026c3e0214fc3eb3433d4648d5a786f0"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/get_relations_by_prefix.sql": {
+    "mtime": 1724869925.0,
+    "hash": "09b43d194d6e8b0a2b660477e7bb9e84"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/get_single_value.sql": {
+    "mtime": 1724869925.0,
+    "hash": "a203b8cf8486cafe41a0daa0cba2772d"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/get_table_types_sql.sql": {
+    "mtime": 1724869925.0,
+    "hash": "2c87c40a87336d1700d7471bddf25889"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/get_tables_by_pattern_sql.sql": {
+    "mtime": 1724869925.0,
+    "hash": "ee599f8073b87f8ed656a96505193a06"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/get_tables_by_prefix_sql.sql": {
+    "mtime": 1724869925.0,
+    "hash": "cd8d696cd4d1f1eda855eec0e845e7ac"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/groupby.sql": {
+    "mtime": 1724869925.0,
+    "hash": "27b1395991995f53ba26c5a8183deb7a"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/haversine_distance.sql": {
+    "mtime": 1724869925.0,
+    "hash": "889541de7c9b60ef6433ebfa6eed2834"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/nullcheck.sql": {
+    "mtime": 1724869925.0,
+    "hash": "81f5499e4d897e05a9a4889a13bc0be0"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/nullcheck_table.sql": {
+    "mtime": 1724869925.0,
+    "hash": "a26b804dd6f3dcbf06e5d4e55ad89ef2"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/pivot.sql": {
+    "mtime": 1724869925.0,
+    "hash": "6308ab0808bf3ec9e77050f324601eb7"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/safe_add.sql": {
+    "mtime": 1724869925.0,
+    "hash": "0f5e9ed4e3425b527b77b48eca08fe93"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/safe_divide.sql": {
+    "mtime": 1724869925.0,
+    "hash": "31b6089bc4f9b88f6ae90163900c33ca"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/safe_subtract.sql": {
+    "mtime": 1724869925.0,
+    "hash": "8eaae2ccc9cd8b89d39adb940d2b6b5a"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/star.sql": {
+    "mtime": 1724869925.0,
+    "hash": "8b7a5aa417df26d6172936dc04e5e2fe"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/surrogate_key.sql": {
+    "mtime": 1724869925.0,
+    "hash": "67f665f558583703b02c75e4b96cf3df"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/union.sql": {
+    "mtime": 1724869925.0,
+    "hash": "6376f9ffb3d575a3849bee9882ccb17e"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/unpivot.sql": {
+    "mtime": 1724869925.0,
+    "hash": "f6e05084106f75cbfed23a7494f6a6e7"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/sql/width_bucket.sql": {
+    "mtime": 1724869925.0,
+    "hash": "e66785ceb9f8ad68ba7b25091dd5dcf5"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/web/get_url_host.sql": {
+    "mtime": 1724869925.0,
+    "hash": "bc0fb9b58cf58ca6dee2e24aeacf3087"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/web/get_url_parameter.sql": {
+    "mtime": 1724869925.0,
+    "hash": "819784449956cd36fc2e9f37106ecb55"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/macros/web/get_url_path.sql": {
+    "mtime": 1724869925.0,
+    "hash": "4c632431a5b5ae59259a6aae3c43dcec"
+  },
+  "/home/jerry/Project/cs2-analytics/ml/__init__.py": {
+    "mtime": 1778430362.8719363,
+    "hash": "f07439a6cb32fb22f7debc926426c5b2"
+  },
+  "/home/jerry/Project/cs2-analytics/ml/train.py": {
+    "mtime": 1778480031.4739676,
+    "hash": "b80efab3ae1c30f22efe325a920abf9c"
+  },
+  "/home/jerry/Project/cs2-analytics/ml/predict.py": {
+    "mtime": 1778479732.8365219,
+    "hash": "62aac7c29ff89f156141f97c046f10c3"
   },
   "/home/jerry/Project/cs2-analytics/cs2-analytics-internship-project.md": {
-    "mtime": 1773636512.2849762,
-    "hash": "cb7ca16ef47876a756d79af7ad43a1fc"
+    "mtime": 1778472922.7898371,
+    "hash": "cfe728d8aaa00728e13677271f0904d7"
   },
   "/home/jerry/Project/cs2-analytics/CLAUDE.md": {
-    "mtime": 1773737140.6189668,
-    "hash": "2ba51b6f1a492fef9067ffa5353fbdac"
+    "mtime": 1778472916.8947823,
+    "hash": "18a037474fb83532ec582b3dd0b282a5"
   },
   "/home/jerry/Project/cs2-analytics/airflow/docker-compose.yml": {
     "mtime": 1773736016.1012695,
@@ -284,31 +788,147 @@
     "hash": "e5e08f8448598a5ea4d948ae21da1b86"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/profiles.yml": {
-    "mtime": 1773781501.5589056,
-    "hash": "98c9b214b9a5e6c32b908fc905fd2f2a"
+    "mtime": 1778436170.684342,
+    "hash": "8ec4a214e4b2057af7bde9ee43ce6cac"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/package-lock.yml": {
+    "mtime": 1778446438.0713258,
+    "hash": "6a4c962f8d22a1c763f3561513c43d55"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/sources.yml": {
-    "mtime": 1773781610.3384306,
-    "hash": "3b89f69dd7b90ea5782717cadaa1c654"
+    "mtime": 1778474185.7003589,
+    "hash": "27332aa0cefd13cf0c3b2912c52bbe46"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/staging/staging.yml": {
-    "mtime": 1773781825.688349,
-    "hash": "f850e8cbff166fe438c8f667aa18b98b"
+    "mtime": 1778474207.7365458,
+    "hash": "94e416a40bf3194fd22c65c71fed993c"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/intermediate/intermediate.yml": {
-    "mtime": 1773781878.8015563,
-    "hash": "00fc5bef84e4f58677132a1ce93ae06c"
+    "mtime": 1778474216.9176238,
+    "hash": "d3aecf56938394a394b2e6d5fbb8ce38"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/marts/core/core.yml": {
-    "mtime": 1773781862.8544948,
-    "hash": "a8c714f08df6763cab166e384aa45be8"
+    "mtime": 1778450280.4590738,
+    "hash": "2f1f6a13c6bcd0cef8e8db5fc7a0c3a0"
   },
   "/home/jerry/Project/cs2-analytics/dbt_project/models/marts/analytics/analytics.yml": {
-    "mtime": 1773782139.0454938,
-    "hash": "355564cbf4e850e30b21af90dbaa805d"
+    "mtime": 1778480997.6379855,
+    "hash": "f4ce39b390909567a19f9ee3f3739170"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/CHANGELOG.md": {
+    "mtime": 1724869925.0,
+    "hash": "d1224a5ae6364dcb117d63ff420dc88d"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/CONTRIBUTING.md": {
+    "mtime": 1724869925.0,
+    "hash": "d1ec63f5743d32a402580192f595b889"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/README.md": {
+    "mtime": 1724869925.0,
+    "hash": "0c19ede34ac7e5efc38815d1ea4bd211"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/RELEASE.md": {
+    "mtime": 1724869925.0,
+    "hash": "d482f1a88c4037fd25846a6717278d8c"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/dbt_project.yml": {
+    "mtime": 1724869925.0,
+    "hash": "58ef8ee2434e0f78b806066298beb0ef"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/dev-requirements.txt": {
+    "mtime": 1724869925.0,
+    "hash": "2d4a3c53c9fb444b746672dfe4f8f08f"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/docker-compose.yml": {
+    "mtime": 1724869925.0,
+    "hash": "c8f959f4e3cc6af8d6084dd9c447795c"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/docs/decisions/README.md": {
+    "mtime": 1724869925.0,
+    "hash": "34d211501596657a78fb257f1f025bc8"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/docs/decisions/adr-0000-documenting-architecture-decisions.md": {
+    "mtime": 1724869925.0,
+    "hash": "4a0c9b19a5fd155a0a0f38ca3aeda054"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/docs/decisions/adr-0001-decision-record-format.md": {
+    "mtime": 1724869925.0,
+    "hash": "56817597117a62ab55212a984f4da766"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/docs/decisions/adr-0002-cross-database-utils.md": {
+    "mtime": 1724869925.0,
+    "hash": "de2df717a9e3a50d0985bf4fe3ded98f"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/README.md": {
+    "mtime": 1724869925.0,
+    "hash": "a77dd0ea90d1f6e462f503c019c6a333"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/dbt_project.yml": {
+    "mtime": 1724869925.0,
+    "hash": "13d73b7ab5a520d4755674bc9304fbfa"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/package-lock.yml": {
+    "mtime": 1724869925.0,
+    "hash": "4e25dfcb4ad2aaf25859d241f6880667"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/packages.yml": {
+    "mtime": 1724869925.0,
+    "hash": "fc27fa5e3f465622face41820a15aab3"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/profiles.yml": {
+    "mtime": 1724869925.0,
+    "hash": "1517789b3d1dc5e4ec0d172a60b7f1d4"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/data/schema_tests/schema.yml": {
+    "mtime": 1724869925.0,
+    "hash": "4db1c3a91c9929ca0b558344ad67e100"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/datetime/schema.yml": {
+    "mtime": 1724869925.0,
+    "hash": "83453322388dda8e5818c2568401b562"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/generic_tests/schema.yml": {
+    "mtime": 1724869925.0,
+    "hash": "55c084e8ac8f75ce1e6af300a487127d"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/geo/schema.yml": {
+    "mtime": 1724869925.0,
+    "hash": "7d06ed20eb89a42f69fb053b669ba683"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/sql/schema.yml": {
+    "mtime": 1724869925.0,
+    "hash": "b374656bbe44b37a982689033dcd49e7"
+  },
+  "/home/jerry/Project/cs2-analytics/dbt_project/dbt_packages/dbt_utils/integration_tests/models/web/schema.yml": {
+    "mtime": 1724869925.0,
+    "hash": "b8bceab31b0a1cd981d2b0b8b7af192a"
+  },
+  "/home/jerry/Project/cs2-analytics/tasks/lessons.md": {
+    "mtime": 1778482219.0503063,
+    "hash": "88711288b33b3d4286a19f1df9f306fc"
   },
   "/home/jerry/Project/cs2-analytics/tasks/todo.md": {
-    "mtime": 1778421597.1880581,
-    "hash": "8f5e7997f1f4cabc18b8c021b30b81d4"
+    "mtime": 1778482211.414242,
+    "hash": "914b9755610cc66fc379d290b60f2581"
+  },
+  "/home/jerry/Project/cs2-analytics/ml/MODEL_CARD.md": {
+    "mtime": 1778480078.378354,
+    "hash": "3a7c81812b4fb63f8e6d80c6744b7bf6"
+  },
+  "/home/jerry/Project/cs2-analytics/ml/evaluation/roc_auc.txt": {
+    "mtime": 1778480042.129021,
+    "hash": "9ca5d9ca4f69e17691b7c52ad1a70031"
+  },
+  "/home/jerry/Project/cs2-analytics/ml/evaluation/decision_threshold.txt": {
+    "mtime": 1778480042.1290398,
+    "hash": "ce09e19a41ada2a82b5f7c08cf663b2f"
+  },
+  "/home/jerry/Project/cs2-analytics/ml/evaluation/calibration_curve.png": {
+    "mtime": 1778480042.1694655,
+    "hash": "1438ede2edf4d7ac913b8ffcd5c44ea8"
+  },
+  "/home/jerry/Project/cs2-analytics/ml/evaluation/confusion_matrix.png": {
+    "mtime": 1778480042.2015095,
+    "hash": "951f3e31ff891dfc640c9bba916ddf5e"
   }
 }

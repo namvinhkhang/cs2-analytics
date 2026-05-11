@@ -179,3 +179,19 @@ tier-2/3/4 prospect, with tier-above thresholds, trend direction, and a numeric
 - Verified targeted pytest, ruff, mypy, and the full pytest suite.
 - Blocked on live dbt run/test until the two new RAW tables are created in
   Snowflake by a role with ownership/DDL privileges on `CS2_ANALYTICS.RAW`.
+
+## Graphify Refresh - 2026-05-11
+
+- [x] Rebuild the knowledge graph for the repository with graphify, excluding dot-prefixed directories.
+- [x] Review generated graph outputs for a non-empty graph and report sections.
+
+## Review
+
+- Rebuilt `graphify-out/graph.json`, `graphify-out/graph.html`,
+  `graphify-out/GRAPH_REPORT.md`, `graphify-out/manifest.json`, and
+  `graphify-out/cost.json` from the current codebase.
+- Verified the graph is non-empty with 1,280 nodes, 1,718 edges, and 163
+  communities.
+- Verified no graph node source paths live under dot-prefixed directories.
+- Token benchmark estimates ~36.8x fewer tokens per query than reading the
+  corpus directly.

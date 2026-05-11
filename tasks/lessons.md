@@ -12,3 +12,4 @@
 - A binary classifier's default `0.5` threshold can be wrong for imbalanced products, but recall-heavy thresholds can over-alert; for Upset Tracker, prefer a balanced threshold with an alert-rate cap near the validation upset base rate.
 - Do not invent player-level clutch metrics when raw player stats do not contain clutch events; document the missing source and use available stats until round/event-level clutch data is persisted.
 - Hidden Gem Scout needs a recent sample-size floor; require enough recent stat rows before flagging a player so one-off games do not become prospect signals.
+- When graphifying the current codebase after the user says to ignore dot-prefixed folders, filter every detected path with any directory part beginning with `.` before extraction so planning/cache metadata does not pollute the graph.
