@@ -18,3 +18,4 @@
 - Streamlit numeric sliders need a max value greater than the min value even when filtered data is empty or a column is missing; wrap computed slider bounds so browser-only failures are covered by tests.
 - Dashboard refresh workflows must ingest and load any new raw source before exporting snapshots, and dbt selectors must include upstream parents when changed dimensions like `dim_teams` need rebuilding; final mart-only runs can leave Streamlit showing stale metadata.
 - GitHub Actions that run as the dbt `TRANSFORMER` role must not create raw Snowflake tables in `RAW`; keep raw DDL as one-time setup/admin SQL, then grant the action role the minimum `SELECT`/`INSERT` table privileges it needs for COPY and dbt sources.
+- Snowflake `COPY INTO ... FROM @RAW.stage` requires the action role to have `USAGE` on the external stage as well as table `INSERT`; granting only raw table SELECT/INSERT is not enough.
