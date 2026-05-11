@@ -100,6 +100,65 @@ def test_upset_tracker_display_frame_uses_team_names_instead_of_raw_ids() -> Non
     assert display.loc[0, "team_a_region"] == "Unknown"
 
 
+def test_upset_tracker_display_frame_hides_series_level_map_name() -> None:
+    """Series-grain Upset Tracker rows should not show an always-null map field."""
+    module = _load_module(REPO_ROOT / "dashboard" / "pages" / "1_Upset_Tracker.py")
+    frame = pd.DataFrame(
+        [
+            {
+                "upset_probability": 0.72,
+                "played_at": "2026-05-10",
+                "match_id": "2394126",
+                "team_a_name": "Spirit",
+                "team_b_name": "The MongolZ",
+                "map_name": None,
+                "ranking_delta": 3,
+            }
+        ]
+    )
+
+    display = module._display_frame(frame)
+
+    assert "map_name" not in display.columns
+
+
+def test_upset_tracker_filters_do_not_render_map_selector() -> None:
+    """The page should not expose map filters while Upset Tracker is series-grain."""
+    module = _load_module(REPO_ROOT / "dashboard" / "pages" / "1_Upset_Tracker.py")
+    frame = pd.DataFrame(
+        [
+            {
+                "match_id": "2394126",
+                "team_a_region": "Europe",
+                "team_b_region": "Asia",
+                "map_name": None,
+                "ranking_delta": 3,
+                "is_upset": 0,
+            }
+        ]
+    )
+
+    class FakeControl:
+        def multiselect(self, label: str, options: list[str], default: list[str]) -> list[str]:
+            assert label != "Maps"
+            return default
+
+        def slider(self, *_args: object, **kwargs: object) -> int:
+            return int(kwargs["value"])
+
+        def selectbox(self, _label: str, options: list[str]) -> str:
+            return options[0]
+
+    class FakeStreamlit:
+        def columns(self, count: int) -> list[FakeControl]:
+            assert count == 3
+            return [FakeControl() for _ in range(count)]
+
+    filtered = module._filter_matches(frame, FakeStreamlit())
+
+    assert len(filtered) == 1
+
+
 def test_hidden_gem_display_frame_hides_player_and_team_ids_when_names_exist() -> None:
     """Player/team IDs are technical keys and should not crowd the public table."""
     module = _load_module(REPO_ROOT / "dashboard" / "pages" / "2_Hidden_Gem_Scout.py")

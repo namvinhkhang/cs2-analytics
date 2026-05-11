@@ -70,6 +70,16 @@ Hidden Gem Scout and Upset Tracker remain SQL-first. Modern data should come fro
 
 ## Active Plan
 
+- [x] Remove series-inapplicable map controls from Upset Tracker dashboard.
+  - [x] Add regression tests for hiding `map_name` from the table and filters.
+  - [x] Remove `map_name` from the display columns and filter controls.
+  - [x] Run focused dashboard tests and lint.
+
+- [x] Investigate why Upset Tracker `map_name` values are all null.
+  - [x] Trace `map_name` from raw CS API match ingestion through dbt marts.
+  - [x] Check whether dashboard snapshots preserve or drop the field.
+  - [x] Identify root cause and recommend the smallest fix.
+
 - [x] Tune Upset Tracker classification threshold for balanced upset predictions.
   - [x] Measure default `0.5` threshold confusion matrix and class recall.
   - [x] Add regression tests for validation-based threshold selection.
@@ -103,6 +113,22 @@ tier-2/3/4 prospect, with tier-above thresholds, trend direction, and a numeric
   - [x] Upset Tracker and Hidden Gem model upgrades.
 
 ## Review
+
+- Removed the series-inapplicable `map_name` column and Maps multiselect from
+  the Upset Tracker Streamlit page. The page now exposes three filters:
+  Regions, Ranking delta floor, and Outcome label. Added dashboard regression
+  tests that prove `map_name` stays out of the display table and the Maps
+  selector is not rendered. Verification: `uv run pytest
+  tests/test_dashboard_pages.py` passed with 11 tests, and `uv run ruff check
+  dashboard/pages/1_Upset_Tracker.py tests/test_dashboard_pages.py` passed.
+
+- Upset Tracker `map_name` values are all null because CS API match ingestion
+  currently emits one series-level record per match and hardcodes
+  `map_name = None` in `CSAPIMatch.to_match_record()`. The live CS API
+  `/matches/` payload does include a `maps` array with map names and scores,
+  but the parser intentionally drops it. dbt preserves `m.map_name` through
+  `fact_matches` and `mart_upset_features`, so the dashboard snapshot is
+  reflecting upstream nulls rather than losing the column during export/load.
 
 - Fixed Hidden Gem Scout current-team correctness by ingesting CS API `/players/stats/raw`
   rows as current player profile snapshots with `match_id = null`, so they update
