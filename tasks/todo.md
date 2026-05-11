@@ -272,3 +272,10 @@ tier-2/3/4 prospect, with tier-above thresholds, trend direction, and a numeric
 - [x] Commit changed dashboard snapshots and weekly ML artifacts back to the branch.
 - [x] Document required GitHub repository secrets and manual run behavior in README.
 - [x] Add tests that lock the workflow's required schedule and command contract.
+
+## GitHub Actions Setup Docs - 2026-05-11
+
+- [x] Add a setup section before daily operations in README.
+- [x] Explain the post-PR merge GitHub Actions setup flow.
+- [x] Clarify where to add repository secrets and how to run the first manual refresh.
+- [x] Verify the docs-only change and commit it.
