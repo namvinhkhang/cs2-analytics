@@ -129,9 +129,29 @@ def cs2_weekly_rankings_dag() -> None:
         log.info("player_rankings_ingestion_complete", count=count, date=this_monday)
         return count
 
-    # Both tasks are independent — run in parallel
+    @task()
+    def ingest_csapi_weekly_profile() -> dict[str, int]:
+        """Run the deeper CS API weekly profile for rolling-window marts."""
+        # Import inside the task so DagBag parsing stays lightweight and env-safe.
+        from scripts.bootstrap_csapi import run_profile
+
+        ranking_count, match_count, player_count = asyncio.run(run_profile("weekly"))
+        log.info(
+            "csapi_weekly_profile_ingestion_complete",
+            team_rankings=ranking_count,
+            matches=match_count,
+            player_stats=player_count,
+        )
+        return {
+            "team_rankings": ranking_count,
+            "matches": match_count,
+            "player_stats": player_count,
+        }
+
+    # Tasks are independent — run in parallel
     ingest_team_rankings()
     ingest_player_rankings()
+    ingest_csapi_weekly_profile()
 
 
 cs2_weekly_rankings_dag()

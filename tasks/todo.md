@@ -195,3 +195,70 @@ tier-2/3/4 prospect, with tier-above thresholds, trend direction, and a numeric
 - Verified no graph node source paths live under dot-prefixed directories.
 - Token benchmark estimates ~36.8x fewer tokens per query than reading the
   corpus directly.
+
+## v1 Future Work Continuation - 2026-05-11
+
+- [x] Dispatch independent agents for pressure-source research, CS API bootstrap profiles, and dashboard input mapping.
+- [x] Integrate CS API daily, weekly, and backfill bootstrap profiles with tests and Airflow wiring.
+- [x] Convert pressure-source research into the next safe Choke/Clutch implementation step.
+- [x] Convert dashboard input mapping into a scoped Streamlit dashboard implementation step.
+- [x] Run targeted tests for changed files, then `uv run ruff check .`.
+- [x] Update `.planning/FUTURE_WORK_PLAN.md` and this review section with what shipped and what remains.
+
+## Review - v1 Future Work Continuation
+
+- Started from `.planning/FUTURE_WORK_PLAN.md`.
+- Checked `tasks/lessons.md` before implementation; key constraints are to keep provider IDs aligned, avoid invented clutch metrics, and keep long CS API bootstraps visibly bounded.
+- Added CS API bootstrap profiles:
+  - `daily`: bounded recent match/player-stat refresh plus rankings and current player profiles.
+  - `weekly`: deeper rolling-window refresh for Hidden Gem Scout.
+  - `backfill`: explicit opt-in only with larger resumable chunks.
+- Added per-output S3 existence checks so scheduled profile reruns skip already-written raw objects instead of overwriting same-day data.
+- Wired Airflow daily and weekly DAGs to run the matching CS API profile and updated the Airflow Docker image/compose mounts so `scripts.bootstrap_csapi` is importable in-container.
+- Added `README.md` run commands for CS API profiles, dbt refreshes, ML training, and Airflow startup.
+- Pressure-source research result: next Choke/Clutch implementation should add CS API map-grain ingestion for exact map overtime W/L; lead-blown, halftime comeback, bracket, and elimination metrics remain proxy/unavailable until round or bracket data exists with an identity map.
+- Dashboard research result: first Streamlit slice should read cached mart snapshot Parquet files plus versioned ML artifacts, not query Snowflake on every page refresh.
+- Verification: `uv run pytest tests/test_bootstrap_csapi.py tests/test_dags/test_airflow_runtime_packaging.py tests/test_dags/test_daily_matches.py tests/test_dags/test_dag_structure.py tests/test_dags/test_dbt_run_dag.py` passed with 31 tests and 1 existing Airflow deprecation warning.
+- Verification: `uv run ruff check .` passed.
+- Verification: `uv run pytest` passed with 214 tests and 1 existing Airflow deprecation warning.
+
+## Dashboard Workstream 3 - 2026-05-11
+
+- [x] Build the Streamlit dashboard slice from `.planning/FUTURE_WORK_PLAN.md` while leaving `dashboard/pages/3_Choke_Clutch_Profile.py` out until that product is implemented.
+- [x] Add dashboard dependencies and shared cached data/model helpers.
+- [x] Add Home, Upset Tracker, and Hidden Gem Scout pages backed by cached mart snapshots and versioned ML artifacts.
+- [x] Add smoke/import tests for the implemented dashboard pages and helper modules.
+- [x] Update README dashboard commands and note that Choke/Clutch is intentionally deferred.
+- [x] Verify with targeted dashboard tests.
+- [x] Verify with `uv run ruff check .`.
+- [x] Attempt `uv run streamlit run dashboard/Home.py` locally or document any environment blocker.
+
+## Review - Dashboard Workstream 3
+
+- Added a Streamlit dashboard shell with Home, Upset Tracker, and Hidden Gem Scout pages. Choke/Clutch remains intentionally absent until Workstream 1 is implemented.
+- Added cached Parquet snapshot helpers, Snowflake export/query helpers, model-card/threshold helpers, batch Upset Tracker scoring, and selected-row SHAP explanations.
+- Added `dashboard.export_snapshots` so Snowflake reads happen in an explicit snapshot export step instead of on every page refresh.
+- Added `streamlit` and `plotly` dependencies and refreshed `uv.lock`.
+- Updated README dashboard commands for snapshot export and local app startup.
+- Verification: `uv run pytest tests/test_dashboard_helpers.py tests/test_dashboard_pages.py tests/test_dashboard_export.py` passed with 14 tests.
+- Verification: `uv run streamlit run dashboard/Home.py --server.headless true --server.port 8505 --browser.gatherUsageStats false` started successfully, and `curl -fsS http://localhost:8505/_stcore/health` returned `ok`.
+- Verification: `uv run ruff check .` passed.
+- Verification: `uv run pytest` passed with 228 tests and 1 existing Airflow deprecation warning.
+
+## Dashboard Browser Debug - 2026-05-11
+
+- [x] Reproduce dashboard page failures in a real browser with Playwright against localhost.
+- [x] Fix Snowflake snapshot column normalization so uppercase Parquet exports satisfy lowercase dashboard/ML contracts.
+- [x] Fix Streamlit slider bounds for empty or missing numeric filter columns.
+- [x] Fix Upset Tracker match selector labels when match IDs contain null values.
+- [x] Add opt-in Playwright browser smoke tests gated by `CS2_DASHBOARD_BASE_URL`.
+- [x] Verify desktop and mobile screenshots for implemented dashboard pages.
+- [x] Verify with targeted dashboard tests, browser smoke tests, `uv run ruff check .`, and `uv run pytest`.
+
+## Review - Dashboard Browser Debug
+
+- Root cause: exported Snowflake snapshots had uppercase column names, while the dashboard pages and ML scoring expected lowercase mart columns. That made filters look empty, hid real metrics, and raised missing-feature errors.
+- Secondary root cause: Streamlit sliders were created with `min_value=0` and computed `max_value=0` when page data appeared empty.
+- Added `playwright` as a dev dependency and installed Chromium for local browser checks.
+- Verification: `CS2_DASHBOARD_BASE_URL=http://localhost:8505 uv run pytest tests/test_dashboard_browser.py -q` passed with 3 browser checks.
+- Verification: `uv run pytest` passed with 232 tests, 3 skipped opt-in browser tests, and 1 existing Airflow deprecation warning.
