@@ -70,6 +70,24 @@ Hidden Gem Scout and Upset Tracker remain SQL-first. Modern data should come fro
 
 ## Active Plan
 
+- [x] Fix dashboard refresh failure on unused RAW table privileges.
+  - [x] Reproduce the regression locally with tests that require active-only GitHub Action loads.
+  - [x] Remove Faceit, PandaScore, and Liquipedia from the GitHub Action raw-load loop.
+  - [x] Add Snowflake setup grants for active CS API raw tables.
+  - [x] Record the lesson about keeping CI raw loads active-source only.
+  - [x] Run focused workflow, setup, DAG, lint, and YAML checks.
+
+Review: The dashboard refresh failed in GitHub Actions because the workflow tried
+to `COPY INTO RAW.raw_faceit_matches`, an unused legacy source that the
+`TRANSFORMER` role cannot operate on. The Action now loads only active hosted
+dashboard sources: CS API matches/team rankings/player stats, Valve team
+regions, and HLTV round history. Airflow keeps its full optional raw loader.
+Verification passed: `uv run pytest tests/test_github_actions_workflows.py
+tests/test_snowflake_setup_sql.py tests/test_dags/test_dbt_run_dag.py` with 16
+passed and 1 existing Airflow deprecation warning, `uv run ruff check
+tests/test_github_actions_workflows.py tests/test_snowflake_setup_sql.py
+tests/test_dags/test_dbt_run_dag.py`, and a workflow YAML parse smoke check.
+
 - [x] Ensure GitHub Action and Airflow COPY every raw S3 Parquet source.
   - [x] Add regression coverage for the full raw table/stage prefix matrix in GitHub Actions.
   - [x] Add regression coverage for the same raw table/stage prefix matrix in Airflow.

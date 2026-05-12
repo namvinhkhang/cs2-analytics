@@ -156,16 +156,11 @@ jobs:
           from snowflake.connector.errors import ProgrammingError
 
           RAW_LOADS = (
-              ("raw_faceit_matches", "cs2_raw_stage/faceit/matches/"),
-              ("raw_pandascore_matches", "cs2_raw_stage/pandascore/matches/"),
               ("raw_csapi_matches", "cs2_raw_stage/csapi/matches/"),
               ("raw_csapi_team_rankings", "cs2_raw_stage/csapi/team_rankings/"),
               ("raw_csapi_player_stats", "cs2_raw_stage/csapi/player_stats/"),
               ("raw_valve_team_regions", "cs2_raw_stage/valve/team_regions/"),
               ("raw_hltv_round_history", "cs2_raw_stage/hltv_unofficial/round_history/"),
-              ("raw_faceit_players", "cs2_raw_stage/faceit/players/"),
-              ("raw_pandascore_players", "cs2_raw_stage/pandascore/players/"),
-              ("raw_liquipedia_teams", "cs2_raw_stage/liquipedia/teams/"),
           )
 
           database = os.environ["SNOWFLAKE_DATABASE"]
