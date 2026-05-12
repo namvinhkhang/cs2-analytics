@@ -21,3 +21,5 @@
 - Snowflake `COPY INTO ... FROM @RAW.stage` requires the action role to have `USAGE` on the external stage as well as table `INSERT`; granting only raw table SELECT/INSERT is not enough.
 - Normalize team names in Snowflake by lowercasing before regex-stripping non-alphanumeric characters; otherwise uppercase teams like FURIA/MOUZ lose their letters and fail Valve/Liquipedia region joins.
 - When enriching team metadata from Valve, prefer exact case-insensitive team-name matches first and use normalized-name matching only as a fallback; exact matches are safer and easier to audit when users report region mismatches.
+- Do not add streaming/Kafka scope to CS2 Analytics v2 unless the user explicitly asks for real-time event infrastructure; default v2 platform work should stay warehouse-first with Terraform, data quality, MLflow, BI, Discord, and model iteration.
+- When HLTV unofficial map-stat payloads include numeric team IDs that match `dim_teams.team_id`, join marts by team ID instead of normalized team names.

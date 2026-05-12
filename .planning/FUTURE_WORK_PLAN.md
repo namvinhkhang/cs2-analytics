@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Finish the remaining v1 product work by building a trustworthy Choke/Clutch team profile, adding daily and weekly CS API bootstrap profiles, and shipping one dashboard that presents Upset Tracker, Hidden Gem Scout, and Choke/Clutch Profile.
+**Goal:** Finish the final v1 product gap by building a trustworthy Choke/Clutch team profile and adding its dashboard page. CS API bootstrap profiles, the Upset Tracker dashboard, the Hidden Gem Scout dashboard, browser checks, and scheduled dashboard refresh automation are already implemented.
 
-**Architecture:** Keep Snowflake and dbt as the source of truth. Ingestion profiles write raw Parquet, dbt converts raw data into stable marts, and the dashboard reads only marts plus versioned ML artifacts.
+**Architecture:** Keep Snowflake and dbt as the source of truth. Ingestion profiles write raw Parquet, dbt converts raw data into stable marts, and the dashboard reads cached mart snapshots plus versioned ML artifacts.
 
 **Tech Stack:** Python, Pydantic, boto3, CS API, Snowflake, dbt, XGBoost, SHAP, Streamlit, Plotly, pytest.
 
@@ -14,8 +14,11 @@
 
 - Upset Tracker is trained from CS API-backed `mart_upset_features`.
 - Hidden Gem Scout uses CS API player stats, current-team snapshots, team ranking tiers, tier-above thresholds, 90-day benchmark-gap trends, and a 20-row recent eligibility floor.
-- Choke/Clutch Profile exists as a mart placeholder/proxy, but true lead-blown and halftime comeback metrics need round or half-level source data before they should be presented as exact.
-- The dashboard is not started.
+- CS API `daily`, `weekly`, and `backfill` profiles are implemented with bounded defaults, environment overrides, S3 skip-existing checks, Airflow wiring, and tests.
+- The Streamlit dashboard ships Home, Upset Tracker, and Hidden Gem Scout pages backed by local mart snapshots and versioned ML artifacts.
+- Dashboard browser smoke tests, desktop/mobile screenshot checks, and GitHub Actions dashboard refresh automation are implemented.
+- Choke Profile now uses best-effort `hltv_unofficial` round history exported through the optional HLTV mapstats cache helper. The dashboard page is still intentionally absent until the mart and snapshot/export path are fully verified.
+- Player-level clutch, bracket, and elimination-match pressure remain out of v1 scope unless trustworthy event/bracket source data is added later.
 
 ## Workstream 1: Choke/Clutch Team Profile
 
@@ -36,24 +39,23 @@
   - 2026-05-11 decision: keep the v1 path CS API-first to preserve team ID alignment.
   - CS API `/matches/` map scores can support exact map W/L and inferred CS2 overtime when map total rounds are greater than 24.
   - Lead-blown, halftime comeback, bracket, and elimination metrics must stay proxy/unavailable until true round or bracket data is ingested with an identity map.
-- [ ] Add failing tests for the chosen source payloads.
-- [ ] Add typed raw model fields for the chosen map-grain pressure data.
-- [ ] Extend `bootstrap_csapi.py` to ingest the selected pressure-profile source.
-- [ ] Add raw Snowflake table, `COPY INTO`, dbt source, and staging model.
-- [ ] Rebuild `mart_choke_profile` with:
-  - lead-blown rate when leading by 10+ rounds,
-  - comeback rate when trailing by 3+ rounds at halftime,
-  - overtime win/loss record,
-  - elimination-match win rate,
-  - winners' bracket or non-elimination win rate,
-  - metric quality flags when a metric is proxy-based.
+- [x] Add failing tests for unofficial HLTV round-history payload parsing.
+- [x] Add typed raw model fields for HLTV round rows, including side winners, team winners, score state, map name, played date, and inferred CS2 overtime.
+- [x] Add a cached JSON bootstrap path for HLTV mapstats.
+- [x] Add raw Snowflake table, `COPY INTO`, dbt source, and staging model for HLTV round history.
+- [x] Rebuild `mart_choke_profile` with:
+  - exact map W/L record,
+  - exact inferred overtime win/loss record,
+  - exact largest-lead, 5+ lead-blown, halftime collapse, and halftime comeback metrics,
+  - null bracket/elimination metrics until trustworthy source data exists,
+  - metric quality flags for exact and unavailable metrics.
 - [ ] Add dbt schema tests for accepted values, non-negative counts, and one row per team grain.
 - [ ] Verify with `uv run pytest tests/test_marts/test_choke_profile_sql.py tests/test_csapi_client.py`.
 - [ ] Verify with `uv run dbt run --select mart_choke_profile --project-dir dbt_project --profiles-dir dbt_project`.
 - [ ] Verify with `uv run dbt test --select mart_choke_profile --project-dir dbt_project --profiles-dir dbt_project`.
 - [ ] Commit as `feat(choke-profile): compute team pressure metrics`.
 
-## Workstream 2: CS API Bootstrap Profiles
+## Completed Workstream 2: CS API Bootstrap Profiles
 
 **Goal:** Make `bootstrap_csapi.py` safe to run frequently by supporting explicit daily and weekly profiles with bounded API volume, clear logs, and environment overrides.
 
@@ -91,11 +93,11 @@
 - [x] Wire Airflow schedules so daily and weekly runs call the matching profile.
 - [x] Document recommended manual commands in `README.md` or setup docs.
 - [x] Verify with targeted pytest and `uv run ruff check .`.
-- [ ] Commit as `feat(csapi): add bootstrap profiles`.
+- [x] Commit as `feat(csapi): add bootstrap profiles`.
 
-## Workstream 3: Product Dashboard
+## Mostly Completed Workstream 3: Product Dashboard
 
-**Goal:** Build a public dashboard that presents every v1 feature without re-querying Snowflake on every page refresh.
+**Goal:** Build a public dashboard that presents v1 features without re-querying Snowflake on every page refresh. Home, Upset Tracker, and Hidden Gem Scout are implemented; Choke/Clutch remains deferred until Workstream 1 is complete.
 
 **Files:**
 - Create: `dashboard/Home.py`
@@ -133,15 +135,18 @@
   - expose metric quality flags.
 - [x] Add a smoke test or import test for every implemented dashboard page.
 - [x] Run the app locally with `uv run streamlit run dashboard/Home.py`.
-- [ ] Verify desktop and mobile layouts with screenshots before deployment.
-- [ ] Deploy to Streamlit Community Cloud and add the URL to `README.md`.
-- [ ] Commit as `feat(dashboard): add product dashboard`.
+- [x] Verify desktop and mobile layouts with screenshots before deployment.
+- [x] Deploy to Streamlit Community Cloud and add the URL to `README.md`: https://cs2-analytics.streamlit.app/
+- [x] Add scheduled GitHub Actions dashboard refresh workflow.
+- [x] Commit as `feat(dashboard): add product dashboard`.
 
 ## Release Gate
 
-- [ ] `uv run ruff check .` passes.
-- [ ] `uv run pytest` passes.
+- [x] `uv run ruff check .` passes.
+- [x] `uv run pytest` passes.
 - [ ] `uv run dbt run --project-dir dbt_project --profiles-dir dbt_project` passes against Snowflake.
 - [ ] `uv run dbt test --project-dir dbt_project --profiles-dir dbt_project` passes against Snowflake.
 - [ ] Dashboard smoke test passes.
-- [ ] README has manual run commands for ingestion, dbt, ML training, and dashboard.
+- [ ] Choke/Clutch Profile page renders from `mart_choke_profile` with metric quality flags.
+- [x] README has manual run commands for ingestion, dbt, ML training, and dashboard.
+- [x] README includes the deployed Streamlit URL.

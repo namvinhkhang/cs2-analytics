@@ -104,13 +104,13 @@ tier-2/3/4 prospect, with tier-above thresholds, trend direction, and a numeric
   - [x] CS API daily, weekly, and backfill bootstrap profiles.
   - [x] Streamlit dashboard for every product feature.
 - [x] Create `.planning/V2_PLAN.md` for platform expansion:
-  - [x] Kafka streaming and real-time dashboard updates.
   - [x] Terraform infrastructure.
   - [x] Great Expectations data quality.
   - [x] MLflow experiment tracking.
   - [x] Metabase or Superset plus dbt Semantic Layer.
   - [x] Discord bot integration.
   - [x] Upset Tracker and Hidden Gem model upgrades.
+- [x] Remove streaming/Kafka scope from `.planning/V2_PLAN.md` after product clarification.
 
 ## Review
 
@@ -259,6 +259,24 @@ tier-2/3/4 prospect, with tier-above thresholds, trend direction, and a numeric
 - Root cause: CS API ranking records hard-coded `region = 'global'`, and the dashboard simply displayed that mart value. CS API `/rankings/` does not return a region field, so CS API records now keep region null and `dim_teams` enriches region from unique Liquipedia team-name matches when available.
 - Added `team_a_name` and `team_b_name` to `mart_upset_features`; added `team_name` and `team_region` to `mart_hidden_gems`; dashboard tables now prefer names and hide raw provider IDs when names/display names are present.
 
+## HLTV Choke Profile ID Join - 2026-05-12
+
+- [x] Confirm cached HLTV map-stat payload includes numeric team IDs.
+- [x] Update `mart_choke_profile` to join `dim_teams` by `team_id`.
+- [x] Add contract coverage that prevents falling back to normalized team-name joins.
+- [x] Verify parser, mart SQL contract, lint, full pytest, and dbt parse.
+
+## Review - HLTV Choke Profile ID Join
+
+- Confirmed `data/hltv_cache/map_stats/228493.json` carries `team1.id = 6248`
+  and `team2.id = 7020`, which align with `dim_teams.team_id`.
+- Updated the choke-profile mart to use `ta.team_id = t.team_id` for team
+  metadata enrichment instead of fuzzy normalized-name matching.
+- Verification: focused HLTV/mart tests passed with 8 tests; `uv run ruff
+  check .` passed; `uv run pytest` passed with 262 tests, 3 skipped, and 1
+  existing Airflow warning; `dbt parse --no-partial-parse` passed with dummy
+  Snowflake env vars and existing `accepted_values` deprecation warnings.
+
 ## Valve Region Enrichment Plan - 2026-05-11
 
 Goal: use Valve's public `counter-strike_regional_standings` repo only to fill missing team regions in Upset Tracker and related marts. Do not replace CS API match rankings or world-ranking features in this slice.
@@ -374,3 +392,26 @@ Architecture: add a small Valve standings ingestion path that discovers the late
 - [x] Explain the post-PR merge GitHub Actions setup flow.
 - [x] Clarify where to add repository secrets and how to run the first manual refresh.
 - [x] Verify the docs-only change and commit it.
+
+## v1 Plan Reality Refresh - 2026-05-11
+
+- [x] Update `.planning/FUTURE_WORK_PLAN.md` so it reflects that CS API profiles, the implemented dashboard pages, browser checks, and dashboard refresh automation are complete.
+- [x] Keep Choke/Clutch Profile as the remaining v1 product gap, with map-grain CS API ingestion and metric quality flags as the next implementation target.
+- [x] Record deployed Streamlit Community Cloud URL: https://cs2-analytics.streamlit.app/
+
+## HLTV Unofficial Choke Profile Source - 2026-05-11
+
+- [x] Add tests for normalizing cached HLTV mapstats round history into team-level round winner rows.
+- [x] Add a typed HLTV unofficial round-history raw schema and ingestion entrypoint that writes compact Parquet only.
+- [x] Add Snowflake RAW DDL, dbt source, and staging model for `raw_hltv_round_history`.
+- [x] Rebuild `mart_choke_profile` from exact round-history rows with honest unavailable flags for clutch/bracket data.
+- [x] Add optional Node helper/docs for fetching HLTV mapstats slowly into local JSON cache without proxy rotation.
+- [x] Verify targeted tests, dbt parse, ruff, and full pytest.
+
+## Review - HLTV Unofficial Choke Profile Source
+
+- Added `HLTVMatchMapStats` normalization for cached HLTV mapstats JSON, producing one compact `hltv_unofficial` row per round with side, team winner, score state, overtime flag, and source metadata.
+- Added local/S3 bootstrap support through `scripts/bootstrap_hltv_round_history.py`; raw demo files are not used or stored.
+- Added an optional `tools/fetch_hltv_mapstats.mjs` helper that fetches mapstats JSON slowly into `data/hltv_cache/`, which is gitignored. The helper requires local browser automation dependencies and skips already cached files.
+- Added `raw_hltv_round_history`, `stg_hltv_round_history`, Airflow COPY support, and a round-history-backed `mart_choke_profile` with exact largest-lead, 5+ lead-blown, halftime collapse/comeback, overtime, and close-map metrics. Clutch and bracket data stay explicitly unavailable for v1.
+- Verification: targeted pytest passed with 14 tests and 1 existing Airflow warning; `dbt parse --no-partial-parse` passed with existing accepted-values deprecation warnings; `uv run ruff check .` passed; `uv run pytest` passed with 260 tests, 3 skipped browser tests, and 1 existing Airflow warning.
