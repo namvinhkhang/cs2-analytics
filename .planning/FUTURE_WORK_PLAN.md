@@ -247,12 +247,11 @@
 - [x] Keep all profile defaults overrideable through environment variables.
 - [x] Daily profile default:
   - ingest current team rankings,
-  - refresh current player profile snapshots,
-  - ingest recent matches and player stats with a small page cap,
+  - ingest recent matches and match-anchored player stats with a small page cap,
   - run in less than one Snowflake credit cycle when followed by targeted dbt models.
 - [x] Weekly profile default:
   - ingest a deeper match window,
-  - refresh rankings and player snapshots,
+  - refresh rankings,
   - collect enough recent player stats for Hidden Gem rolling windows,
   - support continuation without duplicating existing S3 objects.
 - [x] Backfill profile default:

@@ -80,7 +80,7 @@ def _call_kwargs(
     return dict(next(kwargs for name, kwargs in calls if name == call_name))
 
 
-def test_daily_profile_uses_bounded_defaults_and_refreshes_profiles(
+def test_daily_profile_uses_bounded_match_stat_defaults(
     fake_bootstrap_client: type[FakeCSAPIClient],
 ) -> None:
     result = asyncio.run(bootstrap_csapi.run_profile("daily"))
@@ -102,7 +102,7 @@ def test_daily_profile_uses_bounded_defaults_and_refreshes_profiles(
     assert player_kwargs["limit"] == 50
     assert player_kwargs["pages"] == 3
     assert player_kwargs["max_matches"] == 150
-    assert player_kwargs["refresh_current_profiles"] is True
+    assert "refresh_current_profiles" not in player_kwargs
 
 
 def test_weekly_profile_uses_deeper_window_for_hidden_gem_rollups(
@@ -123,7 +123,7 @@ def test_weekly_profile_uses_deeper_window_for_hidden_gem_rollups(
     assert player_kwargs["limit"] == 100
     assert player_kwargs["pages"] == 30
     assert player_kwargs["max_matches"] == 3000
-    assert player_kwargs["refresh_current_profiles"] is True
+    assert "refresh_current_profiles" not in player_kwargs
 
 
 def test_backfill_profile_requires_explicit_opt_in(
@@ -154,7 +154,7 @@ def test_backfill_profile_uses_larger_resumable_chunks_when_allowed(
     assert player_kwargs["limit"] == 100
     assert player_kwargs["pages"] == 100
     assert player_kwargs["max_matches"] == 10_000
-    assert player_kwargs["refresh_current_profiles"] is False
+    assert "refresh_current_profiles" not in player_kwargs
 
 
 def test_profile_specific_environment_overrides_win_over_global_defaults(

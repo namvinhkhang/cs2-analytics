@@ -88,11 +88,13 @@ def test_player_leaderboard_uses_current_player_team_for_rankings() -> None:
     assert "left join current_players cp" in sql
 
 
-def test_player_union_prefers_csapi_current_profiles() -> None:
-    """Current CS API profile rows should survive profile-level deduplication."""
+def test_player_union_treats_csapi_as_match_level_modern_fallback() -> None:
+    """CS API player rows should be match-anchored instead of profile snapshots."""
     sql = Path("dbt_project/models/intermediate/int_players_unioned.sql").read_text()
+    staging_sql = Path("dbt_project/models/staging/stg_csapi_player_stats.sql").read_text()
 
-    assert "when match_id is null and source = 'csapi' then 1" in sql
+    assert "when match_id is null and source = 'csapi' then 1" not in sql
+    assert "and match_id is not null" in staging_sql
 
 
 def test_modern_intermediate_models_exclude_kaggle_sources() -> None:

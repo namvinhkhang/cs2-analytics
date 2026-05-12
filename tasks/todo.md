@@ -1,5 +1,28 @@
 # CS2-Era Hidden Gem Scout Implementation
 
+## Active Plan - Remove CS API Raw Player Stats Endpoint
+
+- [x] Add/adjust tests so CS API player-stat ingestion fails if it calls `/players/stats/raw`.
+- [x] Remove the raw-player-profile fetch path from the CS API client and bootstrap profile config.
+- [x] Update docs and lessons to state that player stats come from `/matches/` plus `/matches/{matchid}/stats`.
+- [x] Run targeted CS API/bootstrap tests, ruff, and relevant docs/workflow tests.
+
+Review: CS API player-stat ingestion no longer calls the aggregate raw player
+stats endpoint. The client now writes only match-anchored rows from `/matches/`
+plus `/matches/{matchid}/stats`, and the bootstrap profile config no longer has
+the `refresh_current_profiles` knob. README, dbt model comments, staging docs,
+and Workstream 2 notes now describe match-anchored player stats instead of
+current player profile snapshots.
+
+Verification:
+
+- Red check: `tests/test_csapi_client.py::test_ingest_player_stats_writes_csapi_prefix`
+  failed until the raw endpoint call was removed.
+- `uv run pytest tests/test_csapi_client.py tests/test_bootstrap_csapi.py tests/test_modern_hidden_gems_sql.py tests/test_github_actions_workflows.py -q` passed with 49 tests.
+- `uv run ruff check .` passed.
+- `SNOWFLAKE_ACCOUNT=dummy SNOWFLAKE_USER=dummy SNOWFLAKE_PRIVATE_KEY_PATH=/tmp/dummy_snowflake_key.p8 SNOWFLAKE_WAREHOUSE=dummy SNOWFLAKE_DATABASE=CS2_ANALYTICS uv run dbt parse --project-dir dbt_project --profiles-dir dbt_project --no-partial-parse` passed with existing accepted-values deprecation warnings.
+- `rg -n "players/stats/raw" src scripts tests dbt_project airflow .github README.md -S` found no runtime/docs references.
+
 ## Active Plan - Sync Workstream 3 Future Work Checkboxes
 
 - [x] Audit Workstream 3 dashboard checkboxes against current repo files, tests, and GitHub Actions evidence.
@@ -344,14 +367,13 @@ tier-2/3/4 prospect, with tier-above thresholds, trend direction, and a numeric
   `fact_matches` and `mart_upset_features`, so the dashboard snapshot is
   reflecting upstream nulls rather than losing the column during export/load.
 
-- Fixed Hidden Gem Scout current-team correctness by ingesting CS API `/players/stats/raw`
-  rows as current player profile snapshots with `match_id = null`, so they update
-  `dim_players` without becoming fake match facts.
+- Fixed Hidden Gem Scout current-team correctness by deriving player team context
+  from match-anchored CS API player stats instead of unanchored aggregate rows.
 - Updated `mart_hidden_gems` and `mart_player_leaderboard` to tier/rank players by
   `dim_players` current team first, falling back to the historical match team only
-  when no current profile exists.
-- Updated `int_players_unioned` so CS API current profile snapshots survive
-  profile-level deduplication ahead of older provider profile rows.
+  when no latest player dimension row exists.
+- Updated `int_players_unioned` so CS API remains the CS2-era match-stat fallback
+  behind richer FACEIT/PandaScore rows.
 - Verified live CS API on 2026-05-11: player `11893` is `zywoo`, team `9565`
   Vitality; CS API rankings have Vitality rank 1.
 - Verification: `uv run ruff check .` passed; `uv run pytest` passed with

@@ -52,7 +52,7 @@ models:
         description: "Source selected for the team's world_ranking."
 
   - name: dim_players
-    description: "Player dimension with latest profile data"
+    description: "Player dimension with latest available player data"
     columns:
       - name: player_id
         data_tests:

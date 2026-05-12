@@ -118,8 +118,7 @@ uv run python -m dashboard.export_snapshots --mart mart_upset_features --mart ma
 ```
 
 The daily profile is bounded for frequent use. It refreshes current rankings,
-current player profile snapshots, recent matches, and recent player stats with
-small default page caps.
+recent matches, and match-anchored player stats with small default page caps.
 
 ## Weekly Operations
 

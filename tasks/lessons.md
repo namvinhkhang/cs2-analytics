@@ -4,7 +4,7 @@
 - In dbt on Snowflake, `+schema: MARTS` appends to the target schema by default, creating names like `STAGING_MARTS`; add a `generate_schema_name` macro when the intended physical schemas are exactly `STAGING` and `MARTS`, and grant `CREATE SCHEMA` on the database to the dbt role.
 - For Upset Tracker, keep match outcomes and rankings in the same provider ID space. Use CS API matches with CS API rankings by default; do not train on FACEIT/PandaScore matches joined to CS API rankings without an explicit identity map.
 - For Hidden Gem Scout, do not rely on the old Kaggle dataset as the primary source because it only covers 2015-11-03 through 2020-03-18; use CS2-era sources such as VRS rankings and current player stats for 2023-09 onward.
-- CS API `/players/stats/raw` does not preserve a trustworthy match date or real match ID for trend marts; use `/matches/` plus `/matches/{matchid}/stats` when Hidden Gem Scout needs CS2-era match-level player form.
+- Do not ingest CS API `/players/stats/raw` for CS2 Analytics player marts; even though it is paginated, `/matches/` plus `/matches/{matchid}/stats` preserves match ID and date for warehouse trend marts.
 - Long public-API bootstraps need visible progress logs and chunk controls; otherwise a slow sequential endpoint like CS API match stats looks frozen and a rate limit can waste the whole run.
 - Do not join modern CS API player team IDs against legacy or third-party team rows without normalization: provider IDs can be names or unrelated IDs, while CS API uses numeric HLTV-style IDs.
 - ML feature builders must normalize nullable warehouse booleans before casting to integers; CS API series-level rows can leave flags such as `is_overtime` null.

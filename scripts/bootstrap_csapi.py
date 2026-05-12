@@ -50,7 +50,6 @@ class CSAPIBootstrapProfile:
     max_matches: int | None
     request_delay_seconds: float
     progress_interval: int
-    refresh_current_profiles: bool
     output_filename: str
 
 
@@ -207,22 +206,6 @@ def _read_profile_float_env(
     return max(value, minimum)
 
 
-def _read_profile_bool_env(profile: ProfileName, suffix: str, default: bool) -> bool:
-    """Read a boolean profile override with profile-specific precedence."""
-    resolved = _read_profile_raw_env(profile, suffix)
-    if resolved is None:
-        return default
-
-    name, raw_value = resolved
-    normalized = raw_value.casefold()
-    if normalized in {"1", "true", "yes", "y", "on"}:
-        return True
-    if normalized in {"0", "false", "no", "n", "off"}:
-        return False
-    logger.warning("invalid_bool_env_using_default", name=name, value=raw_value, default=default)
-    return default
-
-
 def _read_profile_string_env(profile: ProfileName, suffix: str) -> str | None:
     """Read a string profile override with profile-specific precedence."""
     resolved = _read_profile_raw_env(profile, suffix)
@@ -248,14 +231,13 @@ def _default_profile(profile: ProfileName) -> CSAPIBootstrapProfile:
     if profile == "daily":
         return CSAPIBootstrapProfile(
             profile=profile,
-            description="bounded daily refresh for rankings, current profiles, and recent form",
+            description="bounded daily refresh for rankings, recent matches, and player form",
             match_limit=50,
             match_offset=0,
             match_pages=3,
             max_matches=150,
             request_delay_seconds=0.5,
             progress_interval=10,
-            refresh_current_profiles=True,
             output_filename="",
         )
     if profile == "weekly":
@@ -268,7 +250,6 @@ def _default_profile(profile: ProfileName) -> CSAPIBootstrapProfile:
             max_matches=3000,
             request_delay_seconds=1.0,
             progress_interval=25,
-            refresh_current_profiles=True,
             output_filename="",
         )
     return CSAPIBootstrapProfile(
@@ -280,7 +261,6 @@ def _default_profile(profile: ProfileName) -> CSAPIBootstrapProfile:
         max_matches=10_000,
         request_delay_seconds=1.0,
         progress_interval=50,
-        refresh_current_profiles=False,
         output_filename="",
     )
 
@@ -344,11 +324,6 @@ def build_profile_config(
         defaults.progress_interval,
         minimum=0,
     )
-    refresh_current_profiles = _read_profile_bool_env(
-        resolved_profile,
-        "REFRESH_CURRENT_PROFILES",
-        defaults.refresh_current_profiles,
-    )
     output_filename = _read_profile_string_env(
         resolved_profile,
         "OUTPUT_FILENAME",
@@ -363,7 +338,6 @@ def build_profile_config(
         max_matches=max_matches,
         request_delay_seconds=request_delay_seconds,
         progress_interval=progress_interval,
-        refresh_current_profiles=refresh_current_profiles,
         output_filename=output_filename,
     )
 
@@ -436,7 +410,7 @@ async def run_profile(
     *,
     allow_backfill: bool = False,
 ) -> tuple[int, int, int]:
-    """Fetch ranking/player stat snapshots and upload them to S3 for one profile."""
+    """Fetch rankings, matches, and match-level player stats for one profile."""
     config = build_profile_config(profile, allow_backfill=allow_backfill)
     ingest_date = date.today()
     output_keys = _profile_output_keys(config, ingest_date)
@@ -455,7 +429,6 @@ async def run_profile(
         estimated_match_window=_estimated_match_window(config),
         request_delay_seconds=config.request_delay_seconds,
         progress_interval=config.progress_interval,
-        refresh_current_profiles=config.refresh_current_profiles,
         output_filename=config.output_filename,
     )
     if config.profile == "backfill":
@@ -531,7 +504,6 @@ async def run_profile(
                 request_delay_seconds=config.request_delay_seconds,
                 progress_interval=config.progress_interval,
                 output_filename=config.output_filename,
-                refresh_current_profiles=config.refresh_current_profiles,
                 region=region,
             )
         )

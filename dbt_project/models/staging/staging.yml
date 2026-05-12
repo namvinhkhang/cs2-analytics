@@ -74,7 +74,7 @@ models:
           - not_null
 
   - name: stg_csapi_player_stats
-    description: "Modern CS2 current-form player stats from CS API"
+    description: "Modern CS2 match-level player stats from CS API"
     columns:
       - name: player_id
         data_tests:
@@ -85,7 +85,7 @@ models:
           - accepted_values:
               values: ['csapi']
       - name: match_id
-        description: "Real CS API match ID for match-stat rows; null for current profile snapshots."
+        description: "Real CS API match ID from /matches/{matchid}/stats."
 
   - name: stg_valve_team_regions
     description: "Valve regional standings used only to fill missing team regions."

@@ -1,10 +1,10 @@
--- Dimension: unique players with latest profile info.
+-- Dimension: unique players with latest available player info.
 -- Sourced from deduplicated int_players_unioned (FACEIT priority).
 with players as (
     select * from {{ ref('int_players_unioned') }}
 ),
 
--- Keep most recent profile record per player (latest recorded_at)
+-- Keep the most recent record per player by recorded_at.
 latest as (
     select
         *,

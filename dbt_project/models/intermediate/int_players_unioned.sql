@@ -1,6 +1,6 @@
 -- Union modern player sources and deduplicate by player_id.
--- Profile snapshots prefer CS API because it carries current HLTV-style team
--- context; match rows keep FACEIT/PandaScore priority for richer stat fields.
+-- Match-level rows keep FACEIT/PandaScore priority for richer stat fields,
+-- with CS API used as the modern fallback for CS2-era match stats.
 with faceit as (
     select * from {{ ref('stg_faceit_players') }}
 ),
@@ -22,7 +22,7 @@ unioned as (
 ),
 
 -- Deduplicate: for each (player_id, match_id) combo, prefer FACEIT over PandaScore.
--- For profile-level records (match_id IS NULL), deduplicate by player_id alone.
+-- For profile-level rows from non-CS API sources, deduplicate by player_id alone.
 ranked as (
     select
         *,
@@ -30,7 +30,6 @@ ranked as (
             partition by player_id, coalesce(match_id, '__profile__')
             order by
                 case
-                    when match_id is null and source = 'csapi' then 1
                     when source = 'faceit' then 2
                     when source = 'pandascore' then 3
                     when source = 'csapi' then 4
