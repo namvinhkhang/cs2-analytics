@@ -118,6 +118,36 @@ VALVE_TEAM_REGION_SCHEMA: pa.Schema = pa.schema(
     ]
 )
 
+HLTV_ROUND_HISTORY_SCHEMA: pa.Schema = pa.schema(
+    [
+        pa.field("source", pa.string(), nullable=False),
+        pa.field("map_stats_id", pa.string(), nullable=False),
+        pa.field("match_id", pa.string(), nullable=False),
+        pa.field("event_id", pa.string(), nullable=True),
+        pa.field("event_name", pa.string(), nullable=True),
+        pa.field("map_name", pa.string(), nullable=False),
+        pa.field("played_at", pa.string(), nullable=False),
+        pa.field("round_number", pa.int64(), nullable=False),
+        pa.field("t_team_id", pa.string(), nullable=False),
+        pa.field("t_team_name", pa.string(), nullable=True),
+        pa.field("ct_team_id", pa.string(), nullable=False),
+        pa.field("ct_team_name", pa.string(), nullable=True),
+        pa.field("winner_side", pa.string(), nullable=False),
+        pa.field("winner_team_id", pa.string(), nullable=False),
+        pa.field("winner_team_name", pa.string(), nullable=True),
+        pa.field("team1_id", pa.string(), nullable=False),
+        pa.field("team1_name", pa.string(), nullable=False),
+        pa.field("team2_id", pa.string(), nullable=False),
+        pa.field("team2_name", pa.string(), nullable=False),
+        pa.field("score_team1_after", pa.int64(), nullable=False),
+        pa.field("score_team2_after", pa.int64(), nullable=False),
+        pa.field("reported_score", pa.string(), nullable=True),
+        pa.field("round_outcome", pa.string(), nullable=False),
+        pa.field("is_overtime", pa.bool_(), nullable=False),
+        pa.field("ingested_at", pa.string(), nullable=False),
+    ]
+)
+
 def models_to_records(models: Sequence[BaseModel]) -> list[dict[str, Any]]:
     """Convert a list of Pydantic models to plain dicts for pyarrow.
 

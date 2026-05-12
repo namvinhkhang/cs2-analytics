@@ -158,6 +158,49 @@ Profile defaults can also be overridden globally, for example
 `CS2_CSAPI_MATCH_PAGES=5`, or per profile, for example
 `CS2_CSAPI_DAILY_MATCH_PAGES=2`.
 
+## HLTV Round History
+
+Choke Profile uses cached JSON exports from an optional browser-based HLTV
+mapstats helper. This source is best-effort and unofficial, so keep fetches
+small, cached, and slow. Do not use proxy rotation.
+
+Install the optional browser dependencies into a gitignored cache directory when
+you need to fetch new map stats:
+
+```bash
+npm install --prefix data/hltv_cache/node \
+  puppeteer puppeteer-extra puppeteer-extra-plugin-stealth
+```
+
+Create a newline-delimited mapstats ID file, then fetch JSON with a delay:
+
+```bash
+mkdir -p data/hltv_cache
+printf "49968\n" > data/hltv_cache/mapstats_ids.txt
+PUPPETEER_MODULE_PATH=data/hltv_cache/node/node_modules/puppeteer-extra/dist/index.cjs.js \
+STEALTH_MODULE_PATH=data/hltv_cache/node/node_modules/puppeteer-extra-plugin-stealth/index.js \
+CHROME_PATH=/usr/bin/chromium \
+node tools/fetch_hltv_mapstats.mjs \
+  --ids-file data/hltv_cache/mapstats_ids.txt \
+  --output-dir data/hltv_cache/map_stats \
+  --delay-ms 5000 \
+  --headless false
+```
+
+Convert cached JSON to compact Parquet and upload it to the existing raw S3
+layout:
+
+```bash
+set -a; source .env; set +a
+uv run python scripts/bootstrap_hltv_round_history.py \
+  --input-dir data/hltv_cache/map_stats \
+  --ingest-date "$(date +%F)" \
+  --upload-s3
+```
+
+The repository stores only parsed round-history rows. Raw helper caches live
+under `data/hltv_cache/`, which is ignored by git.
+
 ## Dashboard
 
 Export dashboard snapshots after dbt finishes:
@@ -191,6 +234,8 @@ The dashboard expects:
 ## Hosting For Free
 
 Use Streamlit Community Cloud for the simplest free deployment:
+
+- Deployed app: https://cs2-analytics.streamlit.app/
 
 1. Push this repository to GitHub.
 2. Deploy a new Streamlit app from the repo.

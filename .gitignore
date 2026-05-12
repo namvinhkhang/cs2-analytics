@@ -12,6 +12,8 @@ __pycache__/
 !.github/workflows/
 !.github/workflows/*.yml
 logs/*
+node_modules/
+data/hltv_cache/
 
 # dbt — build outputs and local credentials
 dbt_project/target/
