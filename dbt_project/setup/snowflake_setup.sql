@@ -156,6 +156,34 @@ CREATE TABLE IF NOT EXISTS RAW.raw_valve_team_regions (
   source               VARCHAR
 );
 
+CREATE TABLE IF NOT EXISTS RAW.raw_hltv_round_history (
+  source            VARCHAR,
+  map_stats_id      VARCHAR,
+  match_id          VARCHAR,
+  event_id          VARCHAR,
+  event_name        VARCHAR,
+  map_name          VARCHAR,
+  played_at         VARCHAR,
+  round_number      INTEGER,
+  t_team_id         VARCHAR,
+  t_team_name       VARCHAR,
+  ct_team_id        VARCHAR,
+  ct_team_name      VARCHAR,
+  winner_side       VARCHAR,
+  winner_team_id    VARCHAR,
+  winner_team_name  VARCHAR,
+  team1_id          VARCHAR,
+  team1_name        VARCHAR,
+  team2_id          VARCHAR,
+  team2_name        VARCHAR,
+  score_team1_after INTEGER,
+  score_team2_after INTEGER,
+  reported_score    VARCHAR,
+  round_outcome     VARCHAR,
+  is_overtime       BOOLEAN,
+  ingested_at       VARCHAR
+);
+
 CREATE TABLE IF NOT EXISTS RAW.raw_faceit_players (
   player_id    VARCHAR,
   source       VARCHAR,
@@ -223,6 +251,7 @@ GRANT SELECT ON FUTURE TABLES IN SCHEMA CS2_ANALYTICS.RAW TO ROLE TRANSFORMER;
 -- Load controlled raw snapshots from S3 during scheduled dashboard refreshes
 GRANT USAGE ON STAGE CS2_ANALYTICS.RAW.cs2_raw_stage TO ROLE TRANSFORMER;
 GRANT INSERT ON TABLE CS2_ANALYTICS.RAW.raw_valve_team_regions TO ROLE TRANSFORMER;
+GRANT INSERT ON TABLE CS2_ANALYTICS.RAW.raw_hltv_round_history TO ROLE TRANSFORMER;
 
 -- Write to staging and marts (dbt creates views and tables here)
 GRANT CREATE VIEW ON SCHEMA CS2_ANALYTICS.STAGING TO ROLE TRANSFORMER;

@@ -1,86 +1,185 @@
--- Team pressure performance metrics (CC-01..CC-04).
--- Current facts include final scores and overtime flags, but not halftime scores
--- or bracket position. We expose availability flags so downstream products do
--- not mistake proxy metrics for unavailable event-level facts.
--- Grain: one row per team with aggregated pressure-scenario statistics.
-with matches as (
-    select * from {{ ref('fact_matches') }}
-    where score_a is not null and score_b is not null
+-- Team pressure performance from exact round-history rows where available.
+-- Source is explicitly marked as `hltv_unofficial` because the upstream data
+-- comes from best-effort HLTV mapstats exports, not an official API contract.
+-- Grain: one row per team with map-level choke indicators.
+with round_history as (
+    select * from {{ ref('stg_hltv_round_history') }}
 ),
 
-team_matches as (
-    -- Team A perspective
+rounds_enriched as (
     select
-        team_a_id as team_id,
-        winner_id,
-        score_a as own_score,
-        score_b as opp_score,
-        is_overtime,
+        *,
+        max(round_number) over (partition by map_stats_id) as total_rounds,
+        max(score_team1_after) over (partition by map_stats_id) as final_team1_score,
+        max(score_team2_after) over (partition by map_stats_id) as final_team2_score
+    from round_history
+),
+
+team_rounds as (
+    select
+        map_stats_id,
+        match_id,
+        map_name,
         played_at,
-        case when score_a >= 10 and winner_id != team_a_id then 1 else 0 end as lead_blown,
-        case when winner_id = team_a_id and score_b >= 12 then 1 else 0 end as comeback_win_proxy,
-        case when winner_id = team_a_id then 1 else 0 end as is_win,
-        case when winner_id is not null and winner_id != team_a_id then 1 else 0 end as is_loss
-    from matches
+        team1_id as team_id,
+        team1_name as team_name,
+        team2_id as opponent_id,
+        team2_name as opponent_name,
+        round_number,
+        winner_team_id,
+        score_team1_after as own_score_after,
+        score_team2_after as opp_score_after,
+        final_team1_score as final_own_score,
+        final_team2_score as final_opp_score,
+        is_overtime,
+        total_rounds
+    from rounds_enriched
 
     union all
 
-    -- Team B perspective
     select
-        team_b_id as team_id,
-        winner_id,
-        score_b as own_score,
-        score_a as opp_score,
-        is_overtime,
+        map_stats_id,
+        match_id,
+        map_name,
         played_at,
-        case when score_b >= 10 and winner_id != team_b_id then 1 else 0 end as lead_blown,
-        case when winner_id = team_b_id and score_a >= 12 then 1 else 0 end as comeback_win_proxy,
-        case when winner_id = team_b_id then 1 else 0 end as is_win,
-        case when winner_id is not null and winner_id != team_b_id then 1 else 0 end as is_loss
-    from matches
+        team2_id as team_id,
+        team2_name as team_name,
+        team1_id as opponent_id,
+        team1_name as opponent_name,
+        round_number,
+        winner_team_id,
+        score_team2_after as own_score_after,
+        score_team1_after as opp_score_after,
+        final_team2_score as final_own_score,
+        final_team1_score as final_opp_score,
+        is_overtime,
+        total_rounds
+    from rounds_enriched
+),
+
+team_round_state as (
+    select
+        *,
+        case when winner_team_id = team_id then 1 else 0 end as won_round,
+        own_score_after - case when winner_team_id = team_id then 1 else 0 end as own_score_before,
+        opp_score_after - case when winner_team_id != team_id then 1 else 0 end as opp_score_before
+    from team_rounds
+),
+
+map_team_summary as (
+    select
+        map_stats_id,
+        any_value(match_id) as match_id,
+        any_value(map_name) as map_name,
+        any_value(played_at) as played_at,
+        team_id,
+        any_value(team_name) as team_name,
+        any_value(opponent_id) as opponent_id,
+        any_value(opponent_name) as opponent_name,
+        max(final_own_score) as final_own_score,
+        max(final_opp_score) as final_opp_score,
+        max(total_rounds) as total_rounds,
+        max(case when is_overtime then 1 else 0 end) as is_overtime_map,
+        max(
+            greatest(
+                own_score_before - opp_score_before,
+                own_score_after - opp_score_after
+            )
+        ) as largest_lead,
+        max(case when round_number = 12 then own_score_after end) as halftime_own_score,
+        max(case when round_number = 12 then opp_score_after end) as halftime_opp_score
+    from team_round_state
+    group by map_stats_id, team_id
+),
+
+map_team_flags as (
+    select
+        *,
+        case when final_own_score > final_opp_score then 1 else 0 end as won_map,
+        case when final_own_score < final_opp_score then 1 else 0 end as lost_map,
+        case when abs(final_own_score - final_opp_score) <= 2 then 1 else 0 end as is_close_map,
+        case when largest_lead >= 5 then 1 else 0 end as had_5plus_lead,
+        case when largest_lead >= 5 and final_own_score < final_opp_score then 1 else 0 end
+            as lead_blown_5plus,
+        case when halftime_own_score > halftime_opp_score then 1 else 0 end as had_halftime_lead,
+        case
+            when halftime_own_score > halftime_opp_score and final_own_score < final_opp_score
+                then 1
+            else 0
+        end as halftime_lead_lost,
+        case
+            when halftime_own_score < halftime_opp_score and final_own_score > final_opp_score
+                then 1
+            else 0
+        end as halftime_comeback_win
+    from map_team_summary
 ),
 
 team_agg as (
     select
         team_id,
-        count(*) as total_scored_matches,
-        sum(is_win) as wins,
-        sum(is_loss) as losses,
-        sum(lead_blown) as leads_blown,
-        round(sum(lead_blown)::float / nullif(count(*), 0), 4) as lead_blown_rate,
-        sum(comeback_win_proxy) as comebacks,
-        round(sum(comeback_win_proxy)::float / nullif(sum(is_win), 0), 4) as comeback_rate,
-        sum(case when is_overtime = true then 1 else 0 end) as ot_matches,
-        sum(case when is_overtime = true and is_win = 1 then 1 else 0 end) as ot_wins,
-        sum(case when is_overtime = true and is_loss = 1 then 1 else 0 end) as ot_losses,
+        any_value(team_name) as team_name,
+        count(*) as total_maps,
+        sum(won_map) as wins,
+        sum(lost_map) as losses,
+        max(largest_lead) as largest_lead,
+        sum(had_5plus_lead) as maps_with_5plus_lead,
+        sum(lead_blown_5plus) as leads_blown,
+        round(sum(lead_blown_5plus)::float / nullif(sum(had_5plus_lead), 0), 4)
+            as lead_blown_rate,
+        sum(halftime_lead_lost) as halftime_leads_lost,
+        sum(halftime_comeback_win) as halftime_comeback_wins,
+        round(sum(halftime_comeback_win)::float / nullif(sum(won_map), 0), 4)
+            as comeback_rate,
+        sum(is_overtime_map) as ot_matches,
+        sum(case when is_overtime_map = 1 and won_map = 1 then 1 else 0 end) as ot_wins,
+        sum(case when is_overtime_map = 1 and lost_map = 1 then 1 else 0 end) as ot_losses,
         round(
-            sum(case when is_overtime = true and is_win = 1 then 1 else 0 end)::float
-            / nullif(sum(case when is_overtime = true then 1 else 0 end), 0),
+            sum(case when is_overtime_map = 1 and won_map = 1 then 1 else 0 end)::float
+            / nullif(sum(is_overtime_map), 0),
             4
-        ) as ot_win_rate
-    from team_matches
+        ) as ot_win_rate,
+        sum(is_close_map) as close_maps,
+        sum(case when is_close_map = 1 and won_map = 1 then 1 else 0 end) as close_map_wins,
+        round(
+            sum(case when is_close_map = 1 and won_map = 1 then 1 else 0 end)::float
+            / nullif(sum(is_close_map), 0),
+            4
+        ) as close_map_win_rate
+    from map_team_flags
     group by team_id
 )
 
 select
     ta.team_id,
-    t.team_name,
+    coalesce(t.team_name, ta.team_name) as team_name,
     t.world_ranking,
-    ta.total_scored_matches,
+    ta.total_maps,
+    ta.total_maps as total_scored_matches,
     ta.wins,
     ta.losses,
+    ta.largest_lead,
+    ta.maps_with_5plus_lead,
     ta.leads_blown,
-    ta.lead_blown_rate,
-    ta.comebacks,
-    ta.comeback_rate,
-    'final_score_pressure_proxy' as comeback_metric_type,
-    false as halftime_data_available,
+    coalesce(ta.lead_blown_rate, 0) as lead_blown_rate,
+    ta.halftime_leads_lost,
+    ta.halftime_comeback_wins as comebacks,
+    coalesce(ta.comeback_rate, 0) as comeback_rate,
+    'round_history_exact' as comeback_metric_type,
+    true as halftime_data_available,
     ta.ot_matches,
     ta.ot_wins,
     ta.ot_losses,
     ta.ot_win_rate,
+    ta.close_maps,
+    ta.close_map_wins,
+    ta.close_map_win_rate,
+    'hltv_unofficial' as metric_source,
+    true as round_history_available,
+    false as clutch_data_available,
     false as bracket_data_available,
     null::float as elimination_win_pct,
     null::float as winners_bracket_win_pct
 from team_agg ta
-left join {{ ref('dim_teams') }} t on ta.team_id = t.team_id
+left join {{ ref('dim_teams') }} t
+    on ta.team_id = t.team_id

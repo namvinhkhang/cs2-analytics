@@ -105,6 +105,31 @@ models:
         data_tests:
           - not_null
 
+  - name: stg_hltv_round_history
+    description: "Best-effort round-by-round map history from cached HLTV mapstats."
+    columns:
+      - name: source
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['hltv_unofficial']
+      - name: map_stats_id
+        data_tests:
+          - not_null
+      - name: round_number
+        data_tests:
+          - not_null
+      - name: winner_side
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['t', 'ct']
+      - name: winner_team_id
+        data_tests:
+          - not_null
+
   - name: stg_faceit_players
     description: "Cleaned FACEIT player stats — primary stats source with ADR, KAST, and ELO"
     columns:

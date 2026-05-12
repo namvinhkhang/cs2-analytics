@@ -104,7 +104,7 @@ models:
         description: "Recent 90-day benchmark gap minus previous 90-day benchmark gap."
 
   - name: mart_choke_profile
-    description: "Team pressure performance: lead-blown rate, final-score comeback proxy, overtime record, and explicit data availability flags (CC-01..04)"
+    description: "Team pressure performance from unofficial HLTV round history: largest lead, 5+ lead-blown rate, halftime collapse/comeback, overtime record, close-map record, and explicit data availability flags (CC-01..04)."
     columns:
       - name: team_id
         data_tests:
@@ -113,12 +113,31 @@ models:
       - name: lead_blown_rate
         data_tests:
           - not_null
+      - name: largest_lead
+        description: "Largest round lead this team held on any parsed map."
+      - name: halftime_leads_lost
+        description: "Maps lost after leading at halftime."
       - name: comeback_metric_type
-        description: "Documents whether comeback_rate is exact halftime logic or a final-score pressure proxy."
+        description: "Documents whether comeback_rate is exact halftime logic or a proxy."
         data_tests:
           - not_null
       - name: halftime_data_available
-        description: "False until halftime score facts are ingested."
+        description: "True when round-history rows allow halftime score reconstruction."
+        data_tests:
+          - not_null
+      - name: metric_source
+        description: "Source system used for pressure metrics."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['hltv_unofficial']
+      - name: round_history_available
+        description: "True when exact round-history rows are available for this team."
+        data_tests:
+          - not_null
+      - name: clutch_data_available
+        description: "False because player-level clutch events are out of v1 scope."
         data_tests:
           - not_null
       - name: bracket_data_available

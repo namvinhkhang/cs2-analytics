@@ -29,6 +29,9 @@ sources:
       - name: raw_valve_team_regions
         description: "Valve regional standings rows used only to fill missing team region metadata."
 
+      - name: raw_hltv_round_history
+        description: "Best-effort round-by-round map history exported from cached HLTV mapstats."
+
       - name: raw_faceit_players
         description: "FACEIT per-match player stats: kills, deaths, ADR, KAST, ELO."
 
