@@ -1,5 +1,87 @@
 # CS2-Era Hidden Gem Scout Implementation
 
+## Active Plan - Sync Workstream 3 Future Work Checkboxes
+
+- [x] Audit Workstream 3 dashboard checkboxes against current repo files, tests, and GitHub Actions evidence.
+- [x] Update `.planning/FUTURE_WORK_PLAN.md` Workstream 3 checkboxes only where the exact requirement is proven.
+- [x] Report remaining Workstream 3 items that are still not done.
+
+Review: Workstream 3 now reflects that the Choke/Clutch dashboard page is no
+longer deferred. The page exists, Home links it, snapshot export includes
+`mart_choke_profile`, the weekly GitHub run exported a 249-row Choke snapshot,
+and local browser smoke tests render all dashboard pages. The only Workstream 3
+release-gate items left unchecked are the exact unscoped Snowflake commands
+`uv run dbt run --project-dir dbt_project --profiles-dir dbt_project` and
+`uv run dbt test --project-dir dbt_project --profiles-dir dbt_project`; current
+evidence proves the targeted hosted-dashboard selector, not the full unscoped
+warehouse run/test.
+
+Verification:
+
+- `CS2_DASHBOARD_BASE_URL=http://localhost:8502 uv run pytest tests/test_dashboard_browser.py -q` passed with 4 tests.
+- `uv run pytest tests/test_dashboard_pages.py tests/test_dashboard_export.py tests/test_dashboard_helpers.py -q` passed with 29 tests.
+- GitHub Actions run `25751114954` exported `mart_choke_profile` with 249 rows and passed targeted dashboard dbt run/test.
+
+## Active Plan - Sync Workstream 1 Future Work Checkboxes
+
+- [x] Update `.planning/FUTURE_WORK_PLAN.md` Workstream 1 checkboxes from verified GitHub/Snowflake/dashboard evidence.
+- [x] Leave any item unchecked if the exact requirement is not proven by repo state or GitHub logs.
+- [x] Report the remaining not-done items.
+
+## Review - Workstream 1 Completion Audit
+
+Result: Workstream 1 is functionally complete, but
+`.planning/FUTURE_WORK_PLAN.md` still has stale unchecked boxes in Phase 3 and
+Phase 7. GitHub Actions run `25751114954` on `main` completed successfully on
+2026-05-12, loaded `raw_hltv_round_history`, ran `+mart_choke_profile`, passed
+113 dbt tests, exported `mart_choke_profile` with 249 rows, retrained the model,
+and committed refreshed artifacts to `origin/main` as `0a15c7b`. Local `main` is
+behind `origin/main` by that artifact commit, and the local working tree also
+contains the uncommitted GitHub Actions runtime optimization changes.
+
+Fresh audit verification:
+
+- `uv run pytest tests/test_bootstrap_hltv_round_history.py tests/test_hltv_round_history.py tests/test_marts/test_choke_profile_sql.py tests/test_dashboard_export.py tests/test_dashboard_pages.py tests/test_github_actions_workflows.py -q` passed with 53 tests.
+- `uv run ruff check .` passed.
+- `SNOWFLAKE_ACCOUNT=dummy SNOWFLAKE_USER=dummy SNOWFLAKE_PRIVATE_KEY_PATH=/tmp/dummy_snowflake_key.p8 SNOWFLAKE_WAREHOUSE=dummy SNOWFLAKE_DATABASE=CS2_ANALYTICS uv run dbt parse --project-dir dbt_project --profiles-dir dbt_project --no-partial-parse` passed with existing accepted-values deprecation warnings.
+- `gh run view 25751114954 --log` shows Snowflake dbt run/test and snapshot export passed for `mart_choke_profile`.
+- `origin/main:dashboard/snapshots/mart_choke_profile.parquet` contains 249 rows: 202 `limited`, 44 `directional`, and 3 `stable`.
+
+## Active Plan - GitHub Actions Daily/Weekly Split
+
+Goal: make hosted dashboard refresh ownership explicit so scheduled GitHub
+Actions have minimal overlap and do not create duplicate CS API raw loads.
+
+- [x] Add regression tests for the workflow contract.
+  - [x] Daily schedule should avoid Monday because weekly owns the Monday refresh.
+  - [x] Weekly refresh should not call the deep CS API `weekly` profile.
+  - [x] Weekly refresh should still load HLTV/choke-only raw data and export Choke snapshots.
+- [x] Update `.github/workflows/dashboard-refresh.yml`.
+  - [x] Daily schedule: current CS API, Valve regions, dbt/test/export for Upset Tracker and Hidden Gem Scout.
+  - [x] Weekly schedule: Monday replacement refresh with bounded CS API `daily` profile, weekly HLTV load, dbt/test/export including Choke Profile, and ML retraining.
+  - [x] Keep the deep CS API `weekly` profile as a manual/backfill path, not a scheduled dashboard action.
+  - [x] Load only the current raw S3 date partition into Snowflake instead of scanning full source prefixes every run.
+- [x] Update README operations docs so daily and weekly action responsibilities are clear.
+- [x] Record the correction in `tasks/lessons.md`.
+- [x] Verify focused workflow tests, YAML parse, and lint.
+
+Review: GitHub Actions now has explicit schedule ownership. The daily hosted
+refresh runs only Sunday and Tuesday-Saturday, while Monday is owned by the
+weekly refresh. Weekly refreshes no longer invoke the deep CS API `weekly`
+profile; they use the bounded CS API `daily` window, add weekly-only
+HLTV/choke/model work, and export all three dashboard marts. Snowflake raw
+`COPY` now targets only the current S3 `year=/month=/day=` partition under each
+active source prefix instead of scanning every historical object.
+
+Verification:
+
+- `uv run pytest tests/test_github_actions_workflows.py -q` passed with 13 tests.
+- `uv run pytest tests/test_github_actions_workflows.py tests/test_snowflake_setup_sql.py -q` passed with 14 tests.
+- `uv run ruff check tests/test_github_actions_workflows.py` passed.
+- `uv run ruff check .` passed.
+- `git diff --check` passed.
+- YAML parse smoke check for `.github/workflows/dashboard-refresh.yml` passed.
+
 ## Active Plan - Workstream 1 Choke/Clutch Team Profile
 
 - [x] Phase 1: Make HLTV round-history uploads batch-safe.

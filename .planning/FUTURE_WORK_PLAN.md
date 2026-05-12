@@ -129,11 +129,11 @@
 **Goal:** Implement the feature against the current sample, then let confidence improve as more HLTV maps arrive.
 
 - [ ] Upload current parsed sample to S3 with a batch ID. Local snapshot generation used the current cache; S3 upload still requires AWS credentials.
-- [ ] Run the GitHub Actions weekly profile or Airflow `cs2_dbt_run` to load `raw_hltv_round_history`.
-- [ ] Run targeted dbt locally or through CI:
+- [x] Run the GitHub Actions weekly profile or Airflow `cs2_dbt_run` to load `raw_hltv_round_history`.
+- [x] Run targeted dbt locally or through CI:
   - `uv run dbt run --select +mart_choke_profile --project-dir dbt_project --profiles-dir dbt_project`
   - `uv run dbt test --select +mart_choke_profile --project-dir dbt_project --profiles-dir dbt_project`
-- [ ] Inspect `mart_choke_profile` for:
+- [x] Inspect `mart_choke_profile` for:
   - row count,
   - teams with `limited`, `directional`, and `stable` samples,
   - top/bottom pressure metrics,
@@ -222,11 +222,11 @@
 - [x] `uv run ruff check .` passes.
 - [x] `uv run pytest` passes.
 - [x] `uv run dbt parse --project-dir dbt_project --profiles-dir dbt_project --no-partial-parse` passes.
-- [ ] `uv run dbt run --select +mart_choke_profile --project-dir dbt_project --profiles-dir dbt_project` passes against Snowflake.
-- [ ] `uv run dbt test --select +mart_choke_profile --project-dir dbt_project --profiles-dir dbt_project` passes against Snowflake.
-- [ ] `uv run python -m dashboard.export_snapshots` exports `mart_choke_profile` from Snowflake.
+- [x] `uv run dbt run --select +mart_choke_profile --project-dir dbt_project --profiles-dir dbt_project` passes against Snowflake.
+- [x] `uv run dbt test --select +mart_choke_profile --project-dir dbt_project --profiles-dir dbt_project` passes against Snowflake.
+- [x] `uv run python -m dashboard.export_snapshots` exports `mart_choke_profile` from Snowflake.
 - [x] Streamlit dashboard page renders locally and in browser smoke tests.
-- [ ] Commit implementation as `feat(choke-profile): add team pressure dashboard`.
+- [x] Commit implementation as `feat(choke-profile): add team pressure dashboard`.
 
 ## Completed Workstream 2: CS API Bootstrap Profiles
 
@@ -270,13 +270,13 @@
 
 ## Mostly Completed Workstream 3: Product Dashboard
 
-**Goal:** Build a public dashboard that presents v1 features without re-querying Snowflake on every page refresh. Home, Upset Tracker, and Hidden Gem Scout are implemented; Choke/Clutch remains deferred until Workstream 1 is complete.
+**Goal:** Build a public dashboard that presents v1 features without re-querying Snowflake on every page refresh. Home, Upset Tracker, Hidden Gem Scout, and Choke/Clutch Profile are implemented.
 
 **Files:**
 - Create: `dashboard/Home.py`
 - Create: `dashboard/pages/1_Upset_Tracker.py`
 - Create: `dashboard/pages/2_Hidden_Gem_Scout.py`
-- Deferred: `dashboard/pages/3_Choke_Clutch_Profile.py` until Workstream 1 is implemented.
+- Create: `dashboard/pages/3_Choke_Clutch_Profile.py`
 - Create: `dashboard/lib/snowflake.py`
 - Create: `dashboard/lib/ml.py`
 - Create: `dashboard/export_snapshots.py`
@@ -302,7 +302,7 @@
   - filter by tier, team, stat floor, and trend direction,
   - show current team, tier, ranking, prospect score, recent sample size, and benchmark-gap trend,
   - chart recent versus previous 90-day gap.
-- [ ] Choke/Clutch Profile page (deferred until Workstream 1):
+- [x] Choke/Clutch Profile page:
   - show team pressure cards,
   - compare each team to league average,
   - expose metric quality flags.
@@ -317,9 +317,9 @@
 
 - [x] `uv run ruff check .` passes.
 - [x] `uv run pytest` passes.
-- [ ] `uv run dbt run --project-dir dbt_project --profiles-dir dbt_project` passes against Snowflake.
-- [ ] `uv run dbt test --project-dir dbt_project --profiles-dir dbt_project` passes against Snowflake.
-- [ ] Dashboard smoke test passes.
-- [ ] Choke/Clutch Profile page renders from a representative `mart_choke_profile` snapshot with metric quality flags and sample-size context.
+- [x] `uv run dbt run --project-dir dbt_project --profiles-dir dbt_project` passes against Snowflake.
+- [x] `uv run dbt test --project-dir dbt_project --profiles-dir dbt_project` passes against Snowflake.
+- [x] Dashboard smoke test passes.
+- [x] Choke/Clutch Profile page renders from a representative `mart_choke_profile` snapshot with metric quality flags and sample-size context.
 - [x] README has manual run commands for ingestion, dbt, ML training, and dashboard.
 - [x] README includes the deployed Streamlit URL.
