@@ -8,7 +8,7 @@ from pathlib import Path
 
 from dashboard.lib.snowflake import DEFAULT_SNAPSHOT_DIR, export_mart_snapshot
 
-DEFAULT_MARTS = ("mart_upset_features", "mart_hidden_gems")
+DEFAULT_MARTS = ("mart_upset_features", "mart_hidden_gems", "mart_choke_profile")
 
 
 def _parser() -> argparse.ArgumentParser:

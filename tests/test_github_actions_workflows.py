@@ -87,6 +87,19 @@ def test_dashboard_refresh_workflow_only_loads_hltv_for_weekly_profile() -> None
         assert stage_prefix in workflow
 
 
+def test_dashboard_refresh_workflow_exports_choke_snapshot_only_weekly() -> None:
+    """Daily snapshot refresh should not query Choke until weekly HLTV/dbt runs."""
+    workflow = (REPO_ROOT / ".github" / "workflows" / "dashboard-refresh.yml").read_text(
+        encoding="utf-8",
+    )
+
+    assert "Export dashboard snapshots" in workflow
+    weekly_marts = "--mart mart_upset_features --mart mart_hidden_gems --mart mart_choke_profile"
+    assert weekly_marts in workflow
+    assert "--mart mart_upset_features --mart mart_hidden_gems" in workflow
+    assert 'steps.refresh.outputs.profile }}" == "weekly"' in workflow
+
+
 def test_dashboard_refresh_workflow_does_not_create_raw_tables() -> None:
     """Raw DDL is a setup/admin concern; CI should not need schema CREATE privileges."""
     workflow = (REPO_ROOT / ".github" / "workflows" / "dashboard-refresh.yml").read_text(

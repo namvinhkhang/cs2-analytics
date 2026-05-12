@@ -185,6 +185,38 @@ def test_parse_hltv_map_stats_files_reads_cached_json_exports(tmp_path: Path) ->
     assert records[-1]["round_number"] == 25
 
 
+def test_parse_hltv_map_stats_files_skips_invalid_null_placeholder_exports(
+    tmp_path: Path,
+) -> None:
+    """Null placeholder exports should not stop the rest of the cache batch."""
+    valid_path = tmp_path / "228493.json"
+    invalid_path = tmp_path / "228406.json"
+    valid_path.write_text(HLTVMatchMapStats.model_validate(_sample_map_stats()).model_dump_json())
+    invalid_path.write_text(
+        """
+        {
+          "id": 228406,
+          "matchId": null,
+          "map": null,
+          "date": null,
+          "event": null,
+          "team1": {"id": null, "name": null},
+          "team2": {"id": null, "name": null},
+          "startSides": {"team1": null, "team2": null},
+          "overtimeStartSides": [],
+          "result": {"team1TotalRounds": 0, "team2TotalRounds": 0, "halfResults": []},
+          "roundHistory": []
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    records = parse_hltv_map_stats_files([invalid_path, valid_path], ingested_at=date(2026, 5, 11))
+
+    assert len(records) == 4
+    assert {record["map_stats_id"] for record in records} == {"228493"}
+
+
 def test_write_round_history_parquet_uses_compact_typed_schema(tmp_path: Path) -> None:
     """Parsed round rows should persist as compact Parquet, not raw HTML or demos."""
     records = HLTVMatchMapStats.model_validate(_sample_map_stats()).to_round_records(

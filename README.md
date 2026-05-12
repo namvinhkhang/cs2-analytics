@@ -12,12 +12,11 @@ The v1 product has three analytics tracks:
   CS API match and ranking features.
 - **Hidden Gem Scout:** finds tier 2/3/4 players whose recent form clears
   benchmark thresholds from the tier above them.
-- **Choke/Clutch Profile:** planned team pressure profile. The dashboard page is
-  intentionally deferred until the underlying source data and mart are upgraded.
+- **Choke/Clutch Profile:** profiles team-level pressure metrics from cached
+  HLTV round history, with explicit sample-quality and unavailable-metric flags.
 
-The dashboard currently ships Upset Tracker and Hidden Gem Scout. It reads local
-Parquet snapshots of marts plus versioned ML artifacts, so page refreshes do not
-query Snowflake directly.
+The dashboard reads local Parquet snapshots of marts plus versioned ML artifacts,
+so page refreshes do not query Snowflake directly.
 
 ## Architecture
 
@@ -115,7 +114,7 @@ set -a; source .env; set +a
 uv run python scripts/bootstrap_csapi.py --profile daily
 uv run dbt run --select mart_upset_features mart_hidden_gems --project-dir dbt_project --profiles-dir dbt_project
 uv run dbt test --select mart_upset_features mart_hidden_gems --project-dir dbt_project --profiles-dir dbt_project
-uv run python -m dashboard.export_snapshots
+uv run python -m dashboard.export_snapshots --mart mart_upset_features --mart mart_hidden_gems
 ```
 
 The daily profile is bounded for frequent use. It refreshes current rankings,
@@ -129,10 +128,10 @@ Run this once per week after exporting `.env`:
 ```bash
 set -a; source .env; set +a
 uv run python scripts/bootstrap_csapi.py --profile weekly
-uv run dbt run --select mart_upset_features mart_hidden_gems mart_choke_profile --project-dir dbt_project --profiles-dir dbt_project
-uv run dbt test --select mart_upset_features mart_hidden_gems mart_choke_profile --project-dir dbt_project --profiles-dir dbt_project
+uv run dbt run --select +mart_upset_features +mart_hidden_gems +mart_choke_profile --project-dir dbt_project --profiles-dir dbt_project
+uv run dbt test --select +mart_upset_features +mart_hidden_gems +mart_choke_profile --project-dir dbt_project --profiles-dir dbt_project
 uv run python -m ml.train
-uv run python -m dashboard.export_snapshots
+uv run python -m dashboard.export_snapshots --mart mart_upset_features --mart mart_hidden_gems --mart mart_choke_profile
 ```
 
 The weekly profile collects a deeper rolling window for Hidden Gem Scout and keeps
@@ -195,11 +194,14 @@ set -a; source .env; set +a
 uv run python scripts/bootstrap_hltv_round_history.py \
   --input-dir data/hltv_cache/map_stats \
   --ingest-date "$(date +%F)" \
-  --upload-s3
+  --upload-s3 \
+  --batch-id "hltv_maps_001"
 ```
 
 The repository stores only parsed round-history rows. Raw helper caches live
-under `data/hltv_cache/`, which is ignored by git.
+under `data/hltv_cache/`, which is ignored by git. Use a unique `--batch-id` for
+each 100-300 map chunk so raw S3 files are append-only and reruns skip existing
+batch objects instead of overwriting them.
 
 ## Dashboard
 
@@ -226,6 +228,7 @@ The dashboard expects:
 
 - `dashboard/snapshots/mart_upset_features.parquet`
 - `dashboard/snapshots/mart_hidden_gems.parquet`
+- `dashboard/snapshots/mart_choke_profile.parquet`
 - `ml/models/upset_tracker_v1.0.joblib`
 - `ml/evaluation/decision_threshold.txt`
 - `ml/evaluation/metrics.json`

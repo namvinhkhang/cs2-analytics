@@ -18,6 +18,7 @@ ERROR_TERMS = ("Traceback", "StreamlitAPIException", "ValueError:", "TypeError:"
         ("", "CS2 Analytics"),
         ("Upset_Tracker", "Upset Tracker"),
         ("Hidden_Gem_Scout", "Hidden Gem Scout"),
+        ("Choke_Clutch_Profile", "Choke/Clutch Profile"),
     ],
 )
 def test_dashboard_page_renders_without_streamlit_errors(

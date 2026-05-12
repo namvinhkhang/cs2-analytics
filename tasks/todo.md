@@ -1,5 +1,61 @@
 # CS2-Era Hidden Gem Scout Implementation
 
+## Active Plan - Workstream 1 Choke/Clutch Team Profile
+
+- [x] Phase 1: Make HLTV round-history uploads batch-safe.
+  - [x] Add tests for unique upload filenames, `--batch-id` naming, unsafe filename rejection, S3 skip-existing behavior, and invalid JSON tolerance.
+  - [x] Add CLI batch controls and deterministic batch summaries.
+  - [x] Preserve invalid/null placeholder skipping without blocking valid maps.
+- [x] Phase 2: Harden `mart_choke_profile` for small samples.
+  - [x] Add sample-size fields, sample-quality buckets, league-average deltas, and metric availability flags.
+  - [x] Add dbt schema tests and SQL contract tests for the mart contract.
+- [x] Phase 3: Verify current warehouse/sample state where credentials and data are available.
+  - [x] Generate a local representative snapshot from the current cache; external S3/Snowflake load is blocked in this shell because AWS and Snowflake env vars are not set.
+  - [x] Record JSON files fetched, valid maps parsed, skipped placeholders, round rows, and current stable/directional sample counts.
+- [x] Phase 4: Export Choke Profile snapshots.
+  - [x] Add `mart_choke_profile` to default dashboard snapshot exports.
+  - [x] Add export/workflow tests so weekly refresh exports the choke snapshot while daily stays free of HLTV requirements.
+- [x] Phase 5: Add the Streamlit Choke/Clutch Profile page.
+  - [x] Build filters, KPI cards, table, charts, and small-sample messaging from cached `mart_choke_profile`.
+  - [x] Add page import/filter/display regression tests.
+- [x] Phase 6: Document the no-code data growth loop.
+  - [x] Record recommended 100-300 mapstat chunking and unique `--batch-id` uploads.
+  - [x] Keep dashboard labels honest until enough teams reach stable samples.
+- [ ] Phase 7: Run release-gate verification.
+  - [x] Run focused tests during implementation.
+  - [x] Run `uv run ruff check .`, `uv run pytest`, `uv run dbt parse --project-dir dbt_project --profiles-dir dbt_project --no-partial-parse`, snapshot load checks, and available Streamlit smoke checks.
+  - [ ] Run live S3 upload, Snowflake `dbt run/test`, and Snowflake-backed `dashboard.export_snapshots` when AWS/Snowflake credentials are available.
+
+Workstream 1 current local sample stats on 2026-05-12:
+
+- JSON files scanned: 1,710
+- Valid maps parsed: 1,466
+- Skipped invalid/empty placeholder files: 244
+- Round rows parsed into the representative snapshot: 30,962
+- Teams profiled: 245
+- Teams with at least 20 maps (`directional` or `stable`): 40
+- Teams with at least 50 maps (`stable`): 3
+- Representative snapshot: `dashboard/snapshots/mart_choke_profile.parquet`
+- External load status: AWS/Snowflake environment variables are absent in this shell, so S3 upload and Snowflake `dbt run/test` remain CI/manual verification steps.
+
+Review: Workstream 1 now has batch-safe HLTV raw uploads, a sample-aware
+`mart_choke_profile` contract, default snapshot export support, a weekly-only
+GitHub Actions Choke export path, a cached `mart_choke_profile` snapshot, and a
+Streamlit Choke/Clutch Profile page linked from Home. The page defaults to a
+20-map floor, filters by sample quality and team, shows pressure KPIs, displays
+lead-blown and comeback visuals, and warns when most teams are still limited.
+
+Verification:
+
+- `uv run pytest tests/test_bootstrap_hltv_round_history.py tests/test_hltv_round_history.py -q` passed with 14 tests.
+- `uv run pytest tests/test_marts/test_choke_profile_sql.py -q` passed with 7 tests.
+- `uv run pytest tests/test_dashboard_pages.py tests/test_dashboard_export.py tests/test_github_actions_workflows.py tests/test_dashboard_browser.py -q` passed with 29 tests and 4 skipped browser tests when no server env was set.
+- `uv run ruff check .` passed.
+- `uv run pytest` passed with 285 tests, 4 skipped browser tests, and 1 existing Airflow warning.
+- `SNOWFLAKE_ACCOUNT=dummy SNOWFLAKE_USER=dummy SNOWFLAKE_PRIVATE_KEY_PATH=/tmp/dummy_snowflake_key.p8 SNOWFLAKE_WAREHOUSE=dummy SNOWFLAKE_DATABASE=CS2_ANALYTICS uv run dbt parse --project-dir dbt_project --profiles-dir dbt_project --no-partial-parse` passed with existing accepted-values deprecation warnings.
+- Local snapshot load check passed for `mart_upset_features`, `mart_hidden_gems`, and `mart_choke_profile`.
+- `CS2_DASHBOARD_BASE_URL=http://localhost:8501 uv run pytest tests/test_dashboard_browser.py -q` passed with 4 browser checks against the local Streamlit server.
+
 - [x] Move Upset Tracker match lineage to CS API.
   - [x] Add regression tests for CS API match ingestion and upset-source filtering.
   - [x] Ingest CS API `/matches/` rows into `raw/csapi/matches/`.
@@ -490,4 +546,16 @@ Architecture: add a small Valve standings ingestion path that discovers the late
 - Added local/S3 bootstrap support through `scripts/bootstrap_hltv_round_history.py`; raw demo files are not used or stored.
 - Added an optional `tools/fetch_hltv_mapstats.mjs` helper that fetches mapstats JSON slowly into `data/hltv_cache/`, which is gitignored. The helper requires local browser automation dependencies and skips already cached files.
 - Added `raw_hltv_round_history`, `stg_hltv_round_history`, Airflow COPY support, and a round-history-backed `mart_choke_profile` with exact largest-lead, 5+ lead-blown, halftime collapse/comeback, overtime, and close-map metrics. Clutch and bracket data stay explicitly unavailable for v1.
+- Important correction: this is still a backend data path plus first mart shape, not the finished Choke Profile analysis feature. The feature still needs a representative HLTV sample, Snowflake/dbt run/test on that sample, a dashboard snapshot, and a Streamlit page with metric quality and sample-size context.
 - Verification: targeted pytest passed with 14 tests and 1 existing Airflow warning; `dbt parse --no-partial-parse` passed with existing accepted-values deprecation warnings; `uv run ruff check .` passed; `uv run pytest` passed with 260 tests, 3 skipped browser tests, and 1 existing Airflow warning.
+
+## Choke Profile Feature Plan Refresh - 2026-05-12
+
+- [x] Update `.planning/FUTURE_WORK_PLAN.md` with a detailed Choke Profile implementation plan.
+- [x] Include batch-safe S3 upload work for HLTV round-history Parquet.
+- [x] Include sample-quality fields, dashboard behavior, snapshot export, and release gates.
+
+## Review - Choke Profile Feature Plan Refresh
+
+- Choke Profile should be implemented now against the current small sample, while the data collection loop continues toward 5k valid maps.
+- The plan now explicitly separates backend ingestion, batch upload safety, mart sample-quality contracts, Snowflake verification, snapshot export, Streamlit dashboard work, and the ongoing data-growth loop.

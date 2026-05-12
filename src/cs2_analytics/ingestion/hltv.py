@@ -17,6 +17,7 @@ from typing import Any
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 import structlog
+from pydantic import ValidationError
 
 from cs2_analytics.models.hltv import HLTVMatchMapStats
 from cs2_analytics.utils.parquet import HLTV_ROUND_HISTORY_SCHEMA
@@ -33,9 +34,22 @@ def parse_hltv_map_stats_files(
     """Parse cached HLTV mapstats JSON exports into raw round rows."""
     records: list[dict[str, Any]] = []
     for path in paths:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-        stats = HLTVMatchMapStats.model_validate(payload)
-        map_records = stats.to_round_records(ingested_at=ingested_at.isoformat())
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            stats = HLTVMatchMapStats.model_validate(payload)
+            map_records = stats.to_round_records(ingested_at=ingested_at.isoformat())
+        except (json.JSONDecodeError, ValidationError, ValueError) as exc:
+            logger.warning(
+                "hltv_map_stats_file_skipped",
+                path=str(path),
+                reason=str(exc),
+            )
+            continue
+
+        if not map_records:
+            logger.warning("hltv_map_stats_file_skipped_empty_round_history", path=str(path))
+            continue
+
         records.extend(map_records)
         logger.info(
             "hltv_map_stats_file_parsed",

@@ -17,22 +17,28 @@
 - CS API `daily`, `weekly`, and `backfill` profiles are implemented with bounded defaults, environment overrides, S3 skip-existing checks, Airflow wiring, and tests.
 - The Streamlit dashboard ships Home, Upset Tracker, and Hidden Gem Scout pages backed by local mart snapshots and versioned ML artifacts.
 - Dashboard browser smoke tests, desktop/mobile screenshot checks, and GitHub Actions dashboard refresh automation are implemented.
-- Choke Profile now uses best-effort `hltv_unofficial` round history exported through the optional HLTV mapstats cache helper. The dashboard page is still intentionally absent until the mart and snapshot/export path are fully verified.
+- Choke Profile has a best-effort `hltv_unofficial` round-history ingestion path, a sample-aware backend mart contract, cached snapshot export support, and a dashboard analysis page. Current local data is still growing, so Snowflake/dbt warehouse verification should continue with weekly HLTV batches.
 - Player-level clutch, bracket, and elimination-match pressure remain out of v1 scope unless trustworthy event/bracket source data is added later.
 
 ## Workstream 1: Choke/Clutch Team Profile
 
-**Goal:** Produce a team-level pressure profile that is honest about data quality and upgrades from proxy metrics to exact metrics when source data exists.
+**Goal:** Produce a team-level pressure profile that is honest about data quality, backed by enough maps to be meaningful, and visible in the dashboard as an analysis feature.
 
 **Files:**
-- Modify: `src/cs2_analytics/ingestion/csapi.py`
-- Modify: `src/cs2_analytics/models/csapi.py`
-- Modify: `scripts/bootstrap_csapi.py`
-- Modify or create: `dbt_project/models/staging/stg_csapi_maps.sql`
+- Modify: `scripts/bootstrap_hltv_round_history.py`
+- Modify: `src/cs2_analytics/ingestion/hltv.py`
+- Modify: `src/cs2_analytics/models/hltv.py` if the cached payload shape expands.
+- Modify: `src/cs2_analytics/utils/parquet.py` if new raw fields are added.
+- Modify: `dashboard/export_snapshots.py`
+- Create: `dashboard/pages/3_Choke_Clutch_Profile.py`
 - Modify: `dbt_project/models/marts/analytics/mart_choke_profile.sql`
 - Modify: `dbt_project/models/marts/analytics/analytics.yml`
-- Test: `tests/test_csapi_client.py`
+- Modify: `dbt_project/models/staging/staging.yml`
+- Test: `tests/test_hltv_round_history.py`
+- Test: `tests/test_bootstrap_hltv_round_history.py`
 - Test: `tests/test_marts/test_choke_profile_sql.py`
+- Test: `tests/test_dashboard_export.py`
+- Test: `tests/test_dashboard_pages.py`
 
 - [x] Audit CS API, PandaScore, and FACEIT payloads for round score, halftime score, overtime, bracket stage, and elimination-match signals.
 - [x] Document which pressure metrics can be exact and which must remain proxy-based.
@@ -49,11 +55,178 @@
   - exact largest-lead, 5+ lead-blown, halftime collapse, and halftime comeback metrics,
   - null bracket/elimination metrics until trustworthy source data exists,
   - metric quality flags for exact and unavailable metrics.
-- [ ] Add dbt schema tests for accepted values, non-negative counts, and one row per team grain.
-- [ ] Verify with `uv run pytest tests/test_marts/test_choke_profile_sql.py tests/test_csapi_client.py`.
-- [ ] Verify with `uv run dbt run --select mart_choke_profile --project-dir dbt_project --profiles-dir dbt_project`.
-- [ ] Verify with `uv run dbt test --select mart_choke_profile --project-dir dbt_project --profiles-dir dbt_project`.
-- [ ] Commit as `feat(choke-profile): compute team pressure metrics`.
+
+### Phase 1: Batch-Safe HLTV Raw Uploads
+
+**Goal:** Let the feature ship against the current sample while supporting continued collection toward 5k valid maps without overwriting raw S3 files.
+
+- [x] Add batch upload controls to `scripts/bootstrap_hltv_round_history.py`:
+  - `--batch-id`, optional human-readable ID such as `pgl_astana_001` or `2026-05-12_001`.
+  - `--filename`, still supported for explicit one-off names.
+  - default filename should become unique when `--upload-s3` is used, for example `batch_<batch_id>.parquet` or `round_history_<YYYYMMDD_HHMMSS>.parquet`.
+  - reject unsafe filenames with path separators.
+- [x] Add an S3 skip-existing guard before upload so rerunning the same batch does not overwrite raw history.
+- [x] Print and log batch summary:
+  - total JSON files scanned,
+  - valid map files parsed,
+  - skipped/invalid JSON files,
+  - total round rows written,
+  - output S3 key or local Parquet path.
+- [x] Keep invalid/null placeholder JSON files skipped, not fatal.
+- [x] Add tests for:
+  - unique batch filename generation,
+  - `--batch-id` output naming,
+  - skip-existing behavior,
+  - invalid JSON files not blocking valid maps.
+- [x] Recommended run pattern:
+  - upload current sample as `--batch-id current_sample_001`,
+  - continue fetching JSON in chunks,
+  - upload later chunks as `--batch-id hltv_maps_002`, `hltv_maps_003`, etc.
+
+### Phase 2: Mart Contract and Sample Quality
+
+**Goal:** Make `mart_choke_profile` safe to display even when the dataset is small.
+
+- [x] Add sample-size fields to `mart_choke_profile`:
+  - `maps_analyzed`,
+  - `rounds_analyzed`,
+  - `overtime_maps_analyzed`,
+  - `close_maps_analyzed`,
+  - `maps_with_5plus_lead`,
+  - `minimum_stable_maps`.
+- [x] Add `sample_quality` with clear buckets:
+  - `limited` for `< 20` maps,
+  - `directional` for `20-49` maps,
+  - `stable` for `>= 50` maps.
+- [x] Add display-safe rates:
+  - keep raw rates nullable when denominators are zero,
+  - add dashboard-friendly coalesced fields only if needed,
+  - avoid ranking teams by rates when denominator is too small.
+- [x] Add league-average comparison fields:
+  - `lead_blown_rate_delta`,
+  - `halftime_comeback_rate_delta`,
+  - `ot_win_rate_delta`,
+  - `close_map_win_rate_delta`.
+- [x] Add metric availability flags:
+  - `round_history_available`,
+  - `halftime_data_available`,
+  - `clutch_data_available = false`,
+  - `bracket_data_available = false`,
+  - `sample_size_warning`.
+- [x] Add dbt schema tests:
+  - one row per `team_id`,
+  - accepted values for `sample_quality`,
+  - non-negative count fields,
+  - accepted values for `metric_source`,
+  - not-null required display fields.
+- [x] Add SQL contract tests that prove:
+  - `dim_teams` joins by HLTV `team_id`,
+  - sample-quality buckets exist,
+  - clutch/bracket flags remain false/null until real source data exists.
+
+### Phase 3: Warehouse Verification With Current Data
+
+**Goal:** Implement the feature against the current sample, then let confidence improve as more HLTV maps arrive.
+
+- [ ] Upload current parsed sample to S3 with a batch ID. Local snapshot generation used the current cache; S3 upload still requires AWS credentials.
+- [ ] Run the GitHub Actions weekly profile or Airflow `cs2_dbt_run` to load `raw_hltv_round_history`.
+- [ ] Run targeted dbt locally or through CI:
+  - `uv run dbt run --select +mart_choke_profile --project-dir dbt_project --profiles-dir dbt_project`
+  - `uv run dbt test --select +mart_choke_profile --project-dir dbt_project --profiles-dir dbt_project`
+- [ ] Inspect `mart_choke_profile` for:
+  - row count,
+  - teams with `limited`, `directional`, and `stable` samples,
+  - top/bottom pressure metrics,
+  - null/zero denominator behavior.
+- [x] Record current sample stats in `tasks/todo.md`:
+  - JSON files fetched,
+  - valid maps parsed,
+  - skipped placeholders,
+  - round rows loaded,
+  - teams with at least 20 maps,
+  - teams with at least 50 maps.
+
+### Phase 4: Snapshot Export
+
+**Goal:** Make the Choke Profile dashboard read cached snapshots like the existing pages.
+
+- [x] Add `mart_choke_profile` to `dashboard/export_snapshots.py`.
+- [x] Write `dashboard/snapshots/mart_choke_profile.parquet`.
+- [x] Normalize Snowflake uppercase columns to dashboard lowercase contract.
+- [x] Add export tests for the new snapshot.
+- [x] Update GitHub Actions weekly profile so it exports and commits the choke snapshot after dbt passes.
+- [x] Keep daily refresh free of HLTV/choke requirements.
+
+### Phase 5: Streamlit Choke/Clutch Profile Page
+
+**Goal:** Build the user-facing analysis while making sample limits obvious.
+
+- [x] Create `dashboard/pages/3_Choke_Clutch_Profile.py`.
+- [x] Page controls:
+  - minimum maps slider, default `20`,
+  - sample quality filter: `limited`, `directional`, `stable`,
+  - team search/multiselect,
+  - metric selector: lead-blown, halftime comeback, overtime, close maps.
+- [x] KPI cards:
+  - maps analyzed,
+  - rounds analyzed,
+  - lead-blown rate,
+  - halftime comeback rate,
+  - overtime win rate,
+  - close-map win rate.
+- [x] Main table:
+  - team name,
+  - world ranking,
+  - sample quality,
+  - maps analyzed,
+  - largest lead,
+  - leads blown,
+  - lead-blown rate,
+  - halftime leads lost,
+  - comebacks,
+  - overtime record,
+  - close-map record.
+- [x] Visuals:
+  - bar chart for lead-blown rate among teams meeting minimum sample,
+  - scatter plot of comeback rate vs lead-blown rate,
+  - optional league-average reference lines.
+- [x] Small-sample UX:
+  - show a clear warning when most teams are `limited`,
+  - de-emphasize or hide unstable rates by default,
+  - never claim clutch/bracket metrics exist.
+- [x] Add explanatory copy:
+  - source: `hltv_unofficial`,
+  - metrics are map/team pressure metrics, not player clutch metrics,
+  - sample is still growing toward the 5k-map target.
+- [x] Add tests:
+  - page imports with sample snapshot,
+  - small sample warning renders,
+  - minimum map filter works,
+  - raw IDs are not shown when team names exist.
+
+### Phase 6: Data Growth Loop
+
+**Goal:** Continue collecting data after the feature exists without changing code.
+
+- [x] Keep fetching HLTV mapstats in 100-300 ID chunks.
+- [x] Upload each chunk with a unique `--batch-id`.
+- [x] Run weekly refresh after each meaningful batch.
+- [x] Track progress toward:
+  - 1k valid maps for acceptable v1 demo,
+  - 2k valid maps for better team profiles,
+  - 5k valid maps for stable tier-1 comparisons.
+- [x] Keep dashboard labels honest until enough teams reach `stable`.
+
+### Phase 7: Release Gate
+
+- [x] `uv run ruff check .` passes.
+- [x] `uv run pytest` passes.
+- [x] `uv run dbt parse --project-dir dbt_project --profiles-dir dbt_project --no-partial-parse` passes.
+- [ ] `uv run dbt run --select +mart_choke_profile --project-dir dbt_project --profiles-dir dbt_project` passes against Snowflake.
+- [ ] `uv run dbt test --select +mart_choke_profile --project-dir dbt_project --profiles-dir dbt_project` passes against Snowflake.
+- [ ] `uv run python -m dashboard.export_snapshots` exports `mart_choke_profile` from Snowflake.
+- [x] Streamlit dashboard page renders locally and in browser smoke tests.
+- [ ] Commit implementation as `feat(choke-profile): add team pressure dashboard`.
 
 ## Completed Workstream 2: CS API Bootstrap Profiles
 
@@ -147,6 +320,6 @@
 - [ ] `uv run dbt run --project-dir dbt_project --profiles-dir dbt_project` passes against Snowflake.
 - [ ] `uv run dbt test --project-dir dbt_project --profiles-dir dbt_project` passes against Snowflake.
 - [ ] Dashboard smoke test passes.
-- [ ] Choke/Clutch Profile page renders from `mart_choke_profile` with metric quality flags.
+- [ ] Choke/Clutch Profile page renders from a representative `mart_choke_profile` snapshot with metric quality flags and sample-size context.
 - [x] README has manual run commands for ingestion, dbt, ML training, and dashboard.
 - [x] README includes the deployed Streamlit URL.
