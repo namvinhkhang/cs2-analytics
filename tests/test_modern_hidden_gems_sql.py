@@ -126,6 +126,16 @@ def test_upset_features_use_csapi_match_source() -> None:
     assert "source = 'csapi'" in sql
 
 
+def test_fact_matches_deduplicates_raw_match_reloads() -> None:
+    """Repeated COPY loads should not create duplicate match surrogate keys."""
+    sql = Path("dbt_project/models/marts/core/fact_matches.sql").read_text()
+    compact_sql = " ".join(sql.split())
+
+    assert "row_number() over (" in sql
+    assert "partition by match_id, source, map_name" in compact_sql
+    assert "where raw_match_rank = 1" in compact_sql
+
+
 def test_upset_features_expose_readable_team_names() -> None:
     """Dashboard watchlists should not force users to decode raw team IDs."""
     sql = Path("dbt_project/models/marts/analytics/mart_upset_features.sql").read_text()

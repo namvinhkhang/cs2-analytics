@@ -1,7 +1,23 @@
 -- Fact: match results with foreign keys to all dimension tables.
 -- Grain: one row per played map per source.
-with matches as (
+with raw_matches as (
     select * from {{ ref('int_matches_unioned') }}
+),
+
+matches as (
+    -- Raw loads are append-only and may contain the same source match across
+    -- multiple staged files. Keep the declared fact grain unique before SKs.
+    select *
+    from (
+        select
+            *,
+            row_number() over (
+                partition by match_id, source, map_name
+                order by played_at desc nulls last
+            ) as raw_match_rank
+        from raw_matches
+    )
+    where raw_match_rank = 1
 ),
 
 teams as (

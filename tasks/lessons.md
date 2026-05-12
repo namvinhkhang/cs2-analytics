@@ -25,3 +25,4 @@
 - When HLTV unofficial map-stat payloads include numeric team IDs that match `dim_teams.team_id`, join marts by team ID instead of normalized team names.
 - GitHub Actions dashboard refresh should only `COPY INTO` active hosted-dashboard raw sources; keep legacy/unused sources such as Faceit, PandaScore, and Liquipedia out of the CI raw-load loop even if Airflow retains a full optional loader.
 - Keep optional manual HLTV round-history loads out of the daily dashboard refresh; only weekly Choke Profile refresh should require `raw_hltv_round_history`.
+- Raw match tables can contain duplicate source rows after staged historical loads; deduplicate `fact_matches` at its declared `match_id`/`source`/`map_name` grain before generating surrogate keys.

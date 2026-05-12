@@ -70,6 +70,20 @@ Hidden Gem Scout and Upset Tracker remain SQL-first. Modern data should come fro
 
 ## Active Plan
 
+- [x] Fix dbt unique failures after raw COPY loads.
+  - [x] Inspect failed GitHub Action logs for dbt test failures.
+  - [x] Add regression coverage that `fact_matches` deduplicates repeated raw match rows.
+  - [x] Deduplicate `fact_matches` at `match_id`/`source`/`map_name` before surrogate-key generation.
+  - [x] Run focused SQL tests, dbt parse, and lint.
+
+Review: After the profile-aware raw load passed, dbt failed on duplicate
+`match_sk` values in `fact_matches` and `mart_upset_features`. The fix ranks
+raw match rows at the declared fact grain and keeps one row before generating
+`match_sk`, making dashboard refreshes resilient to repeated or overlapping raw
+S3 loads. Verification passed: focused workflow/setup/DAG/SQL pytest suite,
+Ruff, and `dbt parse --no-partial-parse` with dummy Snowflake environment
+values. The parse still reports existing accepted-values deprecation warnings.
+
 - [x] Make HLTV raw table load weekly-only in dashboard refresh.
   - [x] Add regression coverage that daily refresh does not require optional HLTV round history.
   - [x] Pass the resolved refresh profile into the raw-load step.
