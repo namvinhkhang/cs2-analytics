@@ -147,6 +147,8 @@ jobs:
 
       - name: Load raw Parquet data into Snowflake
         shell: bash
+        env:
+          REFRESH_PROFILE: ${{ steps.refresh.outputs.profile }}
         run: |
           uv run python - <<'PY'
           import os
@@ -160,10 +162,14 @@ jobs:
               ("raw_csapi_team_rankings", "cs2_raw_stage/csapi/team_rankings/"),
               ("raw_csapi_player_stats", "cs2_raw_stage/csapi/player_stats/"),
               ("raw_valve_team_regions", "cs2_raw_stage/valve/team_regions/"),
+          )
+          WEEKLY_RAW_LOADS = (
               ("raw_hltv_round_history", "cs2_raw_stage/hltv_unofficial/round_history/"),
           )
 
           database = os.environ["SNOWFLAKE_DATABASE"]
+          refresh_profile = os.environ["REFRESH_PROFILE"]
+          raw_loads = RAW_LOADS + WEEKLY_RAW_LOADS if refresh_profile == "weekly" else RAW_LOADS
           conn = snowflake.connector.connect(
               account=os.environ["SNOWFLAKE_ACCOUNT"],
               user=os.environ["SNOWFLAKE_USER"],
@@ -174,7 +180,7 @@ jobs:
           )
           try:
               cursor = conn.cursor()
-              for table, stage_prefix in RAW_LOADS:
+              for table, stage_prefix in raw_loads:
                   table_name = f"{database}.RAW.{table}"
                   try:
                       cursor.execute(f"SELECT 1 FROM {table_name} LIMIT 0")

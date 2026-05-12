@@ -9,7 +9,6 @@ EXPECTED_DASHBOARD_RAW_LOADS = (
     ("raw_csapi_team_rankings", "cs2_raw_stage/csapi/team_rankings/"),
     ("raw_csapi_player_stats", "cs2_raw_stage/csapi/player_stats/"),
     ("raw_valve_team_regions", "cs2_raw_stage/valve/team_regions/"),
-    ("raw_hltv_round_history", "cs2_raw_stage/hltv_unofficial/round_history/"),
 )
 UNUSED_DASHBOARD_RAW_LOADS = (
     ("raw_faceit_matches", "cs2_raw_stage/faceit/matches/"),
@@ -17,6 +16,9 @@ UNUSED_DASHBOARD_RAW_LOADS = (
     ("raw_faceit_players", "cs2_raw_stage/faceit/players/"),
     ("raw_pandascore_players", "cs2_raw_stage/pandascore/players/"),
     ("raw_liquipedia_teams", "cs2_raw_stage/liquipedia/teams/"),
+)
+WEEKLY_DASHBOARD_RAW_LOADS = (
+    ("raw_hltv_round_history", "cs2_raw_stage/hltv_unofficial/round_history/"),
 )
 
 
@@ -69,6 +71,20 @@ def test_dashboard_refresh_workflow_loads_active_raw_tables_before_dbt() -> None
     assert workflow.index("Load raw Parquet data into Snowflake") < workflow.index(
         "Run targeted dbt models",
     )
+
+
+def test_dashboard_refresh_workflow_only_loads_hltv_for_weekly_profile() -> None:
+    """Daily refreshes should not require the optional manual HLTV raw table."""
+    workflow = (REPO_ROOT / ".github" / "workflows" / "dashboard-refresh.yml").read_text(
+        encoding="utf-8",
+    )
+
+    assert 'REFRESH_PROFILE: ${{ steps.refresh.outputs.profile }}' in workflow
+    assert 'refresh_profile = os.environ["REFRESH_PROFILE"]' in workflow
+    assert 'WEEKLY_RAW_LOADS if refresh_profile == "weekly" else RAW_LOADS' in workflow
+    for table, stage_prefix in WEEKLY_DASHBOARD_RAW_LOADS:
+        assert table in workflow
+        assert stage_prefix in workflow
 
 
 def test_dashboard_refresh_workflow_does_not_create_raw_tables() -> None:

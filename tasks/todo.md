@@ -70,6 +70,18 @@ Hidden Gem Scout and Upset Tracker remain SQL-first. Modern data should come fro
 
 ## Active Plan
 
+- [x] Make HLTV raw table load weekly-only in dashboard refresh.
+  - [x] Add regression coverage that daily refresh does not require optional HLTV round history.
+  - [x] Pass the resolved refresh profile into the raw-load step.
+  - [x] Add `raw_hltv_round_history` only for the weekly profile.
+  - [x] Record the lesson about optional manual HLTV loads.
+
+Review: The reported log still included Faceit/PandaScore from the older
+`64d3aaa` run, but the HLTV failure is valid for daily: local/manual HLTV data
+should not block daily Upset Tracker and Hidden Gem Scout snapshots. The
+workflow now loads CS API and Valve raw tables every run, and adds HLTV round
+history only when `profile=weekly`.
+
 - [x] Fix dashboard refresh failure on unused RAW table privileges.
   - [x] Reproduce the regression locally with tests that require active-only GitHub Action loads.
   - [x] Remove Faceit, PandaScore, and Liquipedia from the GitHub Action raw-load loop.
