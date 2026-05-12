@@ -5,6 +5,22 @@ without requiring Snowflake or dbt connections.
 """
 from __future__ import annotations
 
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+EXPECTED_RAW_LOADS = (
+    ("raw_faceit_matches", "cs2_raw_stage/faceit/matches/"),
+    ("raw_pandascore_matches", "cs2_raw_stage/pandascore/matches/"),
+    ("raw_csapi_matches", "cs2_raw_stage/csapi/matches/"),
+    ("raw_csapi_team_rankings", "cs2_raw_stage/csapi/team_rankings/"),
+    ("raw_csapi_player_stats", "cs2_raw_stage/csapi/player_stats/"),
+    ("raw_valve_team_regions", "cs2_raw_stage/valve/team_regions/"),
+    ("raw_hltv_round_history", "cs2_raw_stage/hltv_unofficial/round_history/"),
+    ("raw_faceit_players", "cs2_raw_stage/faceit/players/"),
+    ("raw_pandascore_players", "cs2_raw_stage/pandascore/players/"),
+    ("raw_liquipedia_teams", "cs2_raw_stage/liquipedia/teams/"),
+)
+
 
 class TestDbtRunDagStructure:
     """cs2_dbt_run DAG structural validation."""
@@ -53,3 +69,13 @@ class TestDbtRunDagStructure:
         assert "copy_into_raw" in task_dict["dbt_run"].upstream_task_ids
         # dbt_test depends on dbt_run completing successfully
         assert "dbt_run" in task_dict["dbt_test"].upstream_task_ids
+
+    def test_copy_into_raw_loads_all_staged_raw_parquet_sources(self) -> None:
+        """Airflow must load every staged raw Parquet prefix before dbt runs."""
+        dag_source = (REPO_ROOT / "airflow" / "dags" / "cs2_dbt_run.py").read_text(
+            encoding="utf-8",
+        )
+
+        for table, stage_prefix in EXPECTED_RAW_LOADS:
+            assert table in dag_source
+            assert stage_prefix in dag_source

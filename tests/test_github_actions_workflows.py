@@ -4,6 +4,18 @@ import subprocess
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+EXPECTED_RAW_LOADS = (
+    ("raw_faceit_matches", "cs2_raw_stage/faceit/matches/"),
+    ("raw_pandascore_matches", "cs2_raw_stage/pandascore/matches/"),
+    ("raw_csapi_matches", "cs2_raw_stage/csapi/matches/"),
+    ("raw_csapi_team_rankings", "cs2_raw_stage/csapi/team_rankings/"),
+    ("raw_csapi_player_stats", "cs2_raw_stage/csapi/player_stats/"),
+    ("raw_valve_team_regions", "cs2_raw_stage/valve/team_regions/"),
+    ("raw_hltv_round_history", "cs2_raw_stage/hltv_unofficial/round_history/"),
+    ("raw_faceit_players", "cs2_raw_stage/faceit/players/"),
+    ("raw_pandascore_players", "cs2_raw_stage/pandascore/players/"),
+    ("raw_liquipedia_teams", "cs2_raw_stage/liquipedia/teams/"),
+)
 
 
 def test_dashboard_refresh_workflow_has_required_schedule_and_steps() -> None:
@@ -39,6 +51,21 @@ def test_dashboard_refresh_workflow_loads_valve_regions_before_dbt() -> None:
     assert "cs2_raw_stage/valve/team_regions/" in workflow
 
 
+def test_dashboard_refresh_workflow_loads_all_raw_tables_before_dbt() -> None:
+    """No-Airflow refreshes must load every staged raw Parquet source before dbt."""
+    workflow = (REPO_ROOT / ".github" / "workflows" / "dashboard-refresh.yml").read_text(
+        encoding="utf-8",
+    )
+
+    assert "Load raw Parquet data into Snowflake" in workflow
+    for table, stage_prefix in EXPECTED_RAW_LOADS:
+        assert table in workflow
+        assert stage_prefix in workflow
+    assert workflow.index("Load raw Parquet data into Snowflake") < workflow.index(
+        "Run targeted dbt models",
+    )
+
+
 def test_dashboard_refresh_workflow_does_not_create_raw_tables() -> None:
     """Raw DDL is a setup/admin concern; CI should not need schema CREATE privileges."""
     workflow = (REPO_ROOT / ".github" / "workflows" / "dashboard-refresh.yml").read_text(
@@ -46,7 +73,8 @@ def test_dashboard_refresh_workflow_does_not_create_raw_tables() -> None:
     )
 
     assert "CREATE TABLE IF NOT EXISTS" not in workflow
-    assert "RAW.raw_valve_team_regions is missing or inaccessible" in workflow
+    assert "is missing or inaccessible" in workflow
+    assert "dbt_project/setup/snowflake_setup.sql" in workflow
 
 
 def test_dashboard_refresh_workflow_rebuilds_upstream_region_models() -> None:

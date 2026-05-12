@@ -70,6 +70,38 @@ Hidden Gem Scout and Upset Tracker remain SQL-first. Modern data should come fro
 
 ## Active Plan
 
+- [x] Ensure GitHub Action and Airflow COPY every raw S3 Parquet source.
+  - [x] Add regression coverage for the full raw table/stage prefix matrix in GitHub Actions.
+  - [x] Add regression coverage for the same raw table/stage prefix matrix in Airflow.
+  - [x] Expand the GitHub Action Snowflake raw load to all raw sources.
+  - [x] Run focused workflow, DAG, lint, and YAML checks.
+  - [x] Document verification results.
+
+Review: Replaced the dashboard refresh workflow's single-source raw load with
+one all-raw `COPY INTO` loop covering Faceit matches/players, PandaScore
+matches/players, CS API matches/team rankings/player stats, Valve team regions,
+HLTV round history, and Liquipedia teams. Added matching regression coverage for
+GitHub Actions and Airflow so both paths must keep the same staged raw table
+matrix. Verification passed: `uv run pytest
+tests/test_github_actions_workflows.py tests/test_dags/test_dbt_run_dag.py`
+with 15 passed and 1 existing Airflow deprecation warning, `uv run ruff check
+tests/test_github_actions_workflows.py tests/test_dags/test_dbt_run_dag.py`,
+and a YAML parse smoke check for `.github/workflows/dashboard-refresh.yml`.
+
+- [x] Make dashboard GitHub Action self-contained for no-Airflow refresh.
+  - [x] Add regression coverage that the Action loads CS API S3 Parquet into Snowflake RAW tables.
+  - [x] Add GitHub Action CS API `COPY INTO` step before dbt runs.
+  - [x] Run focused workflow tests and lint.
+  - [x] Document verification results.
+
+Review: Added a dashboard-refresh workflow step that loads `raw_csapi_matches`,
+`raw_csapi_team_rankings`, and `raw_csapi_player_stats` from the Snowflake S3
+stage before dbt runs, so the GitHub Action no longer depends on optional
+Airflow for the CS API S3-to-RAW hop. Verification passed:
+`uv run pytest tests/test_github_actions_workflows.py`, `uv run ruff check
+tests/test_github_actions_workflows.py`, and a YAML parse smoke check for
+`.github/workflows/dashboard-refresh.yml`.
+
 - [x] Remove series-inapplicable map controls from Upset Tracker dashboard.
   - [x] Add regression tests for hiding `map_name` from the table and filters.
   - [x] Remove `map_name` from the display columns and filter controls.
