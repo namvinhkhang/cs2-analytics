@@ -28,3 +28,5 @@
 - Keep optional manual HLTV round-history loads out of the daily dashboard refresh; only weekly Choke Profile refresh should require `raw_hltv_round_history`.
 - Raw match tables can contain duplicate source rows after staged historical loads; deduplicate `fact_matches` at its declared `match_id`/`source`/`map_name` grain before generating surrogate keys.
 - Do not call Choke Profile implemented just because ingestion and a first mart shape exist; the feature requires representative data, Snowflake/dbt verification, snapshots, and a dashboard analysis page.
+- GitHub Actions weekly dashboard refresh must not run the deep CS API `weekly` profile; Monday weekly should replace the Monday daily schedule, use the bounded CS API `daily` ingest window, and add only weekly-specific HLTV/choke/model work.
+- GitHub Actions Snowflake raw loads should target the current S3 `year=/month=/day=` partition, not the whole source prefix, so scheduled runs do not rescan historical files or depend on long-lived COPY load history to avoid duplicates.

@@ -28,7 +28,7 @@ def test_dashboard_refresh_workflow_has_required_schedule_and_steps() -> None:
     text = workflow.read_text(encoding="utf-8")
 
     assert "workflow_dispatch:" in text
-    assert "17 10 * * *" in text
+    assert "17 10 * * 0,2-6" in text
     assert "43 11 * * 1" in text
     assert "contents: write" in text
     assert "uv run python scripts/bootstrap_csapi.py --profile" in text
@@ -41,6 +41,29 @@ def test_dashboard_refresh_workflow_has_required_schedule_and_steps() -> None:
     assert "SNOWFLAKE_PRIVATE_KEY" in text
     assert "CS2_AWS_S3_BUCKET" in text
     assert "AWS_ACCESS_KEY_ID" in text
+
+
+def test_dashboard_refresh_workflow_keeps_daily_and_weekly_schedules_disjoint() -> None:
+    """Weekly owns Monday so the hosted action does not ingest duplicate daily rows."""
+    workflow = (REPO_ROOT / ".github" / "workflows" / "dashboard-refresh.yml").read_text(
+        encoding="utf-8",
+    )
+
+    assert 'cron: "17 10 * * 0,2-6"' in workflow
+    assert 'cron: "17 10 * * 1"' not in workflow
+    assert 'cron: "17 10 * * *"' not in workflow
+    assert 'cron: "43 11 * * 1"' in workflow
+
+
+def test_weekly_dashboard_refresh_uses_bounded_csapi_ingest_profile() -> None:
+    """Weekly dashboard refresh should not run the deep CS API weekly profile."""
+    workflow = (REPO_ROOT / ".github" / "workflows" / "dashboard-refresh.yml").read_text(
+        encoding="utf-8",
+    )
+
+    assert 'echo "csapi_profile=daily" >> "$GITHUB_OUTPUT"' in workflow
+    assert '--profile "${{ steps.refresh.outputs.csapi_profile }}"' in workflow
+    assert '--profile "${{ steps.refresh.outputs.profile }}"' not in workflow
 
 
 def test_dashboard_refresh_workflow_loads_valve_regions_before_dbt() -> None:
@@ -71,6 +94,21 @@ def test_dashboard_refresh_workflow_loads_active_raw_tables_before_dbt() -> None
     assert workflow.index("Load raw Parquet data into Snowflake") < workflow.index(
         "Run targeted dbt models",
     )
+
+
+def test_dashboard_refresh_workflow_loads_only_current_raw_partition() -> None:
+    """COPY should not scan every historical raw file on each scheduled run."""
+    workflow = (REPO_ROOT / ".github" / "workflows" / "dashboard-refresh.yml").read_text(
+        encoding="utf-8",
+    )
+
+    assert "from datetime import date" in workflow
+    assert (
+        'current_partition = f"year={today.year}/month={today.month:02d}/day={today.day:02d}/"'
+        in workflow
+    )
+    assert "stage_prefix = f\"{base_stage_prefix}{current_partition}\"" in workflow
+    assert "FROM @{database}.RAW.{stage_prefix}" in workflow
 
 
 def test_dashboard_refresh_workflow_only_loads_hltv_for_weekly_profile() -> None:

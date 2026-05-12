@@ -127,15 +127,17 @@ Run this once per week after exporting `.env`:
 
 ```bash
 set -a; source .env; set +a
-uv run python scripts/bootstrap_csapi.py --profile weekly
+uv run python scripts/bootstrap_csapi.py --profile daily
 uv run dbt run --select +mart_upset_features +mart_hidden_gems +mart_choke_profile --project-dir dbt_project --profiles-dir dbt_project
 uv run dbt test --select +mart_upset_features +mart_hidden_gems +mart_choke_profile --project-dir dbt_project --profiles-dir dbt_project
 uv run python -m ml.train
 uv run python -m dashboard.export_snapshots --mart mart_upset_features --mart mart_hidden_gems --mart mart_choke_profile
 ```
 
-The weekly profile collects a deeper rolling window for Hidden Gem Scout and keeps
-raw S3 writes resumable by skipping output objects that already exist.
+The hosted weekly dashboard refresh replaces the Monday daily run. It uses the
+bounded CS API `daily` profile for current rankings/matches, then adds the
+weekly-only HLTV Choke Profile load, model retraining, and three-mart snapshot
+export. Do not schedule the deep CS API `weekly` profile in GitHub Actions.
 
 ## Backfills
 
@@ -279,14 +281,19 @@ gh workflow run dashboard-refresh.yml --ref main -f profile=daily
 
 Schedules are in UTC:
 
-- Daily refresh: `17 10 * * *`
-- Weekly refresh: `43 11 * * 1`
+- Daily refresh: `17 10 * * 0,2-6` for Sunday and Tuesday-Saturday
+- Weekly refresh: `43 11 * * 1` for Monday
 
 You can also run it manually from GitHub Actions with the `daily` or `weekly`
 profile. The daily run ingests recent CS API data, rebuilds/test the dashboard
-marts, exports snapshots, and commits changed snapshots. The weekly run also
-rebuilds `mart_choke_profile` and retrains the Upset Tracker model before
-exporting snapshots.
+marts, exports snapshots, and commits changed snapshots. The weekly run replaces
+the Monday daily run, still uses the bounded CS API `daily` ingest window, and
+adds HLTV raw loading, `mart_choke_profile`, Upset Tracker retraining, and the
+Choke snapshot export.
+
+Each hosted refresh copies only the current S3 date partition into Snowflake,
+for example `year=2026/month=05/day=12/`, instead of scanning every historical
+raw file under the source prefix.
 
 Add these repository secrets in GitHub before enabling the workflow:
 
@@ -318,7 +325,9 @@ docker compose --env-file .env -f airflow/docker-compose.yml up -d
 ```
 
 The daily DAG runs the `daily` CS API profile. The weekly rankings DAG runs the
-`weekly` profile. The `backfill` profile has no scheduled trigger by default.
+`weekly` profile for deeper warehouse history. GitHub Actions intentionally does
+not use that deep weekly CS API profile for hosted dashboard refreshes. The
+`backfill` profile has no scheduled trigger by default.
 
 ## Validation
 
@@ -346,9 +355,11 @@ uv run dbt test --project-dir dbt_project --profiles-dir dbt_project
 
 ## Current Limitations
 
-- Choke/Clutch exact lead-blown, halftime comeback, bracket, and elimination
-  metrics remain deferred until trustworthy round/half/bracket source data is
-  ingested with aligned team identities.
-- Dashboard snapshots are local files today. Refresh them after warehouse/dbt
-  updates, or wire a scheduled export workflow before relying on hosted freshness.
+- Choke/Clutch exact lead-blown, halftime comeback, overtime, and close-map
+  metrics are team/map pressure signals from `hltv_unofficial` round history.
+  Player clutch, bracket, and elimination-match metrics remain unavailable until
+  a trustworthy event/bracket source is persisted with aligned team identities.
+- Hosted dashboard pages read committed Parquet snapshots. The GitHub Actions
+  refresh exports those snapshots on schedule, but Streamlit still serves the
+  latest committed files rather than querying Snowflake live on page load.
 - Upset Tracker predictions are watchlist signals, not certainties.

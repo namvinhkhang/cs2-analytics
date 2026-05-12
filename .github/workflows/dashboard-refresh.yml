@@ -2,9 +2,11 @@ name: Dashboard Refresh
 
 on:
   schedule:
-    # GitHub schedule times are UTC. Daily refresh runs at 06:17 Eastern during EDT.
-    - cron: "17 10 * * *"
-    # Weekly refresh runs Monday at 07:43 Eastern during EDT.
+    # GitHub schedule times are UTC. Daily refresh runs Sun/Tue-Sat at
+    # 06:17 Eastern during EDT. Monday is owned by the weekly refresh below.
+    - cron: "17 10 * * 0,2-6"
+    # Weekly refresh runs Monday at 07:43 Eastern during EDT and replaces the
+    # daily action for that day to avoid duplicate CS API raw loads.
     - cron: "43 11 * * 1"
   workflow_dispatch:
     inputs:
@@ -71,7 +73,11 @@ jobs:
             profile="daily"
           fi
           echo "profile=${profile}" >> "$GITHUB_OUTPUT"
-          echo "Running ${profile} dashboard refresh"
+          # Hosted dashboard refreshes always use the bounded CS API daily
+          # window. The deeper CS API weekly/backfill profiles are manual data
+          # growth paths, not scheduled dashboard work.
+          echo "csapi_profile=daily" >> "$GITHUB_OUTPUT"
+          echo "Running ${profile} dashboard refresh with CS API daily ingest"
 
       - name: Write Snowflake private key
         shell: bash
@@ -108,9 +114,9 @@ jobs:
                 threads: 4
           YAML
 
-      - name: Ingest CS API profile
+      - name: Ingest bounded CS API daily window
         shell: bash
-        run: uv run python scripts/bootstrap_csapi.py --profile "${{ steps.refresh.outputs.profile }}"
+        run: uv run python scripts/bootstrap_csapi.py --profile "${{ steps.refresh.outputs.csapi_profile }}"
 
       - name: Ingest Valve team regions
         shell: bash
@@ -151,6 +157,7 @@ jobs:
           REFRESH_PROFILE: ${{ steps.refresh.outputs.profile }}
         run: |
           uv run python - <<'PY'
+          from datetime import date
           import os
           import sys
 
@@ -169,6 +176,8 @@ jobs:
 
           database = os.environ["SNOWFLAKE_DATABASE"]
           refresh_profile = os.environ["REFRESH_PROFILE"]
+          today = date.today()
+          current_partition = f"year={today.year}/month={today.month:02d}/day={today.day:02d}/"
           raw_loads = RAW_LOADS + WEEKLY_RAW_LOADS if refresh_profile == "weekly" else RAW_LOADS
           conn = snowflake.connector.connect(
               account=os.environ["SNOWFLAKE_ACCOUNT"],
@@ -180,8 +189,9 @@ jobs:
           )
           try:
               cursor = conn.cursor()
-              for table, stage_prefix in raw_loads:
+              for table, base_stage_prefix in raw_loads:
                   table_name = f"{database}.RAW.{table}"
+                  stage_prefix = f"{base_stage_prefix}{current_partition}"
                   try:
                       cursor.execute(f"SELECT 1 FROM {table_name} LIMIT 0")
                   except ProgrammingError as exc:
