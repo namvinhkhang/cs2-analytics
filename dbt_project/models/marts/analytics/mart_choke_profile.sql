@@ -120,6 +120,7 @@ team_agg as (
         team_id,
         any_value(team_name) as team_name,
         count(*) as total_maps,
+        sum(total_rounds) as rounds_analyzed,
         sum(won_map) as wins,
         sum(lost_map) as losses,
         max(largest_lead) as largest_lead,
@@ -148,6 +149,18 @@ team_agg as (
         ) as close_map_win_rate
     from map_team_flags
     group by team_id
+),
+
+league_averages as (
+    select
+        round(sum(leads_blown)::float / nullif(sum(maps_with_5plus_lead), 0), 4)
+            as league_lead_blown_rate,
+        round(sum(halftime_comeback_wins)::float / nullif(sum(wins), 0), 4)
+            as league_halftime_comeback_rate,
+        round(sum(ot_wins)::float / nullif(sum(ot_matches), 0), 4) as league_ot_win_rate,
+        round(sum(close_map_wins)::float / nullif(sum(close_maps), 0), 4)
+            as league_close_map_win_rate
+    from team_agg
 )
 
 select
@@ -155,25 +168,45 @@ select
     coalesce(t.team_name, ta.team_name) as team_name,
     t.world_ranking,
     ta.total_maps,
+    ta.total_maps as maps_analyzed,
     ta.total_maps as total_scored_matches,
+    ta.rounds_analyzed,
     ta.wins,
     ta.losses,
     ta.largest_lead,
     ta.maps_with_5plus_lead,
     ta.leads_blown,
-    coalesce(ta.lead_blown_rate, 0) as lead_blown_rate,
+    ta.lead_blown_rate,
+    coalesce(ta.lead_blown_rate, 0) as lead_blown_rate_display,
+    ta.lead_blown_rate - la.league_lead_blown_rate as lead_blown_rate_delta,
     ta.halftime_leads_lost,
     ta.halftime_comeback_wins as comebacks,
-    coalesce(ta.comeback_rate, 0) as comeback_rate,
+    ta.comeback_rate,
+    ta.comeback_rate as halftime_comeback_rate,
+    coalesce(ta.comeback_rate, 0) as halftime_comeback_rate_display,
+    ta.comeback_rate - la.league_halftime_comeback_rate as halftime_comeback_rate_delta,
     'round_history_exact' as comeback_metric_type,
     true as halftime_data_available,
     ta.ot_matches,
+    ta.ot_matches as overtime_maps_analyzed,
     ta.ot_wins,
     ta.ot_losses,
     ta.ot_win_rate,
+    coalesce(ta.ot_win_rate, 0) as ot_win_rate_display,
+    ta.ot_win_rate - la.league_ot_win_rate as ot_win_rate_delta,
     ta.close_maps,
+    ta.close_maps as close_maps_analyzed,
     ta.close_map_wins,
     ta.close_map_win_rate,
+    coalesce(ta.close_map_win_rate, 0) as close_map_win_rate_display,
+    ta.close_map_win_rate - la.league_close_map_win_rate as close_map_win_rate_delta,
+    50 as minimum_stable_maps,
+    case
+        when ta.total_maps < 20 then 'limited'
+        when ta.total_maps < 50 then 'directional'
+        else 'stable'
+    end as sample_quality,
+    ta.total_maps < 20 as sample_size_warning,
     'hltv_unofficial' as metric_source,
     true as round_history_available,
     false as clutch_data_available,
@@ -181,5 +214,6 @@ select
     null::float as elimination_win_pct,
     null::float as winners_bracket_win_pct
 from team_agg ta
+cross join league_averages la
 left join {{ ref('dim_teams') }} t
     on ta.team_id = t.team_id

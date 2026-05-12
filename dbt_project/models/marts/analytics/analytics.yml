@@ -110,13 +110,84 @@ models:
         data_tests:
           - unique
           - not_null
-      - name: lead_blown_rate
+      - name: team_name
+        description: "Readable team label from dim_teams when available, otherwise HLTV cache name."
+        data_tests:
+          - not_null
+      - name: maps_analyzed
+        description: "Parsed HLTV maps included for this team."
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+      - name: rounds_analyzed
+        description: "Parsed round rows included for this team."
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+      - name: overtime_maps_analyzed
+        description: "Parsed maps that reached overtime."
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+      - name: close_maps_analyzed
+        description: "Parsed maps decided by two rounds or fewer."
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+      - name: maps_with_5plus_lead
+        description: "Maps where this team held a five-round or larger lead."
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+      - name: minimum_stable_maps
+        description: "Minimum parsed maps required for the stable sample-quality bucket."
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+      - name: sample_quality
+        description: "Sample-size bucket: limited under 20 maps, directional for 20-49, stable at 50+."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['limited', 'directional', 'stable']
+      - name: lead_blown_rate_display
+        description: "Coalesced lead-blown rate for dashboard display; raw lead_blown_rate stays nullable."
         data_tests:
           - not_null
       - name: largest_lead
         description: "Largest round lead this team held on any parsed map."
       - name: halftime_leads_lost
         description: "Maps lost after leading at halftime."
+        data_tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+      - name: halftime_comeback_rate_display
+        description: "Coalesced halftime comeback rate for dashboard display; raw comeback_rate stays nullable."
+        data_tests:
+          - not_null
+      - name: lead_blown_rate_delta
+        description: "Lead-blown rate minus the parsed-map league average."
+      - name: halftime_comeback_rate_delta
+        description: "Halftime comeback rate minus the parsed-map league average."
+      - name: ot_win_rate_delta
+        description: "Overtime win rate minus the parsed-map league average."
+      - name: close_map_win_rate_delta
+        description: "Close-map win rate minus the parsed-map league average."
       - name: comeback_metric_type
         description: "Documents whether comeback_rate is exact halftime logic or a proxy."
         data_tests:
@@ -142,5 +213,9 @@ models:
           - not_null
       - name: bracket_data_available
         description: "False until bracket-position facts are ingested."
+        data_tests:
+          - not_null
+      - name: sample_size_warning
+        description: "True when a team has fewer than 20 parsed maps."
         data_tests:
           - not_null

@@ -23,6 +23,8 @@
 - When enriching team metadata from Valve, prefer exact case-insensitive team-name matches first and use normalized-name matching only as a fallback; exact matches are safer and easier to audit when users report region mismatches.
 - Do not add streaming/Kafka scope to CS2 Analytics v2 unless the user explicitly asks for real-time event infrastructure; default v2 platform work should stay warehouse-first with Terraform, data quality, MLflow, BI, Discord, and model iteration.
 - When HLTV unofficial map-stat payloads include numeric team IDs that match `dim_teams.team_id`, join marts by team ID instead of normalized team names.
+- HLTV cache bootstraps must skip invalid placeholder JSON files with null match/team/map fields, because one bad cache file should not stop a whole multi-map round-history batch.
 - GitHub Actions dashboard refresh should only `COPY INTO` active hosted-dashboard raw sources; keep legacy/unused sources such as Faceit, PandaScore, and Liquipedia out of the CI raw-load loop even if Airflow retains a full optional loader.
 - Keep optional manual HLTV round-history loads out of the daily dashboard refresh; only weekly Choke Profile refresh should require `raw_hltv_round_history`.
 - Raw match tables can contain duplicate source rows after staged historical loads; deduplicate `fact_matches` at its declared `match_id`/`source`/`map_name` grain before generating surrogate keys.
+- Do not call Choke Profile implemented just because ingestion and a first mart shape exist; the feature requires representative data, Snowflake/dbt verification, snapshots, and a dashboard analysis page.

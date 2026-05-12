@@ -121,8 +121,10 @@ def render() -> None:
 
     upset_snapshot = load_mart_snapshot_cached("mart_upset_features")
     gems_snapshot = load_mart_snapshot_cached("mart_hidden_gems")
+    choke_snapshot = load_mart_snapshot_cached("mart_choke_profile")
     upset_frame = upset_snapshot.frame
     gems_frame = gems_snapshot.frame
+    choke_frame = choke_snapshot.frame
 
     upset_count = (
         int(upset_frame["is_upset"].fillna(False).sum()) if "is_upset" in upset_frame else 0
@@ -133,9 +135,9 @@ def render() -> None:
         st.metric("Upset matches", _format_number(upset_count), border=True)
         st.metric("Upset rate", f"{upset_rate:.1%}", border=True)
         st.metric("Hidden gems", _format_number(len(gems_frame)), border=True)
-        st.metric("Latest match", _latest_timestamp(upset_frame, "played_at"), border=True)
+        st.metric("Pressure teams", _format_number(len(choke_frame)), border=True)
 
-    product_cols = st.columns(2)
+    product_cols = st.columns(3)
     with product_cols[0].container(border=True, height="stretch"):
         st.subheader(":material/crisis_alert: Upset Tracker")
         st.metric("Mart rows", _format_number(len(upset_frame)))
@@ -185,6 +187,33 @@ def render() -> None:
             icon=":material/open_in_new:",
         )
 
+    with product_cols[2].container(border=True, height="stretch"):
+        st.subheader(":material/tactic: Choke/Clutch Profile")
+        st.metric("Teams profiled", _format_number(len(choke_frame)))
+        if "sample_quality" in choke_frame.columns and not choke_frame.empty:
+            quality_frame = (
+                choke_frame["sample_quality"]
+                .fillna("unknown")
+                .value_counts()
+                .rename_axis("sample_quality")
+                .reset_index(name="teams")
+            )
+            st.bar_chart(
+                quality_frame,
+                x="sample_quality",
+                y="teams",
+                x_label="Sample quality",
+                y_label="Teams",
+                width="stretch",
+            )
+        else:
+            st.caption("Pressure sample quality unavailable.")
+        st.page_link(
+            "pages/3_Choke_Clutch_Profile.py",
+            label="Open Choke/Clutch Profile",
+            icon=":material/open_in_new:",
+        )
+
     chart_cols = st.columns([1, 1])
     with chart_cols[0].container(border=True, height="stretch"):
         st.subheader("Match region coverage")
@@ -225,7 +254,7 @@ def render() -> None:
 
     with st.container(border=True):
         st.subheader("Cached mart snapshots")
-        _render_freshness(st, [upset_snapshot, gems_snapshot])
+        _render_freshness(st, [upset_snapshot, gems_snapshot, choke_snapshot])
 
 
 if __name__ == "__main__":

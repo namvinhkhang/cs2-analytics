@@ -236,7 +236,13 @@ jobs:
         run: uv run python -m ml.train
 
       - name: Export dashboard snapshots
-        run: uv run python -m dashboard.export_snapshots
+        shell: bash
+        run: |
+          if [[ "${{ steps.refresh.outputs.profile }}" == "weekly" ]]; then
+            uv run python -m dashboard.export_snapshots --mart mart_upset_features --mart mart_hidden_gems --mart mart_choke_profile
+          else
+            uv run python -m dashboard.export_snapshots --mart mart_upset_features --mart mart_hidden_gems
+          fi
 
       - name: Commit refreshed artifacts
         shell: bash

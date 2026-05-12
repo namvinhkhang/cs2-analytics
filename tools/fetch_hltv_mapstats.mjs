@@ -10,6 +10,10 @@ const DEFAULT_CHALLENGE_TIMEOUT_MS = 120000;
 const DEFAULT_USER_DATA_DIR = "data/hltv_cache/puppeteer-profile";
 const STOP_STATUSES = new Set([403, 429]);
 const CONTENT_SELECTOR = ".match-info-box";
+// HLTV serves a soft 500: HTTP 200 with an `error-body` page. Detect by class
+// or by the `.error-500` block rendered inside it.
+const ERROR_PAGE_PROBE =
+  "document.body && (document.body.classList.contains('error-body') || !!document.querySelector('.error-500'))";
 const CLOUDFLARE_MARKERS = [
   "Sorry, you have been blocked",
   "Checking your browser before accessing",
@@ -21,9 +25,14 @@ const CLOUDFLARE_MARKERS = [
 function usage() {
   console.error(`
 Usage:
-  PUPPETEER_MODULE_PATH=data/hltv_cache/node/node_modules/puppeteer-extra/dist/index.cjs.js \\
-  STEALTH_MODULE_PATH=data/hltv_cache/node/node_modules/puppeteer-extra-plugin-stealth/index.js \\
-    node tools/fetch_hltv_mapstats.mjs --ids-file data/hltv_cache/mapstats_ids.txt --output-dir data/hltv_cache/map_stats
+  PUPPETEER_MODULE_PATH=data/hltv_cache/node/node_modules/puppeteer-extra/dist/index.cjs.js \
+  STEALTH_MODULE_PATH=data/hltv_cache/node/node_modules/puppeteer-extra-plugin-stealth/index.js \
+  CHROME_PATH=/usr/bin/chromium \
+  node tools/fetch_hltv_mapstats.mjs \
+    --ids-file data/hltv_cache/mapstats_ids.txt \
+    --output-dir data/hltv_cache/map_stats \
+    --delay-ms 5000 \
+    --headless true
 
 Options:
   --ids-file              Newline-delimited HLTV mapstats IDs (required).
@@ -192,9 +201,25 @@ async function gotoMapstats(page, url, navTimeoutMs, challengeTimeoutMs) {
       .catch(() => {});
   }
 
-  await page
-    .waitForSelector(CONTENT_SELECTOR, { timeout: challengeTimeoutMs })
-    .catch(() => {});
+  // Race the content selector against HLTV's HTML 500 page. Without this,
+  // an error page would block for the full challengeTimeoutMs before failing.
+  const outcome = await Promise.race([
+    page
+      .waitForSelector(CONTENT_SELECTOR, { timeout: challengeTimeoutMs })
+      .then(() => "content")
+      .catch(() => null),
+    page
+      .waitForFunction(ERROR_PAGE_PROBE, { timeout: challengeTimeoutMs })
+      .then(() => "error")
+      .catch(() => null),
+  ]);
+
+  if (outcome === "error") {
+    const err = new Error(`HLTV rendered an error page for ${url}`);
+    err.statusCode = 500;
+    err.hltvErrorPage = true;
+    throw err;
+  }
 
   const html = await page.content();
   if (looksLikeChallenge(html)) {
@@ -424,12 +449,19 @@ async function main() {
         await writeFile(outputPath, `${JSON.stringify(data, null, 2)}\n`, "utf8");
         console.log(`fetched ${id}: ${outputPath}`);
       } catch (error) {
-        const code = statusCode(error);
-        console.error(`failed ${id}: ${code ?? "unknown"} ${error?.message ?? error}`);
-        if (STOP_STATUSES.has(Number(code))) {
-          console.error("stopping on rate-limit/forbidden response");
-          process.exitCode = 1;
-          break;
+        if (error?.hltvErrorPage) {
+          // Persist a marker so the next run skips this id via existsSync.
+          const marker = { id, error: "hltv_500", skipped: true };
+          await writeFile(outputPath, `${JSON.stringify(marker, null, 2)}\n`, "utf8");
+          console.log(`skipped ${id}: HLTV 500 error page`);
+        } else {
+          const code = statusCode(error);
+          console.error(`failed ${id}: ${code ?? "unknown"} ${error?.message ?? error}`);
+          if (STOP_STATUSES.has(Number(code))) {
+            console.error("stopping on rate-limit/forbidden response");
+            process.exitCode = 1;
+            break;
+          }
         }
       }
 
