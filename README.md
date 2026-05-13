@@ -204,6 +204,149 @@ under `data/hltv_cache/`, which is ignored by git. Use a unique `--batch-id` for
 each 100-300 map chunk so raw S3 files are append-only and reruns skip existing
 batch objects instead of overwriting them.
 
+### Parallel VPS Scraping
+
+For large backfills (16k+ matches) a single local browser is too slow and one
+Cloudflare timeout can stall the whole run. The repository scales this out
+across cheap Hetzner CPX VPSs (one per region) that each run an isolated Chrome
+with its own warmed `cf_clearance` cookie.
+
+Architecture:
+
+- Shard `data/hltv_cache/match_ids.txt` into N shuffled chunks so each VPS
+  gets a mix of events instead of hammering one event from one IP.
+- Each VPS runs Xvfb + Google Chrome + `tools/fetch_hltv_matches.mjs`.
+- The scraper connects to Chrome via CDP when `CHROME_REMOTE_URL` is set,
+  instead of letting puppeteer spawn its own Chrome. This is required because
+  Cloudflare binds `cf_clearance` to the real Chrome fingerprint, and a
+  freshly puppeteer-launched Chrome triggers a re-challenge that stealth
+  cannot auto-solve on `/stats/...` paths.
+- Cloudflare's managed challenge is solved once per VPS through a VNC session.
+  The persisted `--user-data-dir` keeps the cookie alive for the full run.
+- Output filenames are keyed by `{matchId}.json`, so rsync'ing results back
+  from all VPSs is conflict-free.
+
+VPS bootstrap (Ubuntu 24.04, run once per VPS):
+
+```bash
+DEBIAN_FRONTEND=noninteractive apt-get update -qq
+DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+  curl ca-certificates tmux rsync xvfb fluxbox x11vnc sqlite3 \
+  fonts-liberation libnss3 libatk-bridge2.0-0 libdrm2 libxkbcommon0 \
+  libxcomposite1 libxdamage1 libxrandr2 libgbm1 libasound2t64
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+DEBIAN_FRONTEND=noninteractive apt-get install -y -qq nodejs
+
+# Google Chrome from Google's apt repo. Ubuntu 24.04's `chromium` package is a
+# snap stub that does not install a binary at /usr/bin/chromium.
+curl -fsSL https://dl.google.com/linux/linux_signing_key.pub \
+  | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] https://dl.google.com/linux/chrome/deb/ stable main" \
+  > /etc/apt/sources.list.d/google-chrome.list
+DEBIAN_FRONTEND=noninteractive apt-get update -qq
+DEBIAN_FRONTEND=noninteractive apt-get install -y -qq google-chrome-stable
+```
+
+Shard the match IDs locally and rsync code + vendored `node_modules` to each
+VPS:
+
+```bash
+shuf data/hltv_cache/match_ids.txt > /tmp/shuffled.txt
+split -n l/4 -d /tmp/shuffled.txt data/hltv_cache/match_ids.part_
+
+# Per VPS — repeat with each IP and the matching part_NN
+ssh -i KEY root@VPS_IP 'mkdir -p /root/cs2'
+rsync -avz -e "ssh -i KEY" tools/ root@VPS_IP:/root/cs2/tools/
+rsync -avz -e "ssh -i KEY" data/hltv_cache/node/node_modules/ root@VPS_IP:/root/cs2/node_modules/
+rsync -avz -e "ssh -i KEY" data/hltv_cache/match_ids.part_NN root@VPS_IP:/root/cs2/match_ids.txt
+```
+
+Cloudflare warmup (one-time per VPS):
+
+```bash
+# On the VPS — start virtual display, window manager, VNC server bound to
+# localhost only.
+tmux new -ds desktop 'Xvfb :99 -screen 0 1366x768x24'
+tmux new -ds wm     'DISPLAY=:99 fluxbox'
+tmux new -ds vnc    'x11vnc -display :99 -listen localhost -nopw -forever -shared'
+
+# Launch Chrome on the display pointed at a /stats/ URL that the scraper will
+# need. This is the path that re-challenges if not pre-warmed.
+tmux new -ds chrome 'DISPLAY=:99 google-chrome \
+  --no-sandbox --no-first-run --no-default-browser-check \
+  --disable-blink-features=AutomationControlled \
+  --disable-dev-shm-usage \
+  --user-data-dir=/root/cs2/user_data \
+  --remote-debugging-port=9222 --remote-debugging-address=127.0.0.1 \
+  --window-size=1366,768 \
+  https://www.hltv.org/stats/matches/mapstatsid/213684/-'
+```
+
+Then from your local machine, tunnel VNC and connect:
+
+```bash
+ssh -i KEY -L 5901:localhost:5900 -N root@VPS_IP &
+vncviewer localhost:5901
+```
+
+In the VNC window, click through the Cloudflare challenge until the HLTV
+stats page loads. Close the VNC viewer only — Chrome must keep running. The
+`cf_clearance` cookie now lives in `/root/cs2/user_data` and is valid for
+that VPS's IP for ~30 days.
+
+Launch the scraper attached to the warmed Chrome:
+
+```bash
+tmux new -ds scrape 'stdbuf -oL -eL env \
+  CHROME_REMOTE_URL=http://localhost:9222 \
+  PUPPETEER_MODULE_PATH=/root/cs2/node_modules/puppeteer-extra/dist/index.cjs.js \
+  STEALTH_MODULE_PATH=/root/cs2/node_modules/puppeteer-extra-plugin-stealth/index.js \
+  node /root/cs2/tools/fetch_hltv_matches.mjs \
+    --ids-file /root/cs2/match_ids.txt \
+    --output-dir /root/cs2/matches \
+    --user-data-dir /root/cs2/user_data \
+    --delay-ms 5000 --headless true 2>&1 | tee /root/cs2/run.log'
+```
+
+Collect results when the runs finish:
+
+```bash
+mkdir -p data/hltv_cache/matches
+for ip in IP1 IP2 IP3 IP4; do
+  rsync -avz -e "ssh -i KEY" root@$ip:/root/cs2/matches/ data/hltv_cache/matches/
+done
+```
+
+Troubleshooting gotchas encountered during initial setup:
+
+- Ubuntu 24.04's `chromium` apt package is a snap stub and does not provide
+  `/usr/bin/chromium`. Use `google-chrome-stable` from Google's deb repo.
+- Chrome silently exits on minimal Hetzner images without
+  `--disable-dev-shm-usage` because `/dev/shm` is too small for Chrome IPC.
+- `--disable-gpu` combined with `--disable-software-rasterizer` makes Chrome
+  render to an invisible offscreen surface. Drop both flags if you need
+  Chrome visible in VNC.
+- Fluxbox (or another WM) must be running on display `:99` *before* Chrome
+  launches, or Chrome's window will not appear in VNC.
+- `puppeteer-extra-plugin-stealth` alone is not enough for HLTV `/stats/`
+  paths. Cloudflare detects the puppeteer-launched Chrome and refuses to
+  clear the challenge even with a valid `cf_clearance` cookie. The scraper
+  works around this by connecting to a manually-launched Chrome via CDP
+  when `CHROME_REMOTE_URL` is set.
+- `cf_clearance` minted by visiting only the homepage is not sufficient. The
+  warmup VNC visit must navigate to a `/stats/matches/mapstatsid/{id}/-` URL
+  at least once before the scraper can fetch mapstats pages.
+- Node's stdout is block-buffered when piped to `tee`, so log lines do not
+  appear until the buffer fills. Prefix the command with `stdbuf -oL -eL` to
+  force line buffering.
+- VNC server, fluxbox, x11vnc, and Chrome are kept in separate `tmux`
+  sessions (`desktop`, `wm`, `vnc`, `chrome`, `scrape`) so each can be
+  restarted independently if it crashes.
+
+Expected throughput is about one match every ~20 seconds (homepage + match
+page + ~3 mapstats pages × 5s delay), so a 4-VPS run of 16k matches takes
+roughly 22 hours wall-clock.
+
 ## Dashboard
 
 Export dashboard snapshots after dbt finishes:
