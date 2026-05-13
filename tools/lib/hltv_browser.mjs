@@ -77,26 +77,42 @@ export async function createBrowser({
   chromePath,
 }) {
   const puppeteer = await loadStealthPuppeteer();
-  const resolvedProfile = isAbsolute(userDataDir) ? userDataDir : resolve(userDataDir);
-  await mkdir(resolvedProfile, { recursive: true });
 
-  const launchOptions = {
-    headless,
-    userDataDir: resolvedProfile,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-blink-features=AutomationControlled",
-      "--lang=en-US,en",
-    ],
-  };
-  if (chromePath) launchOptions.executablePath = chromePath;
+  // When CHROME_REMOTE_URL is set we attach to a long-lived Chrome process via
+  // CDP instead of letting puppeteer spawn its own. This is required when
+  // Cloudflare has issued cf_clearance bound to the real Chrome fingerprint —
+  // a fresh puppeteer-launched Chrome triggers a re-challenge even with the
+  // cookie present, because subtle launch flags change the fingerprint.
+  const remoteUrl = process.env.CHROME_REMOTE_URL;
+  let browser;
+  let page;
 
-  const browser = await puppeteer.launch(launchOptions);
-  const page = (await browser.pages())[0] ?? (await browser.newPage());
-  await page.setUserAgent(DESKTOP_USER_AGENT);
-  await page.setViewport({ width: 1366, height: 768 });
-  await page.setExtraHTTPHeaders({ "accept-language": "en-US,en;q=0.9" });
+  if (remoteUrl) {
+    browser = await puppeteer.connect({ browserURL: remoteUrl, defaultViewport: null });
+    page = (await browser.pages())[0] ?? (await browser.newPage());
+    // Don't override UA/viewport — must match the real Chrome that minted cf_clearance.
+  } else {
+    const resolvedProfile = isAbsolute(userDataDir) ? userDataDir : resolve(userDataDir);
+    await mkdir(resolvedProfile, { recursive: true });
+
+    const launchOptions = {
+      headless,
+      userDataDir: resolvedProfile,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-blink-features=AutomationControlled",
+        "--lang=en-US,en",
+      ],
+    };
+    if (chromePath) launchOptions.executablePath = chromePath;
+
+    browser = await puppeteer.launch(launchOptions);
+    page = (await browser.pages())[0] ?? (await browser.newPage());
+    await page.setUserAgent(DESKTOP_USER_AGENT);
+    await page.setViewport({ width: 1366, height: 768 });
+    await page.setExtraHTTPHeaders({ "accept-language": "en-US,en;q=0.9" });
+  }
 
   // Visit the homepage first so cf_clearance binds to the apex domain before
   // we deep-link into /stats/... or /matches/...
