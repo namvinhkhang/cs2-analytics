@@ -1,37 +1,33 @@
 #!/usr/bin/env node
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { isAbsolute, resolve, join } from "node:path";
-import { pathToFileURL } from "node:url";
-
-const DEFAULT_DELAY_MS = 5000;
-const DEFAULT_NAV_TIMEOUT_MS = 60000;
-const DEFAULT_CHALLENGE_TIMEOUT_MS = 120000;
-const DEFAULT_USER_DATA_DIR = "data/hltv_cache/puppeteer-profile";
-const STOP_STATUSES = new Set([403, 429]);
-const CONTENT_SELECTOR = ".match-info-box";
-// HLTV serves a soft 500: HTTP 200 with an `error-body` page. Detect by class
-// or by the `.error-500` block rendered inside it.
-const ERROR_PAGE_PROBE =
-  "document.body && (document.body.classList.contains('error-body') || !!document.querySelector('.error-500'))";
-const CLOUDFLARE_MARKERS = [
-  "Sorry, you have been blocked",
-  "Checking your browser before accessing",
-  "Enable JavaScript and cookies to continue",
-  "Just a moment...",
-  "cf-challenge",
-];
+import { join } from "node:path";
+import {
+  createBrowser,
+  DEFAULT_CHALLENGE_TIMEOUT_MS,
+  DEFAULT_DELAY_MS,
+  DEFAULT_NAV_TIMEOUT_MS,
+  DEFAULT_USER_DATA_DIR,
+  gotoHltvPage,
+  sleep,
+  statusCode,
+  STOP_STATUSES,
+} from "./lib/hltv_browser.mjs";
+import {
+  extractMapstats,
+  MAPSTATS_CONTENT_SELECTOR,
+} from "./lib/hltv_mapstats_extract.mjs";
 
 function usage() {
   console.error(`
 Usage:
-  PUPPETEER_MODULE_PATH=data/hltv_cache/node/node_modules/puppeteer-extra/dist/index.cjs.js \
-  STEALTH_MODULE_PATH=data/hltv_cache/node/node_modules/puppeteer-extra-plugin-stealth/index.js \
-  CHROME_PATH=/usr/bin/chromium \
-  node tools/fetch_hltv_mapstats.mjs \
-    --ids-file data/hltv_cache/mapstats_ids.txt \
-    --output-dir data/hltv_cache/map_stats \
-    --delay-ms 5000 \
+  PUPPETEER_MODULE_PATH=data/hltv_cache/node/node_modules/puppeteer-extra/dist/index.cjs.js \\
+  STEALTH_MODULE_PATH=data/hltv_cache/node/node_modules/puppeteer-extra-plugin-stealth/index.js \\
+  CHROME_PATH=/usr/bin/chromium \\
+  node tools/fetch_hltv_mapstats.mjs \\
+    --ids-file data/hltv_cache/mapstats_ids.txt \\
+    --output-dir data/hltv_cache/map_stats \\
+    --delay-ms 5000 \\
     --headless true
 
 Options:
@@ -89,331 +85,6 @@ function parseArgs(argv) {
   };
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-// Resolve a module specifier from env: a bare name OR a filesystem path we
-// must convert to a file:// URL so dynamic import works on Linux.
-function moduleSpecifier(envValue, fallback) {
-  const value = envValue ?? fallback;
-  if (!value) return null;
-  if (!value.includes("/") && !value.includes("\\")) return value;
-  return pathToFileURL(isAbsolute(value) ? value : resolve(value)).href;
-}
-
-async function loadStealthPuppeteer() {
-  const puppeteerSpecifier = moduleSpecifier(
-    process.env.PUPPETEER_MODULE_PATH,
-    "puppeteer-extra",
-  );
-  const stealthSpecifier = moduleSpecifier(
-    process.env.STEALTH_MODULE_PATH,
-    "puppeteer-extra-plugin-stealth",
-  );
-  const puppeteerModule = await import(puppeteerSpecifier);
-  const stealthModule = await import(stealthSpecifier);
-  const puppeteer = puppeteerModule.default ?? puppeteerModule;
-  const stealth = stealthModule.default ?? stealthModule;
-  const plugin = stealth();
-  // `user-agent-override` rewrites the UA mid-navigation, which Chromium
-  // sometimes treats as a request change and aborts with net::ERR_ABORTED.
-  plugin.enabledEvasions.delete("user-agent-override");
-  puppeteer.use(plugin);
-  return puppeteer;
-}
-
-const DESKTOP_USER_AGENT =
-  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
-
-function looksLikeChallenge(html) {
-  return CLOUDFLARE_MARKERS.some((marker) => html.includes(marker));
-}
-
-async function createBrowser({
-  headless,
-  navTimeoutMs,
-  challengeTimeoutMs,
-  userDataDir,
-  chromePath,
-}) {
-  const puppeteer = await loadStealthPuppeteer();
-  const resolvedProfile = isAbsolute(userDataDir) ? userDataDir : resolve(userDataDir);
-  await mkdir(resolvedProfile, { recursive: true });
-
-  const launchOptions = {
-    headless,
-    userDataDir: resolvedProfile,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-blink-features=AutomationControlled",
-      "--lang=en-US,en",
-    ],
-  };
-  if (chromePath) launchOptions.executablePath = chromePath;
-
-  const browser = await puppeteer.launch(launchOptions);
-  const page = (await browser.pages())[0] ?? (await browser.newPage());
-  await page.setUserAgent(DESKTOP_USER_AGENT);
-  await page.setViewport({ width: 1366, height: 768 });
-  await page.setExtraHTTPHeaders({ "accept-language": "en-US,en;q=0.9" });
-
-  // Visit the homepage first so cf_clearance binds to the apex domain before
-  // we deep-link into /stats/...
-  try {
-    await page.goto("https://www.hltv.org/", {
-      waitUntil: "domcontentloaded",
-      timeout: navTimeoutMs,
-    });
-    await page
-      .waitForFunction(
-        (markers) => !markers.some((m) => document.documentElement.innerHTML.includes(m)),
-        { timeout: challengeTimeoutMs },
-        CLOUDFLARE_MARKERS,
-      )
-      .catch(() => {
-        console.error(
-          "Cloudflare challenge still present on homepage — solve it in the open window, then leave it running.",
-        );
-      });
-  } catch (error) {
-    console.error(`warmup navigation warning: ${error?.message ?? error}`);
-  }
-
-  return { browser, page };
-}
-
-async function gotoMapstats(page, url, navTimeoutMs, challengeTimeoutMs) {
-  // HLTV redirects /mapstatsid/{id}/- → /mapstatsid/{id}/{slug}. Puppeteer
-  // surfaces that redirect as net::ERR_ABORTED on the original goto promise
-  // even though the redirect target loads fine.
-  try {
-    await page.goto(url, {
-      waitUntil: "domcontentloaded",
-      timeout: navTimeoutMs,
-      referer: "https://www.hltv.org/",
-    });
-  } catch (error) {
-    if (!(error?.message ?? "").includes("net::ERR_ABORTED")) throw error;
-    await page
-      .waitForNavigation({ waitUntil: "domcontentloaded", timeout: navTimeoutMs })
-      .catch(() => {});
-  }
-
-  // Race the content selector against HLTV's HTML 500 page. Without this,
-  // an error page would block for the full challengeTimeoutMs before failing.
-  const outcome = await Promise.race([
-    page
-      .waitForSelector(CONTENT_SELECTOR, { timeout: challengeTimeoutMs })
-      .then(() => "content")
-      .catch(() => null),
-    page
-      .waitForFunction(ERROR_PAGE_PROBE, { timeout: challengeTimeoutMs })
-      .then(() => "error")
-      .catch(() => null),
-  ]);
-
-  if (outcome === "error") {
-    const err = new Error(`HLTV rendered an error page for ${url}`);
-    err.statusCode = 500;
-    err.hltvErrorPage = true;
-    throw err;
-  }
-
-  const html = await page.content();
-  if (looksLikeChallenge(html)) {
-    await page
-      .waitForFunction(
-        (markers) => !markers.some((m) => document.documentElement.innerHTML.includes(m)),
-        { timeout: challengeTimeoutMs },
-        CLOUDFLARE_MARKERS,
-      )
-      .catch(() => {});
-    await page.waitForSelector(CONTENT_SELECTOR, { timeout: challengeTimeoutMs }).catch(() => {});
-    const html2 = await page.content();
-    if (looksLikeChallenge(html2)) {
-      const err = new Error(`Cloudflare challenge did not clear for ${url}`);
-      err.statusCode = 403;
-      throw err;
-    }
-  }
-}
-
-// Runs inside the page. Extracts the mapstats payload directly from the
-// rendered DOM. Anything not present returns null rather than crashing.
-async function extractMapstats(page, id) {
-  return await page.evaluate((mapstatsId) => {
-    const pickText = (sel, root = document) =>
-      root.querySelector(sel)?.textContent?.trim() ?? null;
-    const pickAttr = (sel, attr, root = document) =>
-      root.querySelector(sel)?.getAttribute(attr) ?? null;
-    const segments = (path) => (path ?? "").split("/").filter(Boolean);
-    // Pull the first numeric path segment. Survives HLTV moving prefixes
-    // around (e.g. /stats/teams/{id}/{slug} vs /team/{id}/{slug}).
-    const firstNumericSegment = (path) => {
-      for (const seg of segments(path)) {
-        const n = Number(seg);
-        if (Number.isInteger(n) && n > 0) return n;
-      }
-      return null;
-    };
-
-    const matchId = firstNumericSegment(pickAttr(".match-page-link", "href"));
-
-    // Teams — anchor href is /stats/teams/{id}/{slug} on the mapstats page.
-    const team1Href = pickAttr(".team-left a", "href");
-    const team2Href = pickAttr(".team-right a", "href");
-    const team1 = {
-      id: firstNumericSegment(team1Href),
-      name: pickAttr(".team-left .team-logo", "title") ?? pickText(".team-left .team-logo"),
-    };
-    const team2 = {
-      id: firstNumericSegment(team2Href),
-      name: pickAttr(".team-right .team-logo", "title") ?? pickText(".team-right .team-logo"),
-    };
-
-    const team1Total = Number(pickText(".team-left .bold")) || 0;
-    const team2Total = Number(pickText(".team-right .bold")) || 0;
-
-    // Halves: first .match-info-row .right contains "(16 : 14) ( 7 : 8 ) ( 9 : 6 )" style
-    const halvesText =
-      document.querySelector(".match-info-row .right")?.textContent?.trim() ?? "";
-    const halfPairs = halvesText.match(/\d+\s*:\s*\d+/g) ?? [];
-    // Drop the first pair (the total) if HLTV includes it; otherwise pairs are halves.
-    const halfResults = (halfPairs.length > 2 ? halfPairs.slice(1) : halfPairs).map((pair) => {
-      const [a, b] = pair.split(":").map((n) => Number(n.trim()));
-      return { team1Rounds: a || 0, team2Rounds: b || 0 };
-    });
-
-    // Map name sits as one of .match-info-box's text-node children. Pick the
-    // first non-empty trimmed text node that isn't a known label.
-    const matchInfoBox = document.querySelector(".match-info-box");
-    let map = null;
-    if (matchInfoBox) {
-      for (const node of matchInfoBox.childNodes) {
-        if (node.nodeType !== 3) continue; // TEXT_NODE
-        const text = node.textContent.trim();
-        if (text && !/^[\s|·•-]+$/.test(text)) {
-          map = text;
-          break;
-        }
-      }
-    }
-
-    const date = Number(pickAttr(".match-info-box span[data-time-format]", "data-unix")) || null;
-
-    const eventEl = document.querySelector(".match-info-box .text-ellipsis");
-    const eventHref = eventEl?.getAttribute("href") ?? "";
-    const eventIdMatch = eventHref.match(/event=(\d+)/) ?? eventHref.match(/\/events\/(\d+)\//);
-    const event = eventEl
-      ? {
-          id: eventIdMatch ? Number(eventIdMatch[1]) : null,
-          name: eventEl.textContent?.trim() ?? null,
-        }
-      : null;
-
-    // Round history: HLTV renders one `.round-history-con` for regulation
-    // and (if applicable) a second `.round-history-con.round-history-overtime`
-    // for overtime. Each container has two `.round-history-team-row`
-    // children. Within a row, each `img.round-history-outcome` is one round:
-    // emptyHistory.svg = the team lost that round; any other svg = they won
-    // it. The winning row's image has the running scoreline in `title`.
-    const containers = Array.from(document.querySelectorAll(".round-history-con"));
-    const roundHistory = [];
-    let nextRound = 1;
-    for (const container of containers) {
-      const isOvertime = container.classList.contains("round-history-overtime");
-      const teamRows = Array.from(container.querySelectorAll(".round-history-team-row"));
-      if (teamRows.length < 2) continue;
-      const t1Imgs = Array.from(teamRows[0].querySelectorAll("img.round-history-outcome"));
-      const t2Imgs = Array.from(teamRows[1].querySelectorAll("img.round-history-outcome"));
-      const total = Math.min(t1Imgs.length, t2Imgs.length);
-      for (let i = 0; i < total; i++) {
-        const t1Src = t1Imgs[i].getAttribute("src") ?? "";
-        const t2Src = t2Imgs[i].getAttribute("src") ?? "";
-        const t1Title = t1Imgs[i].getAttribute("title") ?? "";
-        const t2Title = t2Imgs[i].getAttribute("title") ?? "";
-        const t1Empty = t1Src.includes("emptyHistory");
-        const t2Empty = t2Src.includes("emptyHistory");
-        // Both empty + no scoreline means the slot isn't a played round
-        // (trailing placeholders inside the OT container when the map ended).
-        if (t1Empty && t2Empty && !t1Title && !t2Title) continue;
-
-        let winner = null;
-        let outcome = null;
-        let score = null;
-        if (!t1Empty) {
-          winner = 1;
-          outcome = t1Src.split("/").pop()?.split(".")[0] ?? null;
-          score = t1Title || null;
-        } else if (!t2Empty) {
-          winner = 2;
-          outcome = t2Src.split("/").pop()?.split(".")[0] ?? null;
-          score = t2Title || null;
-        }
-        roundHistory.push({ round: nextRound++, winner, outcome, score, isOvertime });
-      }
-    }
-
-    // Starting sides: round 1's outcome encodes the winner's side. The loser
-    // starts on the opposite side. Bomb outcomes pin the winner's side too:
-    // exploded => T planted and won; defused => CT defused and won. stopwatch
-    // means time ran out on the bomb => CT won.
-    const outcomeToSide = {
-      t_win: "T",
-      ct_win: "CT",
-      bomb_exploded: "T",
-      bomb_defused: "CT",
-      stopwatch: "CT",
-    };
-    // Derive starting sides for a slice of rounds from the first played
-    // round in that slice (the one whose outcome has a known side).
-    const sidesFromSlice = (slice) => {
-      for (const r of slice) {
-        const winnerSide = r.outcome ? outcomeToSide[r.outcome] : null;
-        if (!winnerSide) continue;
-        const loserSide = winnerSide === "CT" ? "T" : "CT";
-        if (r.winner === 1) return { team1: winnerSide, team2: loserSide };
-        if (r.winner === 2) return { team1: loserSide, team2: winnerSide };
-      }
-      return null;
-    };
-
-    const regulationRounds = roundHistory.filter((r) => !r.isOvertime);
-    const startSides = sidesFromSlice(regulationRounds) ?? { team1: null, team2: null };
-
-    // Overtime in CS2 is MR3 (3 rounds per half). Teams swap sides every OT
-    // half and at the start of every new OT, so we record start sides per
-    // half-period (one entry per chunk of 3 OT rounds).
-    const overtimeRounds = roundHistory.filter((r) => r.isOvertime);
-    const overtimeStartSides = [];
-    for (let i = 0; i < overtimeRounds.length; i += 3) {
-      const chunk = overtimeRounds.slice(i, i + 3);
-      const sides = sidesFromSlice(chunk);
-      if (sides) overtimeStartSides.push(sides);
-    }
-
-    return {
-      id: mapstatsId,
-      matchId,
-      map,
-      date,
-      event,
-      team1,
-      team2,
-      startSides,
-      overtimeStartSides,
-      result: {
-        team1TotalRounds: team1Total,
-        team2TotalRounds: team2Total,
-        halfResults,
-      },
-      roundHistory,
-    };
-  }, id);
-}
-
 async function readIds(path) {
   const text = await readFile(path, "utf8");
   return text
@@ -422,10 +93,6 @@ async function readIds(path) {
     .filter((line) => line && !line.startsWith("#"))
     .map((line) => Number.parseInt(line, 10))
     .filter((id) => Number.isInteger(id));
-}
-
-function statusCode(error) {
-  return error?.statusCode ?? error?.response?.statusCode ?? error?.code;
 }
 
 async function main() {
@@ -444,7 +111,11 @@ async function main() {
 
       const url = `https://www.hltv.org/stats/matches/mapstatsid/${id}/-`;
       try {
-        await gotoMapstats(page, url, opts.navTimeoutMs, opts.challengeTimeoutMs);
+        await gotoHltvPage(page, url, {
+          navTimeoutMs: opts.navTimeoutMs,
+          challengeTimeoutMs: opts.challengeTimeoutMs,
+          contentSelector: MAPSTATS_CONTENT_SELECTOR,
+        });
         const data = await extractMapstats(page, id);
         await writeFile(outputPath, `${JSON.stringify(data, null, 2)}\n`, "utf8");
         console.log(`fetched ${id}: ${outputPath}`);
