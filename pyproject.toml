@@ -22,18 +22,6 @@ dependencies = [
     "plotly>=6.0",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.0",
-    "pytest-asyncio>=0.23",
-    "respx>=0.21",
-    "ruff>=0.4",
-    "mypy>=1.10",
-    "boto3-stubs[s3]>=1.35",
-    "apache-airflow>=2.9,<3.0",
-    "apache-airflow-providers-slack==8.7.1",
-]
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -76,9 +64,17 @@ ignore = []
 
 [dependency-groups]
 dev = [
+    "apache-airflow>=2.9,<3.0",
+    "apache-airflow-providers-slack==8.7.1",
+    "boto3-stubs[s3]>=1.35",
     "dbt-core>=1.11.9",
     "dbt-snowflake>=1.11.4",
+    "mypy>=1.10",
     "moto[s3]>=5.1.22",
     "pandas-stubs>=3.0.0.260204",
     "playwright>=1.59.0",
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "respx>=0.21",
+    "ruff>=0.4",
 ]

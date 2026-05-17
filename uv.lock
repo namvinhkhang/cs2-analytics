@@ -980,47 +980,35 @@ dependencies = [
     { name = "xgboost" },
 ]
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
     { name = "apache-airflow" },
     { name = "apache-airflow-providers-slack" },
     { name = "boto3-stubs", extra = ["s3"] },
+    { name = "dbt-core" },
+    { name = "dbt-snowflake" },
+    { name = "moto", extra = ["s3"] },
     { name = "mypy" },
+    { name = "pandas-stubs" },
+    { name = "playwright" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "respx" },
     { name = "ruff" },
 ]
 
-[package.dev-dependencies]
-dev = [
-    { name = "dbt-core" },
-    { name = "dbt-snowflake" },
-    { name = "moto", extra = ["s3"] },
-    { name = "pandas-stubs" },
-    { name = "playwright" },
-]
-
 [package.metadata]
 requires-dist = [
-    { name = "apache-airflow", marker = "extra == 'dev'", specifier = ">=2.9,<3.0" },
-    { name = "apache-airflow-providers-slack", marker = "extra == 'dev'", specifier = "==8.7.1" },
     { name = "boto3", specifier = ">=1.35" },
-    { name = "boto3-stubs", extras = ["s3"], marker = "extra == 'dev'", specifier = ">=1.35" },
     { name = "duckdb", specifier = ">=1.5.2" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "joblib", specifier = ">=1.5.3" },
     { name = "matplotlib", specifier = ">=3.10.9" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.10" },
     { name = "pandas", specifier = ">=3.0.2" },
     { name = "plotly", specifier = ">=6.0" },
     { name = "pyarrow", specifier = ">=16.0" },
     { name = "pydantic", specifier = ">=2.7" },
     { name = "pydantic-settings", specifier = ">=2.3" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
-    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23" },
-    { name = "respx", marker = "extra == 'dev'", specifier = ">=0.21" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4" },
     { name = "scikit-learn", specifier = ">=1.8.0" },
     { name = "shap", specifier = ">=0.51.0" },
     { name = "snowflake-connector-python", specifier = ">=4.4.0" },
@@ -1029,15 +1017,22 @@ requires-dist = [
     { name = "tenacity", specifier = ">=9.0" },
     { name = "xgboost", specifier = ">=3.2.0" },
 ]
-provides-extras = ["dev"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "apache-airflow", specifier = ">=2.9,<3.0" },
+    { name = "apache-airflow-providers-slack", specifier = "==8.7.1" },
+    { name = "boto3-stubs", extras = ["s3"], specifier = ">=1.35" },
     { name = "dbt-core", specifier = ">=1.11.9" },
     { name = "dbt-snowflake", specifier = ">=1.11.4" },
     { name = "moto", extras = ["s3"], specifier = ">=5.1.22" },
+    { name = "mypy", specifier = ">=1.10" },
     { name = "pandas-stubs", specifier = ">=3.0.0.260204" },
     { name = "playwright", specifier = ">=1.59.0" },
+    { name = "pytest", specifier = ">=8.0" },
+    { name = "pytest-asyncio", specifier = ">=0.23" },
+    { name = "respx", specifier = ">=0.21" },
+    { name = "ruff", specifier = ">=0.4" },
 ]
 
 [[package]]

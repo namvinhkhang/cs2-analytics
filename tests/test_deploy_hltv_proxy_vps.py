@@ -1,5 +1,6 @@
-from pathlib import Path
+from __future__ import annotations
 
+from pathlib import Path
 
 SCRIPT_PATH = Path("scripts/deploy_hltv_proxy_vps.sh")
 
