@@ -3,11 +3,14 @@
 // pulls match-level aggregate stats and the list of mapstats links, then
 // visits each mapstats page to embed per-side player stats. One combined
 // JSON per match is written to --output-dir. Only completed matches are
-// persisted; upcoming/forfeited/missing ones are skipped without a marker
-// so the next rerun re-attempts them.
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+// persisted; upcoming/forfeited ones are skipped without a marker so the
+// next rerun re-attempts them. With --prune-ids the ids file becomes a
+// self-draining queue (see main()): terminal ids are removed, retryable
+// ones (not_completed / 403 / timeout) are kept.
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { hostname } from "node:os";
 import {
   createBrowser,
   DEFAULT_CHALLENGE_TIMEOUT_MS,
@@ -15,6 +18,8 @@ import {
   DEFAULT_NAV_TIMEOUT_MS,
   DEFAULT_USER_DATA_DIR,
   gotoHltvPage,
+  jitter,
+  notifySlack,
   sleep,
   statusCode,
   STOP_STATUSES,
@@ -31,6 +36,7 @@ import {
 } from "./lib/hltv_rankings.mjs";
 
 const DEFAULT_RANKINGS_DIR = "data/hltv_cache/rankings";
+const DEFAULT_MAX_CONSECUTIVE_FAILURES = 5;
 
 // .timeAndEvent shows on all match pages (completed, upcoming, even forfeit).
 // We only check for stats AFTER it loads — the completed-ness check is done
@@ -60,6 +66,15 @@ Options:
   --user-data-dir         Persistent Chrome profile dir (keeps cf_clearance cookie). Defaults to ${DEFAULT_USER_DATA_DIR}.
   --chrome-path           Absolute path to a real Chrome binary. Strongly recommended over bundled Chromium for Cloudflare.
   --rankings-dir          Directory for per-day HLTV Valve ranking snapshots. Defaults to ${DEFAULT_RANKINGS_DIR}.
+  --max-consecutive-failures  Backstop: stop (and Slack-alert) after this many
+                          *transient* failures in a row (nav timeout/ERR_*).
+                          403/429 always stops immediately; HLTV soft-500s
+                          (non-existent matches) never count. 0 disables the
+                          backstop. Defaults to ${DEFAULT_MAX_CONSECUTIVE_FAILURES}.
+  --prune-ids             "true"/"false". When true, ids are removed from
+                          --ids-file as they resolve terminally (fetched,
+                          cached, or non-existent 500); not_completed / 403 /
+                          timeout stay for retry. Atomic rewrite. Default false.
 
 Output schema:
   matchId, url, event, date, format, teams{team1,team2},
@@ -107,6 +122,14 @@ function parseArgs(argv) {
     userDataDir: args.get("user-data-dir") ?? DEFAULT_USER_DATA_DIR,
     chromePath: args.get("chrome-path") ?? process.env.CHROME_PATH ?? null,
     rankingsDir: args.get("rankings-dir") ?? DEFAULT_RANKINGS_DIR,
+    maxConsecutiveFailures: Number.parseInt(
+      args.get("max-consecutive-failures") ?? String(DEFAULT_MAX_CONSECUTIVE_FAILURES),
+      10,
+    ),
+    // When true, terminal ids (fetched / cached / non-existent 500) are
+    // removed from --ids-file as they resolve. Default false so Airflow and
+    // local runs that pass a canonical id list never mutate it.
+    pruneIds: (args.get("prune-ids") ?? "false").toLowerCase() === "true",
   };
 }
 
@@ -118,6 +141,17 @@ async function readIds(path) {
     .filter((line) => line && !line.startsWith("#"))
     .map((line) => Number.parseInt(line, 10))
     .filter((id) => Number.isInteger(id));
+}
+
+// Atomically rewrite the ids file keeping only ids still in `remaining`,
+// preserving the original order. Writing to a temp file and renaming makes
+// the swap atomic, so a process kill mid-write can never leave a truncated
+// or corrupt queue — a restart simply resumes from the last good prune.
+async function persistRemaining(path, orderedIds, remaining) {
+  const body = orderedIds.filter((id) => remaining.has(id)).join("\n");
+  const tmp = `${path}.tmp`;
+  await writeFile(tmp, body ? `${body}\n` : "", "utf8");
+  await rename(tmp, path);
 }
 
 // Extract everything we need from the match page in one round-trip.
@@ -250,7 +284,7 @@ async function fetchMatch(page, matchId, opts) {
     return { skipped: "not_completed" };
   }
 
-  if (opts.delayMs > 0) await sleep(opts.delayMs);
+  if (opts.delayMs > 0) await sleep(jitter(opts.delayMs));
 
   // Fetch each mapstats page in the same browser session so cf_clearance,
   // referer, and stealth state all stay warm.
@@ -283,7 +317,7 @@ async function fetchMatch(page, matchId, opts) {
         throw error;
       }
     }
-    if (opts.delayMs > 0) await sleep(opts.delayMs);
+    if (opts.delayMs > 0) await sleep(jitter(opts.delayMs));
   }
 
   const format = match.format ?? (maps.length > 0 ? `bo${Math.max(maps.length, 1)}` : null);
@@ -343,33 +377,95 @@ async function main() {
   const ids = await readIds(opts.idsFile);
   await mkdir(opts.outputDir, { recursive: true });
 
+  // Self-pruning queue (opt-in via --prune-ids). Terminal outcomes — fetched,
+  // already-cached, or a confirmed non-existent match (HLTV soft-500) — are
+  // dropped from the ids file so reruns never re-walk them. Retryable
+  // outcomes stay. Without --prune-ids the file is left untouched.
+  const remaining = opts.pruneIds ? new Set(ids) : null;
+  const pruneId = async (id) => {
+    if (remaining && remaining.delete(id)) {
+      await persistRemaining(opts.idsFile, ids, remaining);
+    }
+  };
+
+  // Rate-limit guard. A 403/429 stops immediately (cf_clearance dead or IP
+  // throttled — needs a human re-warm), which is the failure mode that
+  // matters. HLTV soft-500s are EXPECTED (non-existent match ids) and never
+  // count. The consecutive-failure stop is only a backstop for transient
+  // errors and is disabled when --max-consecutive-failures is 0.
+  const breakerEnabled = opts.maxConsecutiveFailures > 0;
+  let consecutiveFailures = 0;
+
   try {
     for (const matchId of ids) {
       const outputPath = join(opts.outputDir, `${matchId}.json`);
       if (existsSync(outputPath)) {
         console.log(`skip ${matchId}: cached`);
+        await pruneId(matchId); // already have the data — terminal
         continue;
       }
 
       try {
         const { skipped, payload } = await fetchMatch(page, matchId, opts);
         if (skipped) {
+          // not_completed: match may finish later — keep it in the queue.
           console.log(`skip ${matchId}: ${skipped}`);
         } else {
           await writeFile(outputPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
           console.log(`fetched ${matchId}: ${outputPath} (${payload.maps.length} maps)`);
+          await pruneId(matchId); // success — terminal
         }
+        consecutiveFailures = 0; // healthy response — fetched or cleanly skipped
       } catch (error) {
-        const code = statusCode(error);
-        console.error(`failed ${matchId}: ${code ?? "unknown"} ${error?.message ?? error}`);
-        if (STOP_STATUSES.has(Number(code))) {
-          console.error("stopping on rate-limit/forbidden response");
+        const code = Number(statusCode(error));
+
+        // HLTV soft-500 = the match id does not exist. Expected and terminal:
+        // prune it, don't count it against the breaker, keep going.
+        if (error?.hltvErrorPage || code === 500) {
+          console.log(`gone ${matchId}: 500 non-existent match page`);
+          await pruneId(matchId);
+          consecutiveFailures = 0;
+          if (opts.delayMs > 0) await sleep(jitter(opts.delayMs));
+          continue;
+        }
+
+        // 403/429 = rate-limited / cf_clearance dead. Stop now and KEEP the
+        // id for retry after a human re-warm.
+        if (STOP_STATUSES.has(code)) {
+          console.error(`failed ${matchId}: ${code} ${error?.message ?? error}`);
+          console.error(`stopping on rate-limit/forbidden response (${code})`);
+          await notifySlack(
+            `🛑 HLTV scraper on \`${hostname()}\` stopped: rate-limit/forbidden (${code}). ` +
+              `Last attempted match ${matchId}. VNC in, re-tick the challenge, then ` +
+              `restart — cached/non-existent matches are skipped automatically.`,
+          );
+          process.exitCode = 1;
+          break;
+        }
+
+        // Anything else (nav timeout, ERR_*, transient): KEEP the id, log,
+        // and continue. Only the optional backstop can stop the run here.
+        consecutiveFailures += 1;
+        console.error(
+          `failed ${matchId}: ${code || "unknown"} ${error?.message ?? error}` +
+            (breakerEnabled
+              ? ` (consecutive ${consecutiveFailures}/${opts.maxConsecutiveFailures})`
+              : ""),
+        );
+        if (breakerEnabled && consecutiveFailures >= opts.maxConsecutiveFailures) {
+          console.error(
+            `stopping on ${consecutiveFailures} consecutive transient failures`,
+          );
+          await notifySlack(
+            `🛑 HLTV scraper on \`${hostname()}\` stopped: ${consecutiveFailures} ` +
+              `consecutive transient failures. Last match ${matchId}.`,
+          );
           process.exitCode = 1;
           break;
         }
       }
 
-      if (opts.delayMs > 0) await sleep(opts.delayMs);
+      if (opts.delayMs > 0) await sleep(jitter(opts.delayMs));
     }
   } finally {
     await browser.close().catch(() => {});

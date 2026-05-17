@@ -30,3 +30,5 @@
 - Do not call Choke Profile implemented just because ingestion and a first mart shape exist; the feature requires representative data, Snowflake/dbt verification, snapshots, and a dashboard analysis page.
 - GitHub Actions weekly dashboard refresh must not run the deep CS API `weekly` profile; Monday weekly should replace the Monday daily schedule, use the bounded CS API `daily` ingest window, and add only weekly-specific HLTV/choke/model work.
 - GitHub Actions Snowflake raw loads should target the current S3 `year=/month=/day=` partition, not the whole source prefix, so scheduled runs do not rescan historical files or depend on long-lived COPY load history to avoid duplicates.
+- VPS deploy scripts should health-check the service behind each tmux session, not just `tmux has-session`; stale panes can survive without the expected process/socket and cause false setup failures.
+- HLTV proxy VPS setup must deploy the vendored Puppeteer dependency tree, fail fast when CDP/browser exit-IP verification errors, and allow Chrome more than 20 seconds to expose CDP on slower boxes.

@@ -31,6 +31,29 @@ export function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+// Randomize a base delay so request spacing doesn't look robotic to
+// Cloudflare. Returns a value in [0.8x, 1.8x] of base — e.g. 5000 → 4000–9000ms.
+export function jitter(baseMs) {
+  if (baseMs <= 0) return 0;
+  return Math.round(baseMs * (0.8 + Math.random()));
+}
+
+// Best-effort Slack ping for operator alerts (e.g. circuit-breaker trips).
+// Never throws — a missing webhook or network error must not crash a scrape.
+export async function notifySlack(text) {
+  const webhook = process.env.CS2_SLACK_WEBHOOK_URL;
+  if (!webhook) return;
+  try {
+    await fetch(webhook, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+  } catch {
+    // Alerting is non-critical; swallow.
+  }
+}
+
 export function statusCode(error) {
   return error?.statusCode ?? error?.response?.statusCode ?? error?.code;
 }
@@ -112,6 +135,19 @@ export async function createBrowser({
     await page.setUserAgent(DESKTOP_USER_AGENT);
     await page.setViewport({ width: 1366, height: 768 });
     await page.setExtraHTTPHeaders({ "accept-language": "en-US,en;q=0.9" });
+  }
+
+  // Proxy auth for IPRoyal ISP (and any host:port proxy needing credentials).
+  // Chrome's --proxy-server flag carries only host:port, so the per-IP
+  // username/password — which is what selects this VPS's pinned dedicated IP
+  // on IPRoyal — must be supplied here. page.authenticate works on both
+  // puppeteer-launched and CDP-attached browsers, and must be set before the
+  // first proxied request (the warmup goto below). No-op when unset, so
+  // non-proxy runs and IP-whitelisted setups are unaffected.
+  const proxyUser = process.env.CS2_PROXY_USERNAME;
+  const proxyPass = process.env.CS2_PROXY_PASSWORD;
+  if (proxyUser && proxyPass) {
+    await page.authenticate({ username: proxyUser, password: proxyPass });
   }
 
   // Visit the homepage first so cf_clearance binds to the apex domain before
